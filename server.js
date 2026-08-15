@@ -215,10 +215,11 @@ app.get('/callback', authLimiter, (req, res) => {
 
             console.log('[OAuth] Success! Redirecting to dashboard');
             res.cookie('bk_session', token, {
-                maxAge: 30 * 24 * 60 * 60 * 1000,
+                maxAge: 90 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
                 sameSite: 'lax',
-                secure: false
+                secure: process.env.NODE_ENV === 'production',
+                path: '/'
             });
             res.redirect('/dashboard.html');
         });
@@ -249,6 +250,33 @@ app.get('/api/user', apiLimiter, authMiddleware, (req, res) => {
 
 app.get('/api/csrf', (req, res) => {
     res.json({ token: res.locals.csrfToken });
+});
+
+app.get('/api/session', apiLimiter, authMiddleware, (req, res) => {
+    res.json({ valid: true, user: { id: req.user.id, username: req.user.username } });
+});
+
+app.get('/api/session/refresh', apiLimiter, authMiddleware, (req, res) => {
+    const token = req.cookies.bk_session;
+    if (token) {
+        res.cookie('bk_session', token, {
+            maxAge: 90 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/'
+        });
+    }
+    res.json({ ok: true });
+});
+
+app.get('/api/honeypot', apiLimiter, authMiddleware, (req, res) => {
+    const client = global.botClient;
+    if (client && client.honeypot) {
+        res.json({ enabled: client.honeypot.enabled, log: client.honeypot.log.slice(-50).reverse() });
+    } else {
+        res.json({ enabled: false, log: [] });
+    }
 });
 
 app.get('/api/guilds', apiLimiter, authMiddleware, (req, res) => {

@@ -58,6 +58,97 @@ client.antiLink = {
     whitelistedDomains: ['discord.gg', 'youtube.com', 'github.com']
 };
 
+client.honeypot = {
+    enabled: true,
+    trapCommands: ['.token', '.eval', '.exec', '.hack', '.grabtoken', '.steal', '.raid', '.nuke', '.spam', '.ddos', '.rat', '.selfbot', '.webhook', '.snipe'],
+    honeypotKeywords: ['give me mod', 'give me admin', 'i am admin', 'trust me', 'give perms', 'promote me', 'i own this', 'transfer ownership', 'i paid for this', 'discord admin', 'staff here'],
+    violations: new Map(),
+    log: []
+};
+
+function isHoneypotTrigger(message) {
+    const lower = message.content.toLowerCase().trim();
+    const userId = message.author.id;
+    
+    for (const cmd of client.honeypot.trapCommands) {
+        if (lower.startsWith(cmd) || lower.includes(cmd)) {
+            return { type: 'trap_command', value: cmd };
+        }
+    }
+    
+    for (const kw of client.honeypot.honeypotKeywords) {
+        if (lower.includes(kw)) {
+            return { type: 'social_engineering', value: kw };
+        }
+    }
+    
+    if (/https?:\/\/[^\s]+discord[^\s]*(token|auth|login|steal)/i.test(lower)) {
+        return { type: 'phishing_link', value: 'phishing attempt' };
+    }
+    
+    if (/\b(airdrop|free nitro|free boost|click here to claim|verify here|verify now)\b/i.test(lower)) {
+        return { type: 'scam_link', value: 'scam attempt' };
+    }
+    
+    return null;
+}
+
+async function handleHoneypot(message, result) {
+    const userId = message.author.id;
+    const guild = message.guild;
+    
+    const strikes = (client.honeypot.violations.get(userId) || 0) + 1;
+    client.honeypot.violations.set(userId, strikes);
+    
+    client.honeypot.log.push({
+        user: message.author.tag,
+        userId,
+        type: result.type,
+        value: result.value,
+        channel: message.channel.name,
+        time: Date.now(),
+        strikes
+    });
+    
+    if (client.honeypot.log.length > 100) client.honeypot.log.shift();
+    
+    try { await message.delete(); } catch(e) {}
+    
+    if (result.type === 'phishing_link' || result.type === 'scam_link' || strikes >= 2) {
+        try {
+            const member = guild.members.cache.get(userId);
+            if (member && member.bannable) {
+                await member.ban({ reason: `[Honeypot] ${result.type}: ${result.value} (${strikes} strikes)` });
+                const logCh = guild.channels.cache.find(c => c.name === 'mod-logs' || c.name === 'audit-log');
+                if (logCh) {
+                    const embed = new EmbedBuilder()
+                        .setColor('#FF0000')
+                        .setTitle('Honeypot Triggered')
+                        .setDescription(`**${message.author.tag}** has been banned automatically`)
+                        .addFields(
+                            { name: 'Type', value: result.type, inline: true },
+                            { name: 'Trigger', value: result.value, inline: true },
+                            { name: 'Strikes', value: `${strikes}`, inline: true }
+                        )
+                        .setTimestamp();
+                    logCh.send({ embeds: [embed] }).catch(() => {});
+                }
+            }
+        } catch(e) {}
+        client.honeypot.violations.delete(userId);
+    } else {
+        try {
+            const warnEmbed = new EmbedBuilder()
+                .setColor('#FFA500')
+                .setTitle('Honeypot Warning')
+                .setDescription(`**${message.author.tag}**, this is a warning. Further violations will result in a ban.`)
+                .addFields({ name: 'Type', value: result.type, inline: true })
+                .setTimestamp();
+            message.channel.send({ embeds: [warnEmbed] }).then(m => setTimeout(() => m.delete().catch(() => {}), 8000));
+        } catch(e) {}
+    }
+}
+
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -146,6 +237,14 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
 
+    if (client.honeypot.enabled) {
+        const hpResult = isHoneypotTrigger(message);
+        if (hpResult) {
+            handleHoneypot(message, hpResult);
+            return;
+        }
+    }
+
     if (client.afkUsers.has(message.author.id)) {
         const afk = client.afkUsers.get(message.author.id);
         client.afkUsers.delete(message.author.id);
@@ -171,4 +270,6 @@ function formatDuration(ms) {
     return `${h}h ${Math.floor((s%3600)/60)}m`;
 }
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN).then(() => {
+    global.botClient = client;
+});

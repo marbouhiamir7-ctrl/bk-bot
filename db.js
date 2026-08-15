@@ -53,7 +53,8 @@ function createSession(user, guilds) {
         user,
         guilds,
         created: Date.now(),
-        expires: Date.now() + (30 * 24 * 60 * 60 * 1000)
+        lastActivity: Date.now(),
+        expires: Date.now() + (90 * 24 * 60 * 60 * 1000)
     };
     sessions.set(token, sessionData);
     return token;
@@ -64,6 +65,11 @@ function getSession(token) {
     const s = sessions.get(token);
     if (!s) return null;
     if (Date.now() > s.expires) { sessions.delete(token); return null; }
+    s.lastActivity = Date.now();
+    if (Date.now() - s.created > 7 * 24 * 60 * 60 * 1000) {
+        s.expires = Date.now() + (90 * 24 * 60 * 60 * 1000);
+    }
+    sessions.set(token, s);
     return s;
 }
 

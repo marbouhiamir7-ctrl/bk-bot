@@ -224,6 +224,7 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
             </ul>
             <div class="sb-label">System</div>
             <ul class="sb-menu">
+                <li><a href="#" data-page="honeypot"><i class="fas fa-spider"></i> Honeypot</a></li>
                 <li><a href="#" data-page="settings"><i class="fas fa-gear"></i> Settings</a></li>
             </ul>
             <div class="sb-label">Management</div>
@@ -648,6 +649,32 @@ function renderAll(g){
         </div>
     </div>
 
+    <!-- HONEYPOT -->
+    <div class="page" id="pg-honeypot">
+        <div class="pg-header"><h1><i class="fas fa-spider"></i> Honeypot</h1><p>Anti-abuse trap system — catches malicious users automatically</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-shield" style="color:var(--red)"></i> Trap Configuration</h2><span class="badge badge-live" id="hpStatus">ACTIVE</span></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Active honeypot trap system</p></div><div class="toggle on" id="hpToggle" onclick="this.classList.toggle('on')"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-terminal" style="color:var(--red)"></i> Trap Commands</h4><p>Auto-ban on malicious command usage</p></div><span class="badge badge-live">14 TRAPS</span></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-comment" style="color:var(--orange)"></i> Social Engineering</h4><p>Detect impersonation attempts</p></div><span class="badge badge-live">11 KEYWORDS</span></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link" style="color:var(--purple)"></i> Phishing Detection</h4><p>Block scam and phishing links</p></div><span class="badge badge-live">ACTIVE</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-list" style="color:var(--orange)"></i> Trap Commands</h2></div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:4px">
+                        ${['.token','.eval','.exec','.hack','.grabtoken','.steal','.raid','.nuke','.spam','.ddos','.rat','.selfbot','.webhook','.snipe'].map(c=>`<div style="padding:6px 8px;background:rgba(255,92,92,.06);border:1px solid rgba(255,92,92,.1);border-radius:6px;font-size:.7rem;color:var(--red);font-family:'Courier New',monospace;text-align:center">${c}</div>`).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-scroll" style="color:var(--blue)"></i> Trap Log</h2><button class="save-btn" onclick="loadHoneypot()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
+                <div id="honeypotLog" style="max-height:500px;overflow-y:auto"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="pg-settings">
         <div class="pg-header"><h1><i class="fas fa-gear"></i> Settings</h1><p>General server configuration</p></div>
@@ -1058,7 +1085,7 @@ function renderAll(g){
     </div>`;
 
     initMods();loadCustomCommands();bindNav();applySettings();
-    loadActivity();loadOvActivity();loadOvInvites();loadEmojis();loadStickers();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();
+    loadActivity();loadOvActivity();loadOvInvites();loadEmojis();loadStickers();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();loadHoneypot();
     setTimeout(()=>{
         document.querySelectorAll('.stat-val[data-count]').forEach(el=>animateVal(el,parseInt(el.dataset.count)||0));
         updateWelcomePreview();initColorPicker();
@@ -1115,6 +1142,22 @@ function updateAutoRolePreview(){
 }
 
 /* === OVERVIEW DATA === */
+async function loadHoneypot(){
+    if(!GUILD_ID)return;
+    try{
+        const data=await(await fetch('/api/honeypot')).json();
+        const el=document.getElementById('honeypotLog'),statusEl=document.getElementById('hpStatus'),toggleEl=document.getElementById('hpToggle');
+        if(!el)return;
+        if(statusEl)statusEl.textContent=data.enabled?'ACTIVE':'DISABLED';
+        if(toggleEl)toggleEl.classList.toggle('on',data.enabled);
+        if(!data.log||!data.log.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text4);font-size:.8rem"><div style="width:48px;height:48px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="fas fa-shield-halved" style="font-size:1.1rem;opacity:.3"></i></div><div style="font-weight:600;margin-bottom:4px">No traps triggered</div><div style="font-size:.7rem">The honeypot is watching. Malicious users will appear here.</div></div>';return}
+        el.innerHTML=data.log.map(h=>{
+            const tc={trap_command:'var(--red)',social_engineering:'var(--orange)',phishing_link:'var(--pink)',scam_link:'var(--pink)'};
+            const ti={trap_command:'fa-terminal',social_engineering:'fa-comment',phishing_link:'fa-link',scam_link:'fa-fish'};
+            return`<div style="padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;border-left:3px solid ${tc[h.type]||'var(--red)'}"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:6px;background:${tc[h.type]||'var(--red)'}15;display:flex;align-items:center;justify-content:center"><i class="fas ${ti[h.type]||'fa-shield'}" style="font-size:.6rem;color:${tc[h.type]||'var(--red)'}"></i></div><span style="font-size:.82rem;font-weight:600;color:var(--text)">${esc(h.user||'Unknown')}</span></div><span style="font-size:.6rem;color:var(--text4)">${h.time?new Date(h.time).toLocaleTimeString():''}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:${tc[h.type]||'var(--red)'}10;color:${tc[h.type]||'var(--red)'};font-weight:600">${h.type?.replace(/_/g,' ')||'unknown'}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${esc(h.value||'')}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4)">${esc(h.channel||'')}</span></div></div>`;
+        }).join('');
+    }catch(e){}
+}
 async function loadOvActivity(){
     if(!GUILD_ID)return;
     try{
