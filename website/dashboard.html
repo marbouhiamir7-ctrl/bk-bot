@@ -83,8 +83,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .stat-icon{width:42px;height:42px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:.95rem}
 .si-red{background:var(--red-glow);color:var(--red)}.si-green{background:var(--green-glow);color:var(--green)}.si-blue{background:var(--blue-glow);color:var(--blue)}.si-orange{background:var(--orange-glow);color:var(--orange)}.si-purple{background:var(--purple-glow);color:var(--purple)}.si-pink{background:rgba(244,114,182,.15);color:var(--pink)}.si-cyan{background:rgba(34,211,238,.15);color:var(--cyan)}
 .stat-val{font-size:1.8rem;font-weight:900;margin-bottom:3px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.stat-label{color:var(--text3);font-size:.75rem}
-.sec-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;transition:var(--tr);position:relative}
-.sec-row:last-child{margin-bottom:0}.sec-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:0 3px 3px 0;opacity:.6}
+.sec-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;transition:var(--tr);position:relative;border-left:3px solid var(--green)}
+.sec-row:last-child{margin-bottom:0}.sec-row:hover{border-color:var(--border2);transform:translateX(2px)}
 .sec-row:hover{border-color:var(--border2);transform:translateX(2px)}
 .sec-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
 .sec-info{flex:1}.sec-info h4{font-size:.85rem;font-weight:600;margin-bottom:2px}.sec-info p{color:var(--text4);font-size:.7rem}
@@ -260,7 +260,7 @@ function showConn(){const c=document.getElementById('connStatus');c.classList.ad
 async function getCsrf(){try{const r=await fetch('/api/csrf');const d=await r.json();CSRF_TOKEN=d.token||''}catch(e){}}
 function animateVal(el,end){if(!el)return;const st=performance.now();const step=(now)=>{const p=Math.min((now-st)/800,1);el.textContent=Math.round(end*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
 function skeleton(n){let h='';for(let i=0;i<n;i++)h+=`<div class="skeleton skel-card"></div>`;return h}
-function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/'/g,'&#39;')}
 function hexToRgb(h){return`${(h>>16)&255},${(h>>8)&255},${h&255}`}
 function chOpts(chs,empty='None'){return(empty?'<option value="">'+empty+'</option>':'')+(chs||[]).map(c=>`<option value="${c.id}">#${esc(c.name)}</option>`).join('')}
 function roleOpts(rl,empty='None'){return(empty?'<option value="">'+empty+'</option>':'')+(rl||[]).map(r=>`<option value="${r.id}" style="color:${r.color?'#'+r.color.toString(16).padStart(6,'0'):'inherit'}">${esc(r.name)}</option>`).join('')}
@@ -636,7 +636,7 @@ function renderAll(g){
                 <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-gavel" style="color:var(--red)"></i> Log Moderation</h4><p>Bans, kicks, mutes</p></div><div class="toggle on" data-key="log_moderation" onclick="toggleSetting(this)"></div></div>
                 <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-right-to-bracket" style="color:var(--green)"></i> Log Joins/Leaves</h4><p>Member joins and leaves</p></div><div class="toggle on" data-key="log_joinleave" onclick="toggleSetting(this)"></div></div>
                 <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-pen" style="color:var(--orange)"></i> Log Edits</h4><p>Message edits</p></div><div class="toggle on" data-key="log_edits" onclick="toggleSetting(this)"></div></div>
-                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-voice" style="color:var(--purple)"></i> Log Voice</h4><p>Voice channel joins/leaves</p></div><div class="toggle" data-key="log_voice" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-microphone" style="color:var(--purple)"></i> Log Voice</h4><p>Voice channel joins/leaves</p></div><div class="toggle" data-key="log_voice" onclick="toggleSetting(this)"></div></div>
             </div>
             <div class="card">
                 <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Log Preview</h2></div>
@@ -1014,9 +1014,10 @@ function renderAll(g){
                             {m:'GET',u:'/api/stats',d:'Get global bot statistics',a:'None'},
                             {m:'GET',u:'/api/user/:id',d:'Look up any Discord user by ID',a:'None'}
                         ].map(e=>{
-                            const mc={GET:'var(--green)',POST:'var(--blue)',DEL:'var(--red)',PAT:'var(--orange)',POS:'var(--cyan)'};
+                            const mc={GET:'rgba(52,211,153,.12)',POST:'rgba(96,165,250,.12)',DEL:'rgba(255,92,92,.12)',PAT:'rgba(251,191,36,.12)',POS:'rgba(34,211,238,.12)'};
                             const ml={GET:'GET',POST:'POST',DEL:'DELETE',PAT:'PATCH',POS:'POST'};
-                            return`<div style="padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border);transition:var(--tr);cursor:default" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:.5px;background:${mc[e.m]}15;color:${mc[e.m]};border:1px solid ${mc[e.m]}20;font-family:'Courier New',monospace">${ml[e.m]}</span><span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Courier New',monospace">${e.u}</span></div><div style="font-size:.7rem;color:var(--text4);margin-bottom:4px">${e.d}</div><div style="display:flex;gap:4px">${e.a.split(' + ').map(a=>`<span style="font-size:.55rem;padding:1px 6px;border-radius:3px;background:${a==='Auth'?'rgba(52,211,153,.08)':a==='CSRF'?'rgba(251,191,36,.08)':'rgba(255,255,255,.04)'};color:${a==='Auth'?'var(--green)':a==='CSRF'?'var(--orange)':'var(--text4)'};font-weight:600">${a}</span>`).join('')}</div></div>`;
+                            const mc2={GET:'rgba(52,211,153,.2)',POST:'rgba(96,165,250,.2)',DEL:'rgba(255,92,92,.2)',PAT:'rgba(251,191,36,.2)',POS:'rgba(34,211,238,.2)'};
+                            return`<div style="padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border);transition:var(--tr);cursor:default" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:.5px;background:${mc[e.m]};color:${ml[e.m]==='DELETE'?'var(--red)':ml[e.m]==='GET'?'var(--green)':ml[e.m]==='POST'?'var(--blue)':'var(--orange)'};border:1px solid ${mc2[e.m]};font-family:'Courier New',monospace">${ml[e.m]}</span><span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Courier New',monospace">${e.u}</span></div><div style="font-size:.7rem;color:var(--text4);margin-bottom:4px">${e.d}</div><div style="display:flex;gap:4px">${e.a.split(' + ').map(a=>`<span style="font-size:.55rem;padding:1px 6px;border-radius:3px;background:${a==='Auth'?'rgba(52,211,153,.08)':a==='CSRF'?'rgba(251,191,36,.08)':'rgba(255,255,255,.04)'};color:${a==='Auth'?'var(--green)':a==='CSRF'?'var(--orange)':'var(--text4)'};font-weight:600">${a}</span>`).join('')}</div></div>`;
                         }).join('')}
                     </div>
                 </div>
@@ -1046,17 +1047,17 @@ function renderAll(g){
                         <div class="card-head"><h2><i class="fas fa-server" style="color:var(--blue)"></i> Dashboard Features</h2></div>
                         <div style="display:grid;gap:8px">
                             ${[
-                                {i:'fa-shield-halved',n:'Security',d:'Anti-nuke, raid, spam, link protection',c:'var(--red)'},
-                                {i:'fa-gavel',n:'Moderation',d:'16 mod commands with auto-log',c:'var(--blue)'},
-                                {i:'fa-hand-sparkles',n:'Welcome',d:'Custom embeds with Discord preview',c:'var(--green)'},
-                                {i:'fa-user-plus',n:'Auto Role',d:'Assign roles on member join',c:'var(--orange)'},
-                                {i:'fa-ticket',n:'Tickets',d:'Full support ticket system',c:'var(--purple)'},
-                                {i:'fa-terminal',n:'Commands',d:'Custom auto-reply commands',c:'var(--cyan)'},
-                                {i:'fa-link',n:'Invites',d:'Create, track, revoke invites',c:'var(--green)'},
-                                {i:'fa-plug',n:'Webhooks',d:'Create and send via webhooks',c:'var(--purple)'},
-                                {i:'fa-trophy',n:'Levels',d:'XP system with leaderboard',c:'var(--orange)'},
-                                {i:'fa-database',n:'Backup',d:'Save and restore server config',c:'var(--blue)'}
-                            ].map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="width:34px;height:34px;border-radius:8px;background:${f.c}15;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${f.i}" style="color:${f.c};font-size:.8rem"></i></div><div style="flex:1"><div style="font-size:.82rem;font-weight:600;color:var(--text)">${f.n}</div><div style="font-size:.68rem;color:var(--text4)">${f.d}</div></div></div>`).join('')}
+                                {i:'fa-shield-halved',n:'Security',d:'Anti-nuke, raid, spam, link protection',c:'255,92,92'},
+                                {i:'fa-gavel',n:'Moderation',d:'16 mod commands with auto-log',c:'96,165,250'},
+                                {i:'fa-hand-sparkles',n:'Welcome',d:'Custom embeds with Discord preview',c:'52,211,153'},
+                                {i:'fa-user-plus',n:'Auto Role',d:'Assign roles on member join',c:'251,191,36'},
+                                {i:'fa-ticket',n:'Tickets',d:'Full support ticket system',c:'167,139,250'},
+                                {i:'fa-terminal',n:'Commands',d:'Custom auto-reply commands',c:'34,211,238'},
+                                {i:'fa-link',n:'Invites',d:'Create, track, revoke invites',c:'52,211,153'},
+                                {i:'fa-plug',n:'Webhooks',d:'Create and send via webhooks',c:'167,139,250'},
+                                {i:'fa-trophy',n:'Levels',d:'XP system with leaderboard',c:'251,191,36'},
+                                {i:'fa-database',n:'Backup',d:'Save and restore server config',c:'96,165,250'}
+                            ].map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="width:34px;height:34px;border-radius:8px;background:rgba(${f.c},.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${f.i}" style="color:rgb(${f.c});font-size:.8rem"></i></div><div style="flex:1"><div style="font-size:.82rem;font-weight:600;color:var(--text)">${f.n}</div><div style="font-size:.68rem;color:var(--text4)">${f.d}</div></div></div>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -1089,6 +1090,9 @@ function renderAll(g){
     setTimeout(()=>{
         document.querySelectorAll('.stat-val[data-count]').forEach(el=>animateVal(el,parseInt(el.dataset.count)||0));
         updateWelcomePreview();initColorPicker();
+        document.querySelectorAll('#pg-welcome .var-tag').forEach(v=>{v.style.cursor='pointer';v.addEventListener('click',()=>{
+            const ta=document.getElementById('welcomeMsg');if(ta){ta.value+=v.textContent;SETTINGS.welcome_message=ta.value;markDirty();updateWelcomePreview()}
+        })});
     },100);
 }
 
@@ -1152,9 +1156,9 @@ async function loadHoneypot(){
         if(toggleEl)toggleEl.classList.toggle('on',data.enabled);
         if(!data.log||!data.log.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text4);font-size:.8rem"><div style="width:48px;height:48px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="fas fa-shield-halved" style="font-size:1.1rem;opacity:.3"></i></div><div style="font-weight:600;margin-bottom:4px">No traps triggered</div><div style="font-size:.7rem">The honeypot is watching. Malicious users will appear here.</div></div>';return}
         el.innerHTML=data.log.map(h=>{
-            const tc={trap_command:'var(--red)',social_engineering:'var(--orange)',phishing_link:'var(--pink)',scam_link:'var(--pink)'};
+            const tc={trap_command:'255,92,92',social_engineering:'251,191,36',phishing_link:'244,114,182',scam_link:'244,114,182'};
             const ti={trap_command:'fa-terminal',social_engineering:'fa-comment',phishing_link:'fa-link',scam_link:'fa-fish'};
-            return`<div style="padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;border-left:3px solid ${tc[h.type]||'var(--red)'}"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:6px;background:${tc[h.type]||'var(--red)'}15;display:flex;align-items:center;justify-content:center"><i class="fas ${ti[h.type]||'fa-shield'}" style="font-size:.6rem;color:${tc[h.type]||'var(--red)'}"></i></div><span style="font-size:.82rem;font-weight:600;color:var(--text)">${esc(h.user||'Unknown')}</span></div><span style="font-size:.6rem;color:var(--text4)">${h.time?new Date(h.time).toLocaleTimeString():''}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:${tc[h.type]||'var(--red)'}10;color:${tc[h.type]||'var(--red)'};font-weight:600">${h.type?.replace(/_/g,' ')||'unknown'}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${esc(h.value||'')}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4)">${esc(h.channel||'')}</span></div></div>`;
+            return`<div style="padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;border-left:3px solid rgb(${tc[h.type]||'255,92,92'})"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:6px;background:rgba(${tc[h.type]||'255,92,92'},.12);display:flex;align-items:center;justify-content:center"><i class="fas ${ti[h.type]||'fa-shield'}" style="font-size:.6rem;color:rgb(${tc[h.type]||'255,92,92'})"></i></div><span style="font-size:.82rem;font-weight:600;color:var(--text)">${esc(h.user||'Unknown')}</span></div><span style="font-size:.6rem;color:var(--text4)">${h.time?new Date(h.time).toLocaleTimeString():''}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(${tc[h.type]||'255,92,92'},.1);color:rgb(${tc[h.type]||'255,92,92'});font-weight:600">${h.type?.replace(/_/g,' ')||'unknown'}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${esc(h.value||'')}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4)">${esc(h.channel||'')}</span></div></div>`;
         }).join('');
     }catch(e){}
 }
@@ -1422,7 +1426,8 @@ async function sendWebhookEmbed(){
     if(!whId){showToast('Select a webhook','error');return}
     if(!msg){showToast('Enter a message','error');return}
     try{
-        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({content:'',username:'BK BOT',avatar_url:'https://cdn.discordapp.com/avatars/1537980470782988439/avatar.png'})})).json();
+        const embed=JSON.stringify({content:msg,username:'BK BOT',embeds:[{title:'BK BOT',description:msg,color:0xFF5C5C,footer:{text:'BK BOT Dashboard'}}]});
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({content:msg})})).json();
         if(r.ok){showToast('Embed sent!','success');document.getElementById('webhookMsg').value=''}
         else showToast(r.error||'Failed','error');
     }catch(e){showToast('Failed to send','error')}
@@ -1454,7 +1459,7 @@ async function loadLevels(){
             const medals=['🥇','🥈','🥉'];
             const medal=i<3?medals[i]:`<span style="color:var(--text4);font-size:.85rem;font-weight:700">#${i+1}</span>`;
             const xpPct=Math.round((l.xp%100));
-            return`<div style="padding:12px 16px;background:var(--glass);border:1px solid ${i<3?'rgba(251,191,36,.15)':'var(--border)'};border-radius:var(--r);margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='${i<3?'rgba(251,191,36,.15)':'var(--border)'}'"><div style="min-width:32px;text-align:center;font-size:${i<3?'1.2rem':'.85rem'}">${medal}</div><div style="flex:1"><div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px"><@${l.userId}></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:.68rem;color:var(--text4)">${l.xp} XP</span><div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${xpPct}%;background:var(--orange);border-radius:3px"></div></div></div></div><div style="text-align:right"><div style="font-size:1.3rem;font-weight:900;color:var(--orange)">${l.level}</div><div style="font-size:.6rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px">Level</div></div></div>`;
+            return`<div style="padding:12px 16px;background:var(--glass);border:1px solid ${i<3?'rgba(251,191,36,.15)':'var(--border)'};border-radius:var(--r);margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='${i<3?'rgba(251,191,36,.15)':'var(--border)'}'"><div style="min-width:32px;text-align:center;font-size:${i<3?'1.2rem':'.85rem'}">${medal}</div><div style="flex:1"><div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px">User ${esc(l.userId)}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:.68rem;color:var(--text4)">${l.xp} XP</span><div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${xpPct}%;background:var(--orange);border-radius:3px"></div></div></div></div><div style="text-align:right"><div style="font-size:1.3rem;font-weight:900;color:var(--orange)">${l.level}</div><div style="font-size:.6rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px">Level</div></div></div>`;
         }).join('');
     }catch(e){}
 }
@@ -1495,9 +1500,7 @@ document.addEventListener('DOMContentLoaded',init);
 document.getElementById('cmdName')?.addEventListener('input',updateCmdPreview);
 document.getElementById('cmdResponse')?.addEventListener('input',updateCmdPreview);
 document.querySelectorAll('.var-tag[onclick]').forEach(v=>{if(v.closest('#pg-commands'))v.addEventListener('click',()=>insertCmdVar(v.textContent))});
-document.querySelectorAll('#pg-welcome .var-tag').forEach(v=>{v.style.cursor='pointer';v.addEventListener('click',()=>{
-    const ta=document.getElementById('welcomeMsg');if(ta){ta.value+=v.textContent;SETTINGS.welcome_message=ta.value;markDirty();updateWelcomePreview()}
-})});
+
 </script>
 </body>
 </html>

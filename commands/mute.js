@@ -50,8 +50,8 @@ module.exports = {
                 .setColor('#FFA500')
                 .setTitle('Member Muted')
                 .addFields(
-                    { name: 'User', value: `${target.user.tag}`, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag}`, inline: true },
+                    { name: 'User', value: `${target.user.username}`, inline: true },
+                    { name: 'Moderator', value: `${interaction.user.username}`, inline: true },
                     { name: 'Duration', value: duration ? `${duration} minutes` : 'Permanent', inline: true },
                     { name: 'Reason', value: reason, inline: true }
                 )

@@ -20,15 +20,15 @@ module.exports = {
         const reason = interaction.options.getString('reason') || 'No reason provided';
 
         try {
-            await target.send(`You have been kicked from **${interaction.guild.name}** for: ${reason}`);
+            await target.send(`You have been kicked from **${interaction.guild.name}** for: ${reason}`).catch(() => {});
             await target.kick(reason);
 
             const embed = new EmbedBuilder()
                 .setColor('#FF6B6B')
                 .setTitle('Member Kicked')
                 .addFields(
-                    { name: 'User', value: `${target.user.tag}`, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag}`, inline: true },
+                    { name: 'User', value: `${target.user.username}`, inline: true },
+                    { name: 'Moderator', value: `${interaction.user.username}`, inline: true },
                     { name: 'Reason', value: reason, inline: true }
                 )
                 .setTimestamp();

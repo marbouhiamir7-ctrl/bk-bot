@@ -116,7 +116,7 @@ async function handleHoneypot(message, result) {
     
     if (result.type === 'phishing_link' || result.type === 'scam_link' || strikes >= 2) {
         try {
-            const member = guild.members.cache.get(userId);
+            const member = await guild.members.fetch(userId).catch(() => null);
             if (member && member.bannable) {
                 await member.ban({ reason: `[Honeypot] ${result.type}: ${result.value} (${strikes} strikes)` });
                 const logCh = guild.channels.cache.find(c => c.name === 'mod-logs' || c.name === 'audit-log');
@@ -187,15 +187,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
     try {
         if (command.cooldown) {
-            if (client.cooldowns.has(command.data.name)) {
-                const expirationTime = client.cooldowns.get(command.data.name) + command.cooldown;
+            const cooldownKey = `${command.data.name}_${interaction.user.id}`;
+            if (client.cooldowns.has(cooldownKey)) {
+                const expirationTime = client.cooldowns.get(cooldownKey) + command.cooldown;
                 if (Date.now() < expirationTime) {
                     const timeLeft = (expirationTime - Date.now()) / 1000;
                     return interaction.reply({ content: `Wait ${timeLeft.toFixed(1)}s`, ephemeral: true });
                 }
             }
-            client.cooldowns.set(command.data.name, Date.now());
-            setTimeout(() => client.cooldowns.delete(command.data.name), command.cooldown);
+            client.cooldowns.set(cooldownKey, Date.now());
+            setTimeout(() => client.cooldowns.delete(cooldownKey), command.cooldown);
         }
 
         await command.execute(interaction);
@@ -240,7 +241,7 @@ client.on(Events.MessageCreate, async message => {
     if (client.honeypot.enabled) {
         const hpResult = isHoneypotTrigger(message);
         if (hpResult) {
-            handleHoneypot(message, hpResult);
+            await handleHoneypot(message, hpResult).catch(() => {});
             return;
         }
     }

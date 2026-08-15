@@ -9,6 +9,7 @@ const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.set('trust proxy', 1);
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
@@ -95,8 +96,11 @@ function sanitizeObject(obj) {
 
 app.use((req, res, next) => {
     if (req.method === 'GET') {
-        const csrfToken = crypto.randomBytes(32).toString('hex');
-        res.cookie('bk_csrf', csrfToken, { maxAge: 3600000, httpOnly: false, sameSite: 'strict' });
+        let csrfToken = req.cookies.bk_csrf;
+        if (!csrfToken) {
+            csrfToken = crypto.randomBytes(32).toString('hex');
+            res.cookie('bk_csrf', csrfToken, { maxAge: 3600000, httpOnly: false, sameSite: 'strict' });
+        }
         res.locals.csrfToken = csrfToken;
     }
     next();
@@ -232,8 +236,8 @@ app.get('/callback', authLimiter, (req, res) => {
 app.get('/logout', (req, res) => {
     const token = req.cookies.bk_session;
     if (token) db.destroySession(token);
-    res.clearCookie('bk_session');
-    res.clearCookie('bk_csrf');
+    res.clearCookie('bk_session', { path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    res.clearCookie('bk_csrf', { path: '/', sameSite: 'strict' });
     res.redirect('/login.html');
 });
 
@@ -546,7 +550,7 @@ app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, (req,
         body: JSON.stringify({ name: name || 'BK BOT Webhook', channel_id })
     }).then(wh => {
         if (wh.id) {
-            res.json({ ok: true, webhook: { id: wh.id, name: wh.name, channel_id: wh.channel_id, token: wh.token, url: `https://discord.com/api/webhooks/${wh.id}/${wh.token}` } });
+            res.json({ ok: true, webhook: { id: wh.id, name: wh.name, channel_id: wh.channel_id } });
         } else {
             res.json({ error: wh.message || 'Failed to create webhook' });
         }
@@ -693,6 +697,12 @@ app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, (req, res) => {
     const levels = db.levelData.get(guildId, {});
     const sorted = Object.entries(levels).sort((a, b) => (b[1].xp || 0) - (a[1].xp || 0)).slice(0, 50);
     res.json(sorted.map(([id, data]) => ({ userId: id, level: data.level || 1, xp: data.xp || 0 })));
+});
+
+// ====== 404 Handler ======
+
+app.use((req, res) => {
+    res.status(404).json({ error: 'Not found' });
 });
 
 // ====== Error Handler ======

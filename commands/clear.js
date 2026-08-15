@@ -24,7 +24,7 @@ module.exports = {
                 .setTitle('Messages Cleared')
                 .addFields(
                     { name: 'Amount', value: `${deleted.size} messages`, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag}`, inline: true }
+                    { name: 'Moderator', value: `${interaction.user.username}`, inline: true }
                 )
                 .setTimestamp();
 

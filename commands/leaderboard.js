@@ -25,7 +25,7 @@ module.exports = {
             const member = interaction.guild.members.cache.get(data[i].id);
             if (member) {
                 const medals = ['🥇', '🥈', '🥉'];
-                description += `${medals[i] || `**${i + 1}.**`} ${member.user.tag} - Level ${data[i].level} (${data[i].xp} XP)\n`;
+                description += `${medals[i] || `**${i + 1}.**`} ${member.user.username} - Level ${data[i].level} (${data[i].xp} XP)\n`;
             }
         }
 

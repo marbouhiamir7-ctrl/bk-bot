@@ -27,8 +27,8 @@ module.exports = {
                 .setColor('#00FF00')
                 .setTitle('Member Unmuted')
                 .addFields(
-                    { name: 'User', value: `${target.user.tag}`, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag}`, inline: true }
+                    { name: 'User', value: `${target.user.username}`, inline: true },
+                    { name: 'Moderator', value: `${interaction.user.username}`, inline: true }
                 )
                 .setTimestamp();
 

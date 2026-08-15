@@ -28,7 +28,7 @@ module.exports = {
 
         interaction.client.tickets.set(interaction.user.id, {
             channelId: ticketChannel.id,
-            createdBy: interaction.user.tag,
+            createdBy: interaction.user.username,
             createdAt: new Date().toISOString(),
             reason: interaction.options.getString('reason') || 'No reason provided'
         });
@@ -39,7 +39,7 @@ module.exports = {
             .setDescription(`Welcome ${interaction.user}!\n\nPlease describe your issue and a staff member will assist you soon.`)
             .addFields(
                 { name: 'Reason', value: interaction.options.getString('reason') || 'No reason provided', inline: true },
-                { name: 'Created By', value: interaction.user.tag, inline: true }
+                { name: 'Created By', value: interaction.user.username, inline: true }
             )
             .setTimestamp();
 

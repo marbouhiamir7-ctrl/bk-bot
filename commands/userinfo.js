@@ -11,7 +11,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor('#FF6B6B')
-            .setTitle(`${target.user.tag} Information`)
+            .setTitle(`${target.user.username} Information`)
             .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
             .addFields(
                 { name: 'Username', value: `${target.user.username}`, inline: true },

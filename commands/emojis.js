@@ -12,12 +12,12 @@ module.exports = {
         if (emojis.size === 0) return interaction.reply({ content: 'No emojis in this server!', ephemeral: true });
 
         const animated = emojis.filter(e => e.animated);
-        const static = emojis.filter(e => !e.animated);
+        const staticEmojis = emojis.filter(e => !e.animated);
 
         const embed = new EmbedBuilder()
             .setColor('#FF6B6B')
             .setTitle(`${guild.name} Emojis`)
-            .setDescription(`**${emojis.size}** total emojis (${animated.size} animated, ${static.size} static)`)
+            .setDescription(`**${emojis.size}** total emojis (${animated.size} animated, ${staticEmojis.size} static)`)
             .setTimestamp();
 
         const chunks = [];

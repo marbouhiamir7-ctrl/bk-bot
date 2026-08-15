@@ -21,8 +21,8 @@ module.exports = {
                 .setColor('#00FF00')
                 .setTitle('Member Unbanned')
                 .addFields(
-                    { name: 'User', value: `${user.tag}`, inline: true },
-                    { name: 'Moderator', value: `${interaction.user.tag}`, inline: true }
+                    { name: 'User', value: `${user.username}`, inline: true },
+                    { name: 'Moderator', value: `${interaction.user.username}`, inline: true }
                 )
                 .setTimestamp();
 

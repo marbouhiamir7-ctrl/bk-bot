@@ -31,7 +31,7 @@ module.exports = {
                 .setColor('#FF6B6B')
                 .setTitle('⏰ Reminder!')
                 .setDescription(`**${reminder}**`)
-                .setFooter({ text: `Reminder from ${interaction.user.tag}` })
+                .setFooter({ text: `Reminder from ${interaction.user.username}` })
                 .setTimestamp();
 
             interaction.channel.send({ content: `${interaction.user}`, embeds: [remindEmbed] });

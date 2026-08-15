@@ -18,7 +18,7 @@ module.exports = {
             .setColor('#FF6B6B')
             .setTitle('📊 Poll')
             .setDescription(`**${question}**`)
-            .setFooter({ text: `Poll created by ${interaction.user.tag}` })
+            .setFooter({ text: `Poll created by ${interaction.user.username}` })
             .setTimestamp();
 
         const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];

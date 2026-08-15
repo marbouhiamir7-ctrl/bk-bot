@@ -42,7 +42,7 @@ module.exports = {
                 { name: 'Banned', value: `${banned} users`, inline: true },
                 { name: 'Failed', value: `${failed} users`, inline: true },
                 { name: 'Reason', value: reason, inline: true },
-                { name: 'Moderator', value: `${interaction.user.tag}`, inline: true }
+                { name: 'Moderator', value: `${interaction.user.username}`, inline: true }
             )
             .setTimestamp();
 

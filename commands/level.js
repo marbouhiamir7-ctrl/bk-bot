@@ -20,7 +20,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor('#FF6B6B')
-            .setTitle(`${target.user.tag}'s Level`)
+            .setTitle(`${target.user.username}'s Level`)
             .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
             .addFields(
                 { name: 'Level', value: `${data.level}`, inline: true },

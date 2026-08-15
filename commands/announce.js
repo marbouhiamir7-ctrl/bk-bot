@@ -20,7 +20,7 @@ module.exports = {
             .setColor(config.embedColor)
             .setTitle('📢 Announcement')
             .setDescription(announcement)
-            .setFooter({ text: `Announcement by ${interaction.user.tag}` })
+            .setFooter({ text: `Announcement by ${interaction.user.username}` })
             .setTimestamp();
 
         channel.send({ embeds: [embed] });

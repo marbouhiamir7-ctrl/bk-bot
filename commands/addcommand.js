@@ -17,7 +17,7 @@ module.exports = {
 
         interaction.client.customCommands.set(name.toLowerCase(), {
             response: response,
-            createdBy: interaction.user.tag,
+            createdBy: interaction.user.username,
             createdAt: new Date().toISOString()
         });
 
@@ -27,7 +27,7 @@ module.exports = {
             .addFields(
                 { name: 'Command', value: `/${name}`, inline: true },
                 { name: 'Response', value: response.substring(0, 100), inline: true },
-                { name: 'Created By', value: interaction.user.tag, inline: true }
+                { name: 'Created By', value: interaction.user.username, inline: true }
             )
             .setTimestamp();
 

@@ -23,7 +23,7 @@ module.exports = {
             .setTitle('Welcome Channel Set')
             .addFields(
                 { name: 'Channel', value: `${channel}`, inline: true },
-                { name: 'Set By', value: `${interaction.user.tag}`, inline: true }
+                { name: 'Set By', value: `${interaction.user.username}`, inline: true }
             )
             .setTimestamp();
 

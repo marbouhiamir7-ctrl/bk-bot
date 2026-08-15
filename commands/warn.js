@@ -24,7 +24,7 @@ module.exports = {
         const warnings = interaction.client.warnings.get(target.id);
         warnings.push({
             reason: reason,
-            moderator: interaction.user.tag,
+            moderator: interaction.user.username,
             date: new Date().toISOString()
         });
 
@@ -32,8 +32,8 @@ module.exports = {
             .setColor('#FFCC00')
             .setTitle('Member Warned')
             .addFields(
-                { name: 'User', value: `${target.user.tag}`, inline: true },
-                { name: 'Moderator', value: `${interaction.user.tag}`, inline: true },
+                { name: 'User', value: `${target.user.username}`, inline: true },
+                { name: 'Moderator', value: `${interaction.user.username}`, inline: true },
                 { name: 'Total Warnings', value: `${warnings.length}`, inline: true },
                 { name: 'Reason', value: reason, inline: true }
             )
@@ -50,7 +50,7 @@ module.exports = {
         if (warnings.length >= 3) {
             try {
                 await target.ban({ reason: 'Reached 3 warnings' });
-                interaction.channel.send(`${target.user.tag} has been banned for reaching 3 warnings.`);
+                interaction.channel.send(`${target.user.username} has been banned for reaching 3 warnings.`);
             } catch (error) {
                 console.error('Failed to ban after 3 warnings');
             }

@@ -24,7 +24,7 @@ module.exports = {
             .setTitle('Custom Command Deleted')
             .addFields(
                 { name: 'Command', value: `/${name}`, inline: true },
-                { name: 'Deleted By', value: interaction.user.tag, inline: true }
+                { name: 'Deleted By', value: interaction.user.username, inline: true }
             )
             .setTimestamp();
 

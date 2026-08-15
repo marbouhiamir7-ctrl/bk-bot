@@ -17,12 +17,12 @@ module.exports = {
         const warnings = interaction.client.warnings.get(target.id) || [];
 
         if (warnings.length === 0) {
-            return interaction.reply({ content: `${target.user.tag} has no warnings.`, ephemeral: true });
+            return interaction.reply({ content: `${target.user.username} has no warnings.`, ephemeral: true });
         }
 
         const embed = new EmbedBuilder()
             .setColor('#FFCC00')
-            .setTitle(`Warnings for ${target.user.tag}`)
+            .setTitle(`Warnings for ${target.user.username}`)
             .setDescription(`Total warnings: ${warnings.length}`)
             .setTimestamp();
 
