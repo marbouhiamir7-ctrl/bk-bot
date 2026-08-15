@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BK BOT - Discord Security Bot</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon-box">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <span class="logo-text">BK BOT</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#commands">Commands</a>
+                <a href="#security">Security</a>
+                <a href="/dashboard.html" class="btn-nav">Dashboard</a>
+                <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn-primary">
+                    <i class="fab fa-discord"></i>
+                    <span>Add to Server</span>
+                </a>
+            </div>
+            <button class="mobile-menu"><i class="fas fa-bars"></i></button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content reveal-left">
+            <div class="hero-badge">
+                <i class="fas fa-bolt"></i>
+                <span>Most Advanced Security Bot</span>
+            </div>
+            <h1>Protect Your Discord Server With <span class="gradient">Enterprise-Grade</span> Security</h1>
+            <p class="hero-description">Real-time anti-nuke, anti-raid, anti-spam protection. Live server stats, moderation, giveaways, and 27+ powerful commands - all in one bot.</p>
+            <div class="hero-buttons">
+                <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn-primary btn-large glow">
+                    <i class="fab fa-discord"></i>
+                    <span>Add to Discord</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/dashboard.html" class="btn-secondary btn-large">
+                    <i class="fas fa-gauge-high"></i>
+                    <span>Open Dashboard</span>
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-icon"><i class="fas fa-server"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number">1</span>
+                        <span class="stat-label">Servers</span>
+                    </div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number">36</span>
+                        <span class="stat-label">Users Protected</span>
+                    </div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-icon"><i class="fas fa-terminal"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number">27</span>
+                        <span class="stat-label">Commands</span>
+                    </div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">Uptime</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual reveal-right">
+            <div class="hero-3d-scene" id="scene">
+                <div class="perspective-container">
+                    <div class="hero-card-3d" id="card3d">
+                        <div class="card-3d-inner">
+                            <div class="card-shine"></div>
+                            <div class="card-border-glow"></div>
+                            
+                            <div class="card-3d-header">
+                                <div class="card-3d-status">
+                                    <div class="card-3d-dot"></div>
+                                    <span class="card-3d-title">BK BOT</span>
+                                </div>
+                                <div class="card-3d-badge">
+                                    <i class="fas fa-shield-halved"></i>
+                                    <span>Secured</span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-3d-content">
+                                <div class="card-3d-label">
+                                    <i class="fas fa-lock"></i>
+                                    <span>ACTIVE PROTECTION SYSTEMS</span>
+                                </div>
+                                
+                                <div class="card-3d-grid">
+                                    <div class="card-3d-item" data-tilt>
+                                        <div class="item-3d-icon icon-red">
+                                            <i class="fas fa-shield-halved"></i>
+                                        </div>
+                                        <div class="item-3d-info">
+                                            <span class="item-3d-name">Anti-Nuke</span>
+                                            <span class="item-3d-status">Monitoring</span>
+                                        </div>
+                                        <div class="item-3d-dot"></div>
+                                    </div>
+                                    <div class="card-3d-item" data-tilt>
+                                        <div class="item-3d-icon icon-blue">
+                                            <i class="fas fa-user-shield"></i>
+                                        </div>
+                                        <div class="item-3d-info">
+                                            <span class="item-3d-name">Anti-Raid</span>
+                                            <span class="item-3d-status">Watching</span>
+                                        </div>
+                                        <div class="item-3d-dot"></div>
+                                    </div>
+                                    <div class="card-3d-item" data-tilt>
+                                        <div class="item-3d-icon icon-orange">
+                                            <i class="fas fa-ban"></i>
+                                        </div>
+                                        <div class="item-3d-info">
+                                            <span class="item-3d-name">Anti-Spam</span>
+                                            <span class="item-3d-status">Scanning</span>
+                                        </div>
+                                        <div class="item-3d-dot"></div>
+                                    </div>
+                                    <div class="card-3d-item" data-tilt>
+                                        <div class="item-3d-icon icon-purple">
+                                            <i class="fas fa-link-slash"></i>
+                                        </div>
+                                        <div class="item-3d-info">
+                                            <span class="item-3d-name">Anti-Link</span>
+                                            <span class="item-3d-status">Filtering</span>
+                                        </div>
+                                        <div class="item-3d-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-3d-stats">
+                                <div class="stat-3d-item">
+                                    <span class="stat-3d-value">27</span>
+                                    <span class="stat-3d-label">COMMANDS</span>
+                                </div>
+                                <div class="stat-3d-divider"></div>
+                                <div class="stat-3d-item">
+                                    <span class="stat-3d-value">36</span>
+                                    <span class="stat-3d-label">PROTECTED</span>
+                                </div>
+                                <div class="stat-3d-divider"></div>
+                                <div class="stat-3d-item">
+                                    <span class="stat-3d-value">99.9%</span>
+                                    <span class="stat-3d-label">UPTIME</span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-3d-footer">
+                                <div class="footer-3d-status">
+                                    <div class="footer-3d-dot"></div>
+                                    <span>All systems operational</span>
+                                </div>
+                                <div class="footer-3d-time">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Real-time</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="floating-3d-badge badge-3d-1">
+                    <div class="badge-3d-icon"><i class="fas fa-check-circle"></i></div>
+                    <span>27 Commands</span>
+                </div>
+                <div class="floating-3d-badge badge-3d-2">
+                    <div class="badge-3d-icon"><i class="fas fa-bolt"></i></div>
+                    <span>Instant Updates</span>
+                </div>
+                <div class="floating-3d-badge badge-3d-3">
+                    <div class="badge-3d-icon"><i class="fas fa-lock"></i></div>
+                    <span>Always Protected</span>
+                </div>
+                
+                <div class="orbit-3d-ring ring-3d-1"></div>
+                <div class="orbit-3d-ring ring-3d-2"></div>
+                <div class="orbit-3d-ring ring-3d-3"></div>
+                
+                <div class="particle particle-1"></div>
+                <div class="particle particle-2"></div>
+                <div class="particle particle-3"></div>
+                <div class="particle particle-4"></div>
+                <div class="particle particle-5"></div>
+                <div class="particle particle-6"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-star"></i> Features</div>
+                <h2>Everything You Need to <span class="gradient">Protect & Manage</span> Your Server</h2>
+                <p class="section-subtitle">From enterprise security to fun commands - BK BOT has it all</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card reveal stagger-1">
+                    <div class="feature-icon-box"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Anti-Nuke Protection</h3>
+                    <p>Automatically detects and prevents mass channel deletion, role deletion, and mass bans. Bans attackers instantly.</p>
+                    <div class="feature-tag">Security</div>
+                </div>
+                <div class="feature-card reveal stagger-2">
+                    <div class="feature-icon-box"><i class="fas fa-user-shield"></i></div>
+                    <h3>Anti-Raid System</h3>
+                    <p>Protects against mass join raids. Automatically kicks or bans raiders when suspicious join patterns are detected.</p>
+                    <div class="feature-tag">Security</div>
+                </div>
+                <div class="feature-card reveal stagger-3">
+                    <div class="feature-icon-box"><i class="fas fa-ban"></i></div>
+                    <h3>Anti-Spam</h3>
+                    <p>Detects and punishes message spam. Auto-mutes, kicks, or bans spammers based on your settings.</p>
+                    <div class="feature-tag">Security</div>
+                </div>
+                <div class="feature-card reveal stagger-1">
+                    <div class="feature-icon-box"><i class="fas fa-link-slash"></i></div>
+                    <h3>Anti-Link</h3>
+                    <p>Prevents unauthorized links in your server. Whitelist trusted domains and auto-delete or warn for others.</p>
+                    <div class="feature-tag">Security</div>
+                </div>
+                <div class="feature-card reveal stagger-2">
+                    <div class="feature-icon-box"><i class="fas fa-chart-line"></i></div>
+                    <h3>Live Server Stats</h3>
+                    <p>Real-time updating voice channels showing members, boosts, online status, and more. Updates instantly!</p>
+                    <div class="feature-tag">Utility</div>
+                </div>
+                <div class="feature-card reveal stagger-3">
+                    <div class="feature-icon-box"><i class="fas fa-gavel"></i></div>
+                    <h3>Full Moderation</h3>
+                    <p>Kick, ban, mute, warn, clear messages, mass ban/kick. All the moderation tools you need.</p>
+                    <div class="feature-tag">Moderation</div>
+                </div>
+                <div class="feature-card reveal stagger-1">
+                    <div class="feature-icon-box"><i class="fas fa-gift"></i></div>
+                    <h3>Giveaways</h3>
+                    <p>Create and manage giveaways with automatic winner selection. Easy to set up and manage.</p>
+                    <div class="feature-tag">Fun</div>
+                </div>
+                <div class="feature-card reveal stagger-2">
+                    <div class="feature-icon-box"><i class="fas fa-ticket"></i></div>
+                    <h3>Ticket System</h3>
+                    <p>Support ticket system with easy creation and management. Perfect for customer support.</p>
+                    <div class="feature-tag">Utility</div>
+                </div>
+                <div class="feature-card reveal stagger-3">
+                    <div class="feature-icon-box"><i class="fas fa-trophy"></i></div>
+                    <h3>Leveling System</h3>
+                    <p>XP and level system with leaderboards. Reward active members with roles and recognition.</p>
+                    <div class="feature-tag">Fun</div>
+                </div>
+                <div class="feature-card reveal stagger-1">
+                    <div class="feature-icon-box"><i class="fas fa-hand-sparkles"></i></div>
+                    <h3>Welcome System</h3>
+                    <p>Auto-welcome messages for new members. Configure channels and customize welcome messages.</p>
+                    <div class="feature-tag">Utility</div>
+                </div>
+                <div class="feature-card reveal stagger-2">
+                    <div class="feature-icon-box"><i class="fas fa-code"></i></div>
+                    <h3>Custom Commands</h3>
+                    <p>Create your own custom commands with custom responses. Extend the bot's functionality.</p>
+                    <div class="feature-tag">Utility</div>
+                </div>
+                <div class="feature-card reveal stagger-3">
+                    <div class="feature-icon-box"><i class="fas fa-bolt"></i></div>
+                    <h3>Real-time Updates</h3>
+                    <p>All stats update instantly when something changes. No delays, no waiting.</p>
+                    <div class="feature-tag">Performance</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="commands" id="commands">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-terminal"></i> Commands</div>
+                <h2>27 Powerful <span class="gradient">Commands</span> at Your Fingertips</h2>
+                <p class="section-subtitle">Everything you need in one bot</p>
+            </div>
+            
+            <div class="commands-grid">
+                <div class="command-category reveal-left stagger-1">
+                    <div class="category-header">
+                        <i class="fas fa-gavel"></i>
+                        <h3>Moderation</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/kick</code>
+                            <span>Kick a member</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/ban</code>
+                            <span>Ban a member</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/unban</code>
+                            <span>Unban a user</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/mute</code>
+                            <span>Mute a member</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/unmute</code>
+                            <span>Unmute a member</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/warn</code>
+                            <span>Warn a member</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/warnings</code>
+                            <span>View warnings</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/clear</code>
+                            <span>Clear messages</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/massban</code>
+                            <span>Mass ban users</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/masskick</code>
+                            <span>Mass kick users</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-category reveal stagger-2">
+                    <div class="category-header">
+                        <i class="fas fa-shield-halved"></i>
+                        <h3>Security</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/security</code>
+                            <span>View security status</span>
+                        </div>
+                    </div>
+                    <div class="category-header mt">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Stats</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/setupstats</code>
+                            <span>Create live stats</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/serverinfo</code>
+                            <span>Server information</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/userinfo</code>
+                            <span>User information</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-category reveal-right stagger-3">
+                    <div class="category-header">
+                        <i class="fas fa-screwdriver-wrench"></i>
+                        <h3>Utility</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/help</code>
+                            <span>Show all commands</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/poll</code>
+                            <span>Create a poll</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/remind</code>
+                            <span>Set a reminder</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/announce</code>
+                            <span>Make announcement</span>
+                        </div>
+                    </div>
+                    <div class="category-header mt">
+                        <i class="fas fa-ticket"></i>
+                        <h3>Tickets</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/ticket</code>
+                            <span>Create ticket</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/close</code>
+                            <span>Close ticket</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="command-category reveal stagger-4">
+                    <div class="category-header">
+                        <i class="fas fa-code"></i>
+                        <h3>Custom</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/addcommand</code>
+                            <span>Add command</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/deletecommand</code>
+                            <span>Delete command</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/commands</code>
+                            <span>List commands</span>
+                        </div>
+                    </div>
+                    <div class="category-header mt">
+                        <i class="fas fa-hand-sparkles"></i>
+                        <h3>Welcome</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/setwelcome</code>
+                            <span>Set welcome channel</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/testwelcome</code>
+                            <span>Test welcome</span>
+                        </div>
+                    </div>
+                    <div class="category-header mt">
+                        <i class="fas fa-trophy"></i>
+                        <h3>Leveling</h3>
+                    </div>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <code>/level</code>
+                            <span>Check level</span>
+                        </div>
+                        <div class="command-item">
+                            <code>/leaderboard</code>
+                            <span>View leaderboard</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="security" id="security">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-lock"></i> Security</div>
+                <h2>Multi-Layered <span class="gradient">Protection</span> for Your Server</h2>
+                <p class="section-subtitle">Enterprise-grade security that works 24/7</p>
+            </div>
+            
+            <div class="security-grid">
+                <div class="security-card reveal stagger-1">
+                    <div class="security-icon-box icon-red">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <h3>Anti-Nuke</h3>
+                    <p>Protects against catastrophic server damage</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Mass channel deletion detection</li>
+                        <li><i class="fas fa-check"></i> Mass role deletion detection</li>
+                        <li><i class="fas fa-check"></i> Mass ban detection</li>
+                        <li><i class="fas fa-check"></i> Webhook spam detection</li>
+                        <li><i class="fas fa-check"></i> Auto-ban attackers</li>
+                    </ul>
+                </div>
+                <div class="security-card reveal stagger-2">
+                    <div class="security-icon-box icon-blue">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Anti-Raid</h3>
+                    <p>Protects against mass join attacks</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Mass join detection</li>
+                        <li><i class="fas fa-check"></i> Configurable join limits</li>
+                        <li><i class="fas fa-check"></i> Auto-kick raiders</li>
+                        <li><i class="fas fa-check"></i> Auto-ban raiders</li>
+                        <li><i class="fas fa-check"></i> Time window tracking</li>
+                    </ul>
+                </div>
+                <div class="security-card reveal stagger-3">
+                    <div class="security-icon-box icon-orange">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h3>Anti-Spam</h3>
+                    <p>Protects against message flooding</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Message spam detection</li>
+                        <li><i class="fas fa-check"></i> Configurable limits</li>
+                        <li><i class="fas fa-check"></i> Auto-mute spammers</li>
+                        <li><i class="fas fa-check"></i> Auto-kick spammers</li>
+                        <li><i class="fas fa-check"></i> Warning system</li>
+                    </ul>
+                </div>
+                <div class="security-card reveal stagger-4">
+                    <div class="security-icon-box icon-purple">
+                        <i class="fas fa-link-slash"></i>
+                    </div>
+                    <h3>Anti-Link</h3>
+                    <p>Protects against unauthorized links</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Link detection</li>
+                        <li><i class="fas fa-check"></i> Domain whitelisting</li>
+                        <li><i class="fas fa-check"></i> Auto-delete links</li>
+                        <li><i class="fas fa-check"></i> Auto-warn users</li>
+                        <li><i class="fas fa-check"></i> Auto-mute users</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content reveal-scale">
+                <div class="cta-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h2>Ready to Protect Your Server?</h2>
+                <p>Add BK BOT to your server now and get enterprise-level security for free!</p>
+                <div class="cta-buttons">
+                    <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn-primary btn-large glow">
+                        <i class="fab fa-discord"></i>
+                        <span>Add to Discord</span>
+                    </a>
+                    <a href="/dashboard.html" class="btn-secondary btn-large">
+                        <i class="fas fa-gauge-high"></i>
+                        <span>View Dashboard</span>
+                    </a>
+                </div>
+                <p class="cta-note">Free forever. No credit card required.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <div class="logo-icon-box">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <span class="logo-text">BK BOT</span>
+                    </div>
+                    <p>The ultimate Discord security bot. Protecting servers 24/7 with enterprise-grade security.</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-discord"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Product</h4>
+                    <a href="#features">Features</a>
+                    <a href="#commands">Commands</a>
+                    <a href="#security">Security</a>
+                    <a href="/dashboard.html">Dashboard</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="#">Discord Server</a>
+                    <a href="#">Documentation</a>
+                    <a href="#">Report Bug</a>
+                    <a href="#">Contact Us</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 BK BOT. All rights reserved.</p>
+                <p>Made with <i class="fas fa-heart text-red"></i> by Baktiriya Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

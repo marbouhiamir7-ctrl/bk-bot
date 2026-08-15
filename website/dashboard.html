@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — BK BOT</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+    --bg:#0a0a0e;--bg2:#101015;--bg3:#15151c;--bg4:#1a1a24;--bg5:#1f1f2c;
+    --glass:rgba(255,255,255,.02);--glass2:rgba(255,255,255,.04);--glass3:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.08);--border3:rgba(255,255,255,.12);
+    --text:#f0f0f5;--text2:#a0a0b8;--text3:#6a6a82;--text4:#4a4a60;
+    --red:#ff5c5c;--green:#34d399;--blue:#60a5fa;--orange:#fbbf24;--purple:#a78bfa;--pink:#f472b6;--cyan:#22d3ee;
+    --red-glow:rgba(255,92,92,.15);--green-glow:rgba(52,211,153,.15);--blue-glow:rgba(96,165,250,.15);--orange-glow:rgba(251,191,36,.15);--purple-glow:rgba(167,139,250,.15);
+    --grad:linear-gradient(135deg,#ff5c5c,#e63946);--grad2:linear-gradient(135deg,#60a5fa,#3b82f6);--grad3:linear-gradient(135deg,#34d399,#22c55e);
+    --r:12px;--r2:16px;--r3:20px;
+    --shadow:0 4px 24px rgba(0,0,0,.4);--shadow2:0 8px 40px rgba(0,0,0,.5);
+    --tr:all .3s cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:10px}
+.dashboard{display:none;min-height:100vh;padding-left:270px}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:270px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto}
+.sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at top,rgba(255,92,92,.04),transparent);pointer-events:none}
+.sb-header{padding:20px 16px 14px;position:relative;z-index:1}
+.sb-guild-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--glass2);border:1px solid var(--border);border-radius:var(--r2);transition:var(--tr)}
+.sb-guild-card:hover{border-color:var(--border2)}
+.sb-guild-icon{width:44px;height:44px;border-radius:var(--r);background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:1.1rem;box-shadow:0 4px 16px rgba(255,92,92,.2)}
+.sb-guild-icon img{width:100%;height:100%;object-fit:cover}
+.sb-guild-info{flex:1;min-width:0}
+.sb-guild-name{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sb-guild-id{font-size:.6rem;color:var(--text4);display:block;margin-top:2px}
+.sb-stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.sb-stat{text-align:center;padding:10px 4px 8px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)}
+.sb-stat-val{font-size:1rem;font-weight:800;display:block}
+.sb-stat-label{font-size:.52rem;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;display:block}
+.sb-stat.s-red .sb-stat-val{color:var(--red)}.sb-stat.s-green .sb-stat-val{color:var(--green)}.sb-stat.s-blue .sb-stat-val{color:var(--blue)}
+.sb-guild-select{width:100%;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;color:var(--text);font-size:.78rem;font-family:'Inter',sans-serif;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236a6a82' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;margin-top:8px;transition:var(--tr)}
+.sb-guild-select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+.sb-guild-select option{background:var(--bg2);color:var(--text)}
+.sb-nav{flex:1;padding:6px 0;position:relative;z-index:1}
+.sb-label{padding:18px 20px 6px;font-size:.55rem;text-transform:uppercase;letter-spacing:1.8px;color:var(--text4);font-weight:700}
+.sb-menu{list-style:none;padding:0 8px}
+.sb-menu li{margin:1px 0}
+.sb-menu a{display:flex;align-items:center;gap:11px;padding:10px 14px;color:var(--text3);text-decoration:none;border-radius:var(--r);font-size:.8rem;font-weight:500;transition:var(--tr);position:relative;overflow:hidden}
+.sb-menu a::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:0;background:var(--red);border-radius:0 4px 4px 0;transition:height .3s cubic-bezier(.4,0,.2,1)}
+.sb-menu a i{width:18px;text-align:center;font-size:.85rem;opacity:.5;transition:var(--tr)}
+.sb-menu a:hover{background:rgba(255,255,255,.03);color:var(--text2)}
+.sb-menu a:hover i{opacity:.8}
+.sb-menu a.active{background:linear-gradient(135deg,rgba(255,92,92,.08),rgba(255,92,92,.03));color:var(--red);font-weight:600}
+.sb-menu a.active i{opacity:1;color:var(--red)}
+.sb-menu a.active::before{height:20px}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--border);position:relative;z-index:1}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)}
+.sb-user:hover{border-color:var(--border2)}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;font-size:.7rem;box-shadow:0 2px 8px rgba(255,92,92,.2)}
+.sb-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.sb-user-info{flex:1;min-width:0}
+.sb-user-info h4{font-size:.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.sb-user-info p{font-size:.55rem;color:var(--text4);display:block;margin-top:1px}
+.sb-logout{background:none;border:none;color:var(--text4);width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr);flex-shrink:0;font-size:.72rem}
+.sb-logout:hover{background:rgba(255,59,59,.1);color:var(--red)}
+.main{padding:28px 36px;min-height:100vh;position:relative}
+.main::before{content:'';position:fixed;top:0;left:270px;right:0;height:300px;background:radial-gradient(ellipse at top,rgba(255,92,92,.02),transparent);pointer-events:none;z-index:0}
+.main>*{position:relative;z-index:1}
+.page{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1)}.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.pg-header{margin-bottom:28px}.pg-header h1{font-size:1.4rem;font-weight:800;display:flex;align-items:center;gap:12px;margin-bottom:6px}.pg-header h1 i{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}.pg-header p{color:var(--text3);font-size:.85rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.card{background:var(--glass2);border:1px solid var(--border);border-radius:var(--r2);padding:22px;transition:var(--tr);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.01),transparent);pointer-events:none}
+.card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow)}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.card-head h2{font-size:.92rem;display:flex;align-items:center;gap:8px;font-weight:700}.card-head h2 i{font-size:.82rem}
+.badge{padding:4px 10px;border-radius:20px;font-size:.6rem;font-weight:700;letter-spacing:.3px}
+.badge-live{background:var(--green-glow);color:var(--green)}.badge-count{background:var(--blue-glow);color:var(--blue)}.badge-warn{background:var(--orange-glow);color:var(--orange)}.badge-off{background:rgba(255,255,255,.06);color:var(--text3)}
+.stat-card{padding:22px;position:relative}.stat-card::after{content:'';position:absolute;top:0;right:0;width:120px;height:120px;border-radius:50%;filter:blur(40px);opacity:.06;pointer-events:none}
+.stat-card.sr::after{background:var(--red)}.stat-card.sg::after{background:var(--green)}.stat-card.sb::after{background:var(--blue)}.stat-card.so::after{background:var(--orange)}
+.stat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.stat-icon{width:42px;height:42px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:.95rem}
+.si-red{background:var(--red-glow);color:var(--red)}.si-green{background:var(--green-glow);color:var(--green)}.si-blue{background:var(--blue-glow);color:var(--blue)}.si-orange{background:var(--orange-glow);color:var(--orange)}.si-purple{background:var(--purple-glow);color:var(--purple)}.si-pink{background:rgba(244,114,182,.15);color:var(--pink)}.si-cyan{background:rgba(34,211,238,.15);color:var(--cyan)}
+.stat-val{font-size:1.8rem;font-weight:900;margin-bottom:3px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.stat-label{color:var(--text3);font-size:.75rem}
+.sec-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;transition:var(--tr);position:relative}
+.sec-row:last-child{margin-bottom:0}.sec-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:0 3px 3px 0;opacity:.6}
+.sec-row:hover{border-color:var(--border2);transform:translateX(2px)}
+.sec-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.sec-info{flex:1}.sec-info h4{font-size:.85rem;font-weight:600;margin-bottom:2px}.sec-info p{color:var(--text4);font-size:.7rem}
+.sec-badge{padding:4px 12px;border-radius:20px;font-size:.58rem;font-weight:700;letter-spacing:.5px;flex-shrink:0;text-transform:uppercase}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);gap:16px}.toggle-row:last-child{border-bottom:none}
+.toggle-info{flex:1}.toggle-info h4{font-size:.85rem;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px}.toggle-info p{color:var(--text4);font-size:.7rem}
+.toggle{width:44px;height:24px;background:rgba(255,255,255,.08);border-radius:12px;position:relative;cursor:pointer;transition:var(--tr);flex-shrink:0;border:1px solid transparent}
+.toggle.on{background:linear-gradient(135deg,var(--green),#22c55e);border-color:rgba(52,211,153,.2)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .3s cubic-bezier(.68,-.55,.27,1.55);box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+.sel-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);gap:16px}.sel-row:last-child{border-bottom:none}
+.sel-info{flex:1}.sel-info h4{font-size:.85rem;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px}.sel-info p{color:var(--text4);font-size:.7rem}
+.sel{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;color:var(--text);font-size:.8rem;font-family:'Inter',sans-serif;cursor:pointer;min-width:180px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236a6a82' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:var(--tr)}
+.sel:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}.sel option{background:var(--bg2);color:var(--text)}
+.input{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;color:var(--text);font-size:.8rem;font-family:'Inter',sans-serif;width:100%;max-width:320px;transition:var(--tr)}
+.input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}.input::placeholder{color:var(--text4)}
+textarea.input{resize:vertical;min-height:60px;max-height:200px}
+.cmd-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;transition:var(--tr)}.cmd-item:hover{border-color:var(--border2)}
+.cmd-name{font-size:.85rem;font-weight:600;color:var(--red);font-family:'Courier New',monospace}.cmd-resp{font-size:.7rem;color:var(--text4);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.cmd-actions{display:flex;gap:4px}.cmd-btn{background:var(--glass);border:1px solid var(--border);color:var(--text3);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:var(--tr)}
+.cmd-btn:hover{border-color:var(--border3);color:var(--text)}.cmd-btn.del:hover{background:rgba(255,59,59,.1);border-color:rgba(255,59,59,.2);color:var(--red)}.cmd-btn.toggle-cmd:hover{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.2);color:var(--green)}
+.role-list{display:flex;flex-wrap:wrap;gap:5px;max-height:200px;overflow-y:auto;padding:2px}.role-tag{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:8px;font-size:.68rem;font-weight:600;transition:var(--tr);cursor:default}.role-tag:hover{transform:scale(1.03)}
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.perm-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border-radius:8px;font-size:.72rem;border:1px solid var(--border)}.perm-yes{color:var(--green)}.perm-no{color:var(--text4);opacity:.4}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mod-item{background:var(--glass);border:1px solid var(--border);padding:20px 16px;border-radius:var(--r2);text-align:center;transition:var(--tr);position:relative;overflow:hidden}.mod-item::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);pointer-events:none}.mod-item:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--shadow)}
+.mod-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin:0 auto 12px}.mod-item h4{font-size:.82rem;font-weight:700;margin-bottom:3px}.mod-item p{color:var(--text4);font-size:.68rem;margin-bottom:10px}
+.mod-cmd{display:inline-block;background:rgba(255,92,92,.06);color:var(--red);padding:4px 10px;border-radius:6px;font-size:.65rem;font-weight:700;font-family:'Courier New',monospace;border:1px solid rgba(255,92,92,.1)}
+.bot-banner{background:linear-gradient(135deg,rgba(255,92,92,.04),rgba(255,59,59,.02));border:1px solid rgba(255,92,92,.1);border-radius:var(--r3);padding:36px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden}
+.bot-banner i.robot{font-size:2.5rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:14px;display:block;position:relative;z-index:1}.bot-banner h3{font-size:1.1rem;font-weight:800;margin-bottom:6px;position:relative;z-index:1}.bot-banner p{color:var(--text3);margin-bottom:20px;font-size:.85rem;position:relative;z-index:1}
+.invite-btn{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#fff;padding:12px 28px;border-radius:var(--r);text-decoration:none;font-weight:700;font-size:.88rem;transition:var(--tr);border:none;cursor:pointer;position:relative;z-index:1;box-shadow:0 4px 20px rgba(255,92,92,.25)}.invite-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,92,92,.35)}
+.empty{text-align:center;padding:48px 20px}.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.4rem;color:var(--text4)}.empty h3{font-size:.95rem;font-weight:700;margin-bottom:4px}.empty p{color:var(--text4);font-size:.8rem}
+.toast{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:var(--r);font-size:.82rem;font-weight:600;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:var(--shadow2);backdrop-filter:blur(12px)}.toast.show{transform:translateY(0);opacity:1;pointer-events:auto}.toast.success{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.2);color:var(--green)}.toast.error{background:rgba(255,59,59,.15);border:1px solid rgba(255,59,59,.2);color:var(--red)}.toast.info{background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.2);color:var(--blue)}.toast i{font-size:1rem}
+.save-bar{position:fixed;bottom:28px;right:28px;z-index:100;display:none;animation:slideUp .3s ease}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.save-btn{background:var(--grad);color:#fff;padding:12px 28px;border-radius:var(--r);border:none;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:0 4px 20px rgba(255,92,92,.3);transition:var(--tr);display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif}.save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,92,92,.4)}.save-btn.saved{background:var(--grad3);box-shadow:0 4px 20px rgba(52,211,153,.3)}
+.skeleton{background:linear-gradient(90deg,var(--glass) 25%,var(--glass2) 50%,var(--glass) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}.skel-card{height:140px;border-radius:var(--r2);margin-bottom:14px}
+.loading{text-align:center;padding:60px 20px}.loading i{font-size:2rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:spin 1s linear infinite;display:inline-block}.loading p{margin-top:14px;color:var(--text3);font-size:.85rem}@keyframes spin{to{transform:rotate(360deg)}}
+.conn-status{position:fixed;top:16px;right:16px;z-index:200;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.65rem;font-weight:600;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.15);color:var(--green);opacity:0;transition:var(--tr)}.conn-status.show{opacity:1}.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Welcome Preview - Discord Style */
+.discord-msg{background:#2b2d31;border-radius:8px;padding:16px 16px 16px 56px;position:relative;min-height:60px;margin-top:8px}
+.discord-avatar{position:absolute;left:12px;top:12px;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#5865F2,#EB459E);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.discord-header{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.discord-bot-tag{background:#5865F2;color:#fff;font-size:.55rem;padding:1px 5px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.discord-time{font-size:.65rem;color:#72767d}
+.discord-content{font-size:.85rem;color:#dcddde;line-height:1.5}
+.discord-embed{border-left:4px solid #5865F2;background:#2f3136;border-radius:0 4px 4px 0;padding:12px 16px;margin-top:8px}
+.discord-embed-title{font-size:.85rem;font-weight:700;color:#fff;margin-bottom:6px}
+.discord-embed-desc{font-size:.8rem;color:#b9bbbe;line-height:1.5}
+.discord-embed-field{margin-top:8px}
+.discord-embed-field-name{font-size:.75rem;font-weight:700;color:#fff;margin-bottom:2px}
+.discord-embed-field-val{font-size:.75rem;color:#b9bbbe}
+.discord-embed-footer{margin-top:10px;padding-top:8px;border-top:1px solid #40444b;display:flex;align-items:center;gap:6px;font-size:.65rem;color:#72767d}
+.discord-embed-thumb{width:64px;height:64px;border-radius:4px;background:linear-gradient(135deg,#ff5c5c,#e63946);position:absolute;right:12px;top:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff}
+
+/* Variable Tags */
+.var-tag{display:inline-flex;align-items:center;gap:3px;background:rgba(88,101,242,.1);color:#5865F2;padding:3px 8px;border-radius:5px;font-size:.65rem;font-weight:700;font-family:'Courier New',monospace;cursor:default;border:1px solid rgba(88,101,242,.15);transition:var(--tr)}.var-tag:hover{background:rgba(88,101,242,.2)}
+.var-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.var-hint{font-size:.68rem;color:var(--text4);margin-top:8px;display:flex;align-items:center;gap:4px}
+
+/* Config sections */
+.cfg-section{border-bottom:1px solid var(--border);padding:16px 0}.cfg-section:last-child{border-bottom:none}
+.cfg-title{font-size:.78rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* Color Picker */
+.color-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.color-opt{width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:var(--tr);position:relative}
+.color-opt:hover{transform:scale(1.15)}.color-opt.selected{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.2)}
+.color-opt.selected::after{content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;font-size:.5rem;color:#fff;position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+
+/* Range Slider */
+.range-wrap{display:flex;align-items:center;gap:12px}
+.range-wrap input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:rgba(255,255,255,.08);outline:none;flex:1}
+.range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--red);cursor:pointer;box-shadow:0 2px 8px rgba(255,92,92,.3)}
+.range-val{font-size:.8rem;font-weight:700;color:var(--red);min-width:30px;text-align:right}
+
+/* Tabs within a page */
+.inner-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--glass);border-radius:var(--r);padding:4px;border:1px solid var(--border)}
+.inner-tab{padding:8px 16px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--tr);color:var(--text3);border:none;background:none;font-family:'Inter',sans-serif}
+.inner-tab:hover{color:var(--text)}.inner-tab.active{background:rgba(255,92,92,.1);color:var(--red)}
+.inner-panel{display:none}.inner-panel.active{display:block;animation:pageIn .3s ease}
+
+/* Ticket preview */
+.ticket-preview{background:#2b2d31;border-radius:8px;padding:16px;border:1px solid rgba(255,255,255,.05)}
+.ticket-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(88,101,242,.15);color:#5865F2;padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:600;border:1px solid rgba(88,101,242,.2)}
+
+/* Log preview */
+.log-entry{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border);margin-bottom:6px;font-size:.75rem}
+.log-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0}
+.log-text{flex:1}.log-text strong{color:var(--text);font-weight:600}.log-text span{color:var(--text4)}
+.log-time{font-size:.65rem;color:var(--text4);white-space:nowrap}
+
+/* Notification bar */
+.notif-bar{background:linear-gradient(135deg,rgba(255,92,92,.06),rgba(255,92,92,.02));border:1px solid rgba(255,92,92,.1);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text2)}
+.notif-bar i{color:var(--red);font-size:1rem}
+.notif-bar .close{margin-left:auto;cursor:pointer;color:var(--text4);padding:4px}
+
+@media(max-width:1200px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1024px){.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.dashboard{padding-left:0}.sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}.grid4,.grid2,.grid3{grid-template-columns:1fr}.mobile-toggle{display:flex!important}}
+.mobile-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;background:var(--glass2);border:1px solid var(--border);border-radius:10px;align-items:center;justify-content:center;color:var(--text);cursor:pointer;font-size:1rem}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+<div class="conn-status" id="connStatus"><span class="conn-dot"></span> Connected</div>
+<div class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></div>
+
+<div class="dashboard" id="dashboard" style="display:none">
+    <aside class="sidebar">
+        <div class="sb-header">
+            <div class="sb-guild-card">
+                <div class="sb-guild-icon" id="sbIcon"><i class="fas fa-server"></i></div>
+                <div class="sb-guild-info"><span class="sb-guild-name" id="sbName">Select server</span><span class="sb-guild-id" id="sbId"></span></div>
+            </div>
+            <div class="sb-stats-row" id="sbStats" style="display:none">
+                <div class="sb-stat s-red"><span class="sb-stat-val" id="sbMembers">--</span><span class="sb-stat-label">Members</span></div>
+                <div class="sb-stat s-green"><span class="sb-stat-val" id="sbOnline">--</span><span class="sb-stat-label">Online</span></div>
+                <div class="sb-stat s-blue"><span class="sb-stat-val" id="sbBoosts">--</span><span class="sb-stat-label">Boosts</span></div>
+            </div>
+            <select class="sb-guild-select" id="serverSelect"><option value="">Select a server...</option></select>
+        </div>
+        <nav class="sb-nav">
+            <div class="sb-label">Main</div>
+            <ul class="sb-menu">
+                <li><a href="#" data-page="overview" class="active"><i class="fas fa-chart-pie"></i> Overview</a></li>
+                <li><a href="#" data-page="security"><i class="fas fa-shield-halved"></i> Security</a></li>
+                <li><a href="#" data-page="moderation"><i class="fas fa-gavel"></i> Moderation</a></li>
+                <li><a href="#" data-page="stats"><i class="fas fa-chart-line"></i> Live Stats</a></li>
+            </ul>
+            <div class="sb-label">Configuration</div>
+            <ul class="sb-menu">
+                <li><a href="#" data-page="welcome"><i class="fas fa-hand-sparkles"></i> Welcome</a></li>
+                <li><a href="#" data-page="autorole"><i class="fas fa-user-plus"></i> Auto Role</a></li>
+                <li><a href="#" data-page="tickets"><i class="fas fa-ticket"></i> Tickets</a></li>
+                <li><a href="#" data-page="commands"><i class="fas fa-terminal"></i> Commands</a></li>
+                <li><a href="#" data-page="logs"><i class="fas fa-scroll"></i> Logs</a></li>
+            </ul>
+            <div class="sb-label">System</div>
+            <ul class="sb-menu">
+                <li><a href="#" data-page="settings"><i class="fas fa-gear"></i> Settings</a></li>
+            </ul>
+            <div class="sb-label">Management</div>
+            <ul class="sb-menu">
+                <li><a href="#" data-page="activity"><i class="fas fa-stream"></i> Activity</a></li>
+                <li><a href="#" data-page="emojis"><i class="fas fa-face-smile"></i> Emojis</a></li>
+                <li><a href="#" data-page="invites"><i class="fas fa-link"></i> Invites</a></li>
+                <li><a href="#" data-page="webhooks"><i class="fas fa-plug"></i> Webhooks</a></li>
+                <li><a href="#" data-page="tags"><i class="fas fa-tag"></i> Tags</a></li>
+                <li><a href="#" data-page="levels"><i class="fas fa-trophy"></i> Levels</a></li>
+                <li><a href="#" data-page="backup"><i class="fas fa-database"></i> Backup</a></li>
+                <li><a href="#" data-page="docs"><i class="fas fa-book"></i> API Docs</a></li>
+            </ul>
+        </nav>
+        <div class="sb-footer">
+            <div class="sb-user">
+                <div class="sb-avatar" id="sbAvatar"><i class="fas fa-user" style="font-size:.7rem;color:#fff"></i></div>
+                <div class="sb-user-info"><h4 id="sbUser">...</h4><p>Logged in</p></div>
+                <a href="/logout" class="sb-logout" title="Logout"><i class="fas fa-right-from-bracket"></i></a>
+            </div>
+        </div>
+    </aside>
+    <main class="main" id="mainContent"></main>
+</div>
+
+<div class="save-bar" id="saveBar"><button class="save-btn" id="saveBtn" onclick="saveAll()"><i class="fas fa-check"></i> Save Changes</button></div>
+
+<script>
+let GUILD_ID='',GUILD_DATA={},SETTINGS={},DIRTY=false,CSRF_TOKEN='';
+
+function showToast(m,t='success'){const e=document.getElementById('toast'),s=document.getElementById('toastMsg');e.className='toast '+t;s.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
+function showConn(){const c=document.getElementById('connStatus');c.classList.add('show');setTimeout(()=>c.classList.remove('show'),2000)}
+async function getCsrf(){try{const r=await fetch('/api/csrf');const d=await r.json();CSRF_TOKEN=d.token||''}catch(e){}}
+function animateVal(el,end){if(!el)return;const st=performance.now();const step=(now)=>{const p=Math.min((now-st)/800,1);el.textContent=Math.round(end*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+function skeleton(n){let h='';for(let i=0;i<n;i++)h+=`<div class="skeleton skel-card"></div>`;return h}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function hexToRgb(h){return`${(h>>16)&255},${(h>>8)&255},${h&255}`}
+function chOpts(chs,empty='None'){return(empty?'<option value="">'+empty+'</option>':'')+(chs||[]).map(c=>`<option value="${c.id}">#${esc(c.name)}</option>`).join('')}
+function roleOpts(rl,empty='None'){return(empty?'<option value="">'+empty+'</option>':'')+(rl||[]).map(r=>`<option value="${r.id}" style="color:${r.color?'#'+r.color.toString(16).padStart(6,'0'):'inherit'}">${esc(r.name)}</option>`).join('')}
+function catOpts(cats,empty='None'){return(empty?'<option value="">'+empty+'</option>':'')+(cats||[]).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}
+function setSel(id,v){const s=document.getElementById(id);if(s&&v!==undefined)s.value=v}
+function setInput(id,v){const s=document.getElementById(id);if(s&&v!==undefined)s.value=v}
+function toggleSetting(el){el.classList.toggle('on');SETTINGS[el.dataset.key]=el.classList.contains('on');markDirty()}
+function saveSetting(k,v){SETTINGS[k]=v;markDirty()}
+function markDirty(){DIRTY=true;document.getElementById('saveBar').style.display='block'}
+
+async function init(){
+    await getCsrf();
+    let u;try{const r=await fetch('/api/user');u=await r.json()}catch(e){u={logged_in:false}}
+    if(!u.logged_in){window.location.href='/login.html?error=not_logged_in';return}
+    document.getElementById('dashboard').style.display='block';
+    document.getElementById('sbUser').textContent=u.global_name||u.username;
+    if(u.avatar)document.getElementById('sbAvatar').innerHTML=`<img src="${u.avatar}">`;
+    let guilds;try{const r=await fetch('/api/guilds');guilds=await r.json()}catch(e){guilds=[]}
+    const sel=document.getElementById('serverSelect');
+    sel.innerHTML='<option value="">Select a server...</option>';
+    guilds.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;sel.appendChild(o)});
+    sel.addEventListener('change',()=>{if(sel.value)loadGuild(sel.value)});
+    if(guilds.length>0){sel.value=guilds[0].id;loadGuild(guilds[0].id)}
+    showConn();
+}
+
+async function loadGuild(id){
+    GUILD_ID=id;
+    document.getElementById('mainContent').innerHTML=skeleton(4);
+    try{
+        const g=await(await fetch(`/api/guild/${id}`)).json();
+        GUILD_DATA=g;SETTINGS=g.settings||{};
+        document.getElementById('sbName').textContent=g.name||'Server';
+        document.getElementById('sbId').textContent=`ID: ${id}`;
+        if(g.icon)document.getElementById('sbIcon').innerHTML=`<img src="${g.icon}">`;
+        else document.getElementById('sbIcon').innerHTML='<i class="fas fa-server"></i>';
+        document.getElementById('sbStats').style.display='grid';
+        animateVal(document.getElementById('sbMembers'),g.member_count||0);
+        animateVal(document.getElementById('sbOnline'),g.online_count||0);
+        animateVal(document.getElementById('sbBoosts'),g.boost_count||0);
+        renderAll(g);
+    }catch(e){
+        document.getElementById('mainContent').innerHTML=`<div class="empty"><div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>Error loading server</h3><p>${esc(e.message)}</p></div>`;
+    }
+}
+
+function renderAll(g){
+    const tc=(g.text_channels||[]),vc=(g.voice_channels||[]),rl=(g.roles||[]),cats=(g.categories||[]);
+    const permBits={8:'Administrator',4:'Manage Channels',2:'Ban Members',1:'Kick Members',32:'Manage Messages',2048:'View Channel',1073741824:'Manage Server'};
+    const perms=Object.entries(permBits).map(([b,n])=>{const h=(g.bot_permissions||0)&parseInt(b);return`<div class="perm-item"><i class="fas ${h?'fa-check perm-yes':'fa-times perm-no'}"></i>${n}</div>`}).join('');
+    const roles=rl.map(r=>`<span class="role-tag" style="background:rgba(${r.color?hexToRgb(r.color):'255,92,92'},.08);color:${r.color?'#'+r.color.toString(16).padStart(6,'0'):'var(--red)'}">${esc(r.name)}</span>`).join('');
+    const channels=tc.map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:8px;font-size:.76rem;border:1px solid var(--border)"><i class="fas fa-hashtag" style="color:var(--text4);font-size:.55rem;margin-right:4px"></i>${esc(c.name)}</div>`).join('');
+
+    document.getElementById('mainContent').innerHTML=`
+    ${g.bot_in_guild?'':`<div class="bot-banner"><i class="fas fa-robot robot"></i><h3>Bot Not In This Server</h3><p>Add BK BOT to unlock all features.</p><a href="/api/guild/${GUILD_ID}/invite" class="invite-btn"><i class="fas fa-plus"></i> Add BK BOT</a></div>`}
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="pg-overview">
+        <div class="pg-header"><h1><i class="fas fa-chart-pie"></i> Overview</h1><p>Real-time stats for ${esc(g.name)}</p></div>
+        <div class="grid4">
+            <div class="card stat-card sr"><div class="stat-top"><div class="stat-icon si-red"><i class="fas fa-users"></i></div><span class="badge badge-live"><i class="fas fa-circle" style="font-size:4px;vertical-align:middle;margin-right:3px"></i> Live</span></div><div class="stat-val" data-count="${g.member_count||0}">0</div><div class="stat-label">Total Members</div></div>
+            <div class="card stat-card sg"><div class="stat-top"><div class="stat-icon si-green"><i class="fas fa-circle-check"></i></div><span class="badge badge-live"><i class="fas fa-circle" style="font-size:4px;vertical-align:middle;margin-right:3px"></i> Online</span></div><div class="stat-val" data-count="${g.online_count||0}">0</div><div class="stat-label">Online Now</div></div>
+            <div class="card stat-card sb"><div class="stat-top"><div class="stat-icon si-blue"><i class="fas fa-hashtag"></i></div><span class="badge badge-count">${g.channel_count||0} ch</span></div><div class="stat-val" data-count="${g.channel_count||0}">0</div><div class="stat-label">Total Channels</div></div>
+            <div class="card stat-card so"><div class="stat-top"><div class="stat-icon si-orange"><i class="fas fa-gem"></i></div><span class="badge badge-warn">Tier ${g.boost_level||0}</span></div><div class="stat-val" data-count="${g.boost_count||0}">0</div><div class="stat-label">Server Boosts</div></div>
+        </div>
+        <div class="grid2">
+            <div class="card"><div class="card-head"><h2><i class="fas fa-shield-halved" style="color:var(--red)"></i> Security</h2><span class="badge badge-live">ALL ACTIVE</span></div>
+                <div class="sec-row"><div class="sec-icon si-red"><i class="fas fa-shield-halved"></i></div><div class="sec-info"><h4>Anti-Nuke</h4><p>Mass deletion protection</p></div><span class="sec-badge badge-live">ON</span></div>
+                <div class="sec-row"><div class="sec-icon si-blue"><i class="fas fa-user-shield"></i></div><div class="sec-info"><h4>Anti-Raid</h4><p>Mass join protection</p></div><span class="sec-badge badge-live">ON</span></div>
+                <div class="sec-row"><div class="sec-icon si-orange"><i class="fas fa-ban"></i></div><div class="sec-info"><h4>Anti-Spam</h4><p>Message flood protection</p></div><span class="sec-badge badge-live">ON</span></div>
+                <div class="sec-row"><div class="sec-icon si-purple"><i class="fas fa-link-slash"></i></div><div class="sec-info"><h4>Anti-Link</h4><p>Unauthorized links</p></div><span class="sec-badge badge-live">ON</span></div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-id-card" style="color:var(--blue)"></i> Roles</h2><span class="badge badge-count">${rl.length}</span></div><div class="role-list">${roles||'<span style="color:var(--text4);font-size:.78rem">No roles</span>'}</div></div>
+        </div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-hashtag" style="color:var(--green)"></i> Channels</h2><span class="badge badge-count">${tc.length} text / ${vc.length} voice</span></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:200px;overflow-y:auto">${channels||'<span style="color:var(--text4);font-size:.78rem">No channels</span>'}</div></div>
+    </div>
+
+    <!-- SECURITY -->
+    <div class="page" id="pg-security">
+        <div class="pg-header"><h1><i class="fas fa-shield-halved"></i> Security</h1><p>Always-on protection — configure thresholds and actions</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-sliders" style="color:var(--red)"></i> Protection Toggles</h2></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-shield-halved" style="color:var(--red)"></i> Anti-Nuke</h4><p>Mass deletion protection — auto-bans attackers</p></div><div class="toggle on" data-key="anti_nuke" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-user-shield" style="color:var(--blue)"></i> Anti-Raid</h4><p>Mass join protection — auto-kicks raiders</p></div><div class="toggle on" data-key="anti_raid" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-ban" style="color:var(--orange)"></i> Anti-Spam</h4><p>Message flood protection — auto-mutes spammers</p></div><div class="toggle on" data-key="anti_spam" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link-slash" style="color:var(--purple)"></i> Anti-Link</h4><p>Blocks unauthorized links from being posted</p></div><div class="toggle on" data-key="anti_link" onclick="toggleSetting(this)"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-key" style="color:var(--green)"></i> Bot Permissions</h2></div>
+                    <div class="perm-grid">${perms||'Could not load'}</div>
+                </div>
+            </div>
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-gauge-high" style="color:var(--orange)"></i> Thresholds</h2></div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-bolt"></i> Spam Threshold</div>
+                        <div class="range-wrap"><input type="range" min="2" max="20" value="${SETTINGS.spam_threshold||5}" oninput="this.nextElementSibling.textContent=this.value;SETTINGS.spam_threshold=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.spam_threshold||5}</span></div>
+                        <div class="var-hint"><i class="fas fa-info-circle"></i> Messages per 5 seconds before mute</div>
+                    </div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-users"></i> Raid Threshold</div>
+                        <div class="range-wrap"><input type="range" min="3" max="50" value="${SETTINGS.raid_threshold||10}" oninput="this.nextElementSibling.textContent=this.value;SETTINGS.raid_threshold=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.raid_threshold||10}</span></div>
+                        <div class="var-hint"><i class="fas fa-info-circle"></i> Joins within ${SETTINGS.raid_timeframe||30}s before raid action</div>
+                    </div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-clock"></i> Raid Timeframe (seconds)</div>
+                        <div class="range-wrap"><input type="range" min="10" max="120" value="${SETTINGS.raid_timeframe||30}" oninput="this.nextElementSibling.textContent=this.value+'s';SETTINGS.raid_timeframe=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.raid_timeframe||30}s</span></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-clock-rotate-left" style="color:var(--cyan)"></i> Punishment Cooldown</h2></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-clock" style="color:var(--orange)"></i> Cooldown</h4><p>Seconds between same-user punishments</p></div><input class="input" style="max-width:100px" type="number" min="5" max="300" value="${SETTINGS.punish_cooldown||30}" onchange="SETTINGS.punish_cooldown=parseInt(this.value);markDirty()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODERATION -->
+    <div class="page" id="pg-moderation">
+        <div class="pg-header"><h1><i class="fas fa-gavel"></i> Moderation</h1><p>All commands and log configuration</p></div>
+        <div class="inner-tabs"><button class="inner-tab active" onclick="switchInner(this,'mod','cmds')">Commands</button><button class="inner-tab" onclick="switchInner(this,'mod','log')">Mod Log</button><button class="inner-tab" onclick="switchInner(this,'mod','automod')">Auto-Mod</button></div>
+        <div class="inner-panel active" id="mod-cmds"><div class="mod-grid" id="modGrid"></div></div>
+        <div class="inner-panel" id="mod-log">
+            <div class="card" style="margin-bottom:14px">
+                <div class="card-head"><h2><i class="fas fa-scroll" style="color:var(--blue)"></i> Mod Log Channel</h2></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Channel</h4><p>All moderation actions are logged here</p></div><select class="sel" id="modLogCh" onchange="saveSetting('mod_log_channel',this.value)"><option value="">None</option>${chOpts(tc)}</select></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-message" style="color:var(--blue)"></i> Log Message Deletes</h4><p>Log when messages are deleted</p></div><div class="toggle on" data-key="log_messages" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-gavel" style="color:var(--red)"></i> Log Mod Actions</h4><p>Log bans, kicks, mutes, warns</p></div><div class="toggle on" data-key="log_moderation" onclick="toggleSetting(this)"></div></div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Recent Mod Actions</h2></div>
+                <div class="log-entry"><div class="log-icon si-red"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Nuke protection active — monitoring channel deletes</span></div><div class="log-time">Now</div></div>
+                <div class="log-entry"><div class="log-icon si-blue"><i class="fas fa-shield-halved"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Raid protection active — monitoring joins</span></div><div class="log-time">Now</div></div>
+                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Spam protection active — monitoring messages</span></div><div class="log-time">Now</div></div>
+            </div>
+        </div>
+        <div class="inner-panel" id="mod-automod">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-wand-magic-sparkles" style="color:var(--orange)"></i> Auto-Moderation</h2><span class="badge badge-live">ACTIVE</span></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-ban" style="color:var(--red)"></i> Auto-Mute Spammers</h4><p>Automatically mute users who spam messages</p></div><div class="toggle on" data-key="auto_mute_spam" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link-slash" style="color:var(--purple)"></i> Auto-Delete Links</h4><p>Delete messages with unauthorized links</p></div><div class="toggle on" data-key="auto_delete_links" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-user-xmark" style="color:var(--red)"></i> Auto-Kick Unverified</h4><p>Kick members who don't verify within 5 minutes</p></div><div class="toggle" data-key="auto_kick_unverified" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-shield" style="color:var(--blue)"></i> Lockdown on Raid</h4><p>Auto-lock all channels during a raid</p></div><div class="toggle" data-key="lockdown_on_raid" onclick="toggleSetting(this)"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE STATS -->
+    <div class="page" id="pg-stats">
+        <div class="pg-header"><h1><i class="fas fa-chart-line"></i> Live Stats</h1><p>Auto-updating voice channels showing server stats</p></div>
+        <div class="grid2">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-cog" style="color:var(--orange)"></i> Setup</h2></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-folder" style="color:var(--orange)"></i> Category</h4><p>Select where stat channels are created</p></div><select class="sel" id="statsCat" onchange="saveSetting('stats_category',this.value)"><option value="">None</option>${catOpts(cats)}</select></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-circle-info" style="color:var(--blue)"></i> Setup</h4><p>Run <code style="background:rgba(255,92,92,.06);color:var(--red);padding:3px 8px;border-radius:5px;font-size:.72rem;font-weight:600">/setupstats</code> in Discord after selecting</p></div></div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--green)"></i> Preview</h2></div>
+                <div style="display:grid;gap:8px">
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-volume-high" style="color:var(--text4)"></i><span style="font-size:.8rem;color:var(--text4)">Members: </span><span style="font-size:.8rem;font-weight:700;color:var(--green)">${g.member_count||0}</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-volume-high" style="color:var(--text4)"></i><span style="font-size:.8rem;color:var(--text4)">Online: </span><span style="font-size:.8rem;font-weight:700;color:var(--green)">${g.online_count||0}</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-volume-high" style="color:var(--text4)"></i><span style="font-size:.8rem;color:var(--text4)">Boosts: </span><span style="font-size:.8rem;font-weight:700;color:var(--green)">${g.boost_count||0}</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-volume-high" style="color:var(--text4)"></i><span style="font-size:.8rem;color:var(--text4)">Channels: </span><span style="font-size:.8rem;font-weight:700;color:var(--green)">${g.channel_count||0}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WELCOME -->
+    <div class="page" id="pg-welcome">
+        <div class="pg-header"><h1><i class="fas fa-hand-sparkles"></i> Welcome</h1><p>Configure welcome messages for new members</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-cog" style="color:var(--green)"></i> Settings</h2></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Send welcome messages to new members</p></div><div class="toggle on" data-key="welcome_enabled" onclick="toggleSetting(this)"></div></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Channel</h4><p>Where welcome messages are sent</p></div><select class="sel" id="welcomeCh" onchange="saveSetting('welcome_channel',this.value);updateWelcomePreview()"><option value="">None</option>${chOpts(tc)}</select></div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-message"></i> Welcome Message</div>
+                        <textarea class="input" style="max-width:100%;width:100%" id="welcomeMsg" placeholder="Welcome {user} to {server}!" oninput="SETTINGS.welcome_message=this.value;markDirty();updateWelcomePreview()">${esc(SETTINGS.welcome_message||'Welcome {user} to {server}!')}</textarea>
+                        <div class="var-row">
+                            <span class="var-tag">{user}</span><span class="var-tag">{server}</span><span class="var-tag">{member_count}</span><span class="var-tag">{channel}</span>
+                        </div>
+                        <div class="var-hint"><i class="fas fa-info-circle"></i> Click variables to insert them into the message</div>
+                    </div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-envelope" style="color:var(--purple)"></i> DM Welcome</h4><p>Also send a DM to the new member</p></div><div class="toggle" data-key="welcome_dm" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-image" style="color:var(--pink)"></i> Embed</h4><p>Send as a rich embed instead of plain text</p></div><div class="toggle on" data-key="welcome_embed" onclick="toggleSetting(this)"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-palette" style="color:var(--pink)"></i> Embed Color</h2></div>
+                    <div class="color-picker" id="welcomeColors"></div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Live Preview</h2><span class="badge badge-live">LIVE</span></div>
+                    <div class="discord-msg" id="welcomePreviewBox">
+                        <div class="discord-avatar"><i class="fas fa-robot"></i></div>
+                        <div class="discord-header"><span style="font-weight:700;font-size:.85rem;color:#fff">BK BOT</span><span class="discord-bot-tag">BOT</span><span class="discord-time">Today at ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</span></div>
+                        <div class="discord-content" id="welcomePreviewText">Welcome to the server!</div>
+                        <div class="discord-embed" id="welcomePreviewEmbed" style="border-left-color:${SETTINGS.welcome_color||'#5865F2'}">
+                            <div class="discord-embed-title" id="welcomeEmbedTitle">Welcome!</div>
+                            <div class="discord-embed-desc" id="welcomeEmbedDesc">Welcome to the server!</div>
+                            <div class="discord-embed-footer"><i class="fas fa-robot"></i> <span>BK BOT • ${esc(g.name||'Server')}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTO ROLE -->
+    <div class="page" id="pg-autorole">
+        <div class="pg-header"><h1><i class="fas fa-user-plus"></i> Auto Role</h1><p>Auto-assign roles to new members on join</p></div>
+        <div class="grid2">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-user-plus" style="color:var(--red)"></i> Configuration</h2></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Auto-assign roles on member join</p></div><div class="toggle on" data-key="autorole_enabled" onclick="toggleSetting(this)"></div></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-id-card" style="color:var(--red)"></i> Role</h4><p>Role given to every new member</p></div><select class="sel" id="autoRole" onchange="saveSetting('auto_role',this.value);updateAutoRolePreview()"><option value="">None</option>${roleOpts(rl)}</select></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-clock" style="color:var(--orange)"></i> Delay</h4><p>Wait before assigning role (anti-raid)</p></div><div class="toggle" data-key="autorole_delay" onclick="toggleSetting(this)"></div></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-clock" style="color:var(--blue)"></i> Delay (seconds)</h4><p>Seconds to wait before assigning</p></div><input class="input" style="max-width:100px" type="number" min="5" max="300" value="${SETTINGS.autorole_delay_time||30}" onchange="SETTINGS.autorole_delay_time=parseInt(this.value);markDirty()"></div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Preview</h2></div>
+                <div class="discord-msg">
+                    <div class="discord-avatar"><i class="fas fa-robot"></i></div>
+                    <div class="discord-header"><span style="font-weight:700;font-size:.85rem;color:#fff">BK BOT</span><span class="discord-bot-tag">BOT</span><span class="discord-time">Now</span></div>
+                    <div class="discord-content">Welcome to <strong>${esc(g.name||'Server')}</strong>! You've been assigned the <span style="color:#a78bfa;font-weight:600">@Member</span> role.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="pg-tickets">
+        <div class="pg-header"><h1><i class="fas fa-ticket"></i> Tickets</h1><p>Support ticket system with transcripts</p></div>
+        <div class="grid2">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-cog" style="color:var(--blue)"></i> Configuration</h2></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Enable the ticket system</p></div><div class="toggle on" data-key="ticket_enabled" onclick="toggleSetting(this)"></div></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Panel Channel</h4><p>Channel where the ticket panel is posted</p></div><select class="sel" id="ticketCh" onchange="saveSetting('ticket_channel',this.value)"><option value="">None</option>${chOpts(tc)}</select></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-folder" style="color:var(--orange)"></i> Ticket Category</h4><p>Category where tickets are created</p></div><select class="sel" id="ticketCat" onchange="saveSetting('ticket_category',this.value)"><option value="">None</option>${catOpts(cats)}</select></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-users" style="color:var(--purple)"></i> Support Role</h4><p>Role that can view and manage tickets</p></div><select class="sel" id="ticketSupport" onchange="saveSetting('ticket_support_role',this.value)"><option value="">None</option>${roleOpts(rl)}</select></div>
+                <div class="cfg-section">
+                    <div class="cfg-title"><i class="fas fa-hashtag"></i> Max Tickets Per User</div>
+                    <div class="range-wrap"><input type="range" min="1" max="10" value="${SETTINGS.ticket_max||3}" oninput="this.nextElementSibling.textContent=this.value;SETTINGS.ticket_max=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.ticket_max||3}</span></div>
+                </div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-file-lines" style="color:var(--cyan)"></i> Transcripts</h4><p>Save ticket transcripts when closed</p></div><div class="toggle on" data-key="ticket_transcript" onclick="toggleSetting(this)"></div></div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Panel Preview</h2></div>
+                <div class="ticket-preview">
+                    <div style="text-align:center;margin-bottom:12px;font-size:.85rem;font-weight:700;color:#fff">Need Help?</div>
+                    <div style="text-align:center;margin-bottom:12px;font-size:.75rem;color:#b9bbbe">Click the button below to create a support ticket</div>
+                    <div style="text-align:center"><span class="ticket-btn"><i class="fas fa-ticket"></i> Create Ticket</span></div>
+                </div>
+                <div style="margin-top:12px;padding:12px;background:var(--glass);border-radius:8px;border:1px solid var(--border)">
+                    <div style="font-size:.75rem;font-weight:600;color:var(--text2);margin-bottom:8px">Ticket Log Preview</div>
+                    <div class="log-entry" style="margin-bottom:0"><div class="log-icon si-green"><i class="fas fa-plus"></i></div><div class="log-text"><strong>User#0001</strong> <span>created a ticket</span></div><div class="log-time">Now</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMMANDS -->
+    <div class="page" id="pg-commands">
+        <div class="pg-header"><h1><i class="fas fa-terminal"></i> Custom Commands</h1><p>Create auto-reply commands with embed support</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> New Command</h2></div>
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        <div style="display:flex;gap:8px;align-items:center"><span style="font-size:.85rem;color:var(--red);font-weight:700;font-family:'Courier New',monospace">/</span><input class="input" id="cmdName" placeholder="command-name" style="max-width:200px"></div>
+                        <textarea class="input" id="cmdResponse" placeholder="Bot response text... Use {user} for mention, {server} for server name" style="max-width:100%;width:100%;min-height:80px"></textarea>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button class="save-btn" onclick="addCommand()" style="padding:8px 18px;font-size:.78rem"><i class="fas fa-plus"></i> Add Command</button>
+                            <div style="display:flex;gap:4px;align-items:center"><span class="var-tag" style="cursor:pointer" onclick="insertCmdVar('{user}')">{user}</span><span class="var-tag" style="cursor:pointer" onclick="insertCmdVar('{server}')">{server}</span><span class="var-tag" style="cursor:pointer" onclick="insertCmdVar('{channel}')">{channel}</span><span class="var-tag" style="cursor:pointer" onclick="insertCmdVar('{mention}')">{mention}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> Commands</h2><span class="badge badge-count" id="cmdCount">0</span></div>
+                    <div id="cmdList"></div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Command Preview</h2></div>
+                    <div class="discord-msg" id="cmdPreview">
+                        <div class="discord-avatar"><i class="fas fa-robot"></i></div>
+                        <div class="discord-header"><span style="font-weight:700;font-size:.85rem;color:#fff">BK BOT</span><span class="discord-bot-tag">BOT</span><span class="discord-time">Now</span></div>
+                        <div class="discord-content" id="cmdPreviewText">Type a command name and response to see a preview...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="page" id="pg-logs">
+        <div class="pg-header"><h1><i class="fas fa-scroll"></i> Logs</h1><p>Comprehensive logging configuration</p></div>
+        <div class="grid2">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-cog" style="color:var(--blue)"></i> Log Settings</h2></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Log Channel</h4><p>Channel for all bot logs</p></div><select class="sel" id="logCh" onchange="saveSetting('log_channel',this.value)"><option value="">None</option>${chOpts(tc)}</select></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-message" style="color:var(--blue)"></i> Log Messages</h4><p>Deleted and edited messages</p></div><div class="toggle on" data-key="log_messages" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-gavel" style="color:var(--red)"></i> Log Moderation</h4><p>Bans, kicks, mutes</p></div><div class="toggle on" data-key="log_moderation" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-right-to-bracket" style="color:var(--green)"></i> Log Joins/Leaves</h4><p>Member joins and leaves</p></div><div class="toggle on" data-key="log_joinleave" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-pen" style="color:var(--orange)"></i> Log Edits</h4><p>Message edits</p></div><div class="toggle on" data-key="log_edits" onclick="toggleSetting(this)"></div></div>
+                <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-voice" style="color:var(--purple)"></i> Log Voice</h4><p>Voice channel joins/leaves</p></div><div class="toggle" data-key="log_voice" onclick="toggleSetting(this)"></div></div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Log Preview</h2></div>
+                <div class="log-entry"><div class="log-icon si-green"><i class="fas fa-right-to-bracket"></i></div><div class="log-text"><strong>John#1234</strong> <span>joined the server</span></div><div class="log-time">2m ago</div></div>
+                <div class="log-entry"><div class="log-icon si-red"><i class="fas fa-right-from-bracket"></i></div><div class="log-text"><strong>Jane#5678</strong> <span>left the server</span></div><div class="log-time">5m ago</div></div>
+                <div class="log-entry"><div class="log-icon si-blue"><i class="fas fa-pen"></i></div><div class="log-text"><strong>Bob#9012</strong> <span>edited a message in <strong>#general</strong></span></div><div class="log-time">8m ago</div></div>
+                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>Mod</strong> <span>banned <strong>Spammer#0001</strong> — spamming</span></div><div class="log-time">12m ago</div></div>
+                <div class="log-entry"><div class="log-icon si-purple"><i class="fas fa-gavel"></i></div><div class="log-text"><strong>Mod</strong> <span>muted <strong>User#3456</strong> for 10 minutes</span></div><div class="log-time">15m ago</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="pg-settings">
+        <div class="pg-header"><h1><i class="fas fa-gear"></i> Settings</h1><p>General server configuration</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-gear" style="color:var(--text3)"></i> General</h2></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-volume-xmark" style="color:var(--red)"></i> Muted Role</h4><p>Role used for mute punishment</p></div><select class="sel" id="mutedRole" onchange="saveSetting('muted_role',this.value)"><option value="">None</option>${roleOpts(rl)}</select></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hand-sparkles" style="color:var(--green)"></i> Greet Role</h4><p>Role given on welcome</p></div><select class="sel" id="greetRole" onchange="saveSetting('greet_role',this.value)"><option value="">None</option>${roleOpts(rl)}</select></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-moon" style="color:var(--purple)"></i> Embed Mode</h4><p>Use embeds for bot responses</p></div><div class="toggle on" data-key="embed_mode" onclick="toggleSetting(this)"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-bell" style="color:var(--orange)"></i> Notifications</h2></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-envelope" style="color:var(--blue)"></i> DM on Ban</h4><p>DM the user before banning</p></div><div class="toggle on" data-key="dm_on_ban" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-envelope" style="color:var(--orange)"></i> DM on Kick</h4><p>DM the user before kicking</p></div><div class="toggle on" data-key="dm_on_kick" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-envelope" style="color:var(--red)"></i> DM on Mute</h4><p>DM the user when muted</p></div><div class="toggle" data-key="dm_on_mute" onclick="toggleSetting(this)"></div></div>
+                </div>
+            </div>
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-sliders" style="color:var(--orange)"></i> Thresholds</h2></div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-bolt"></i> Spam Threshold</div>
+                        <div class="range-wrap"><input type="range" min="1" max="20" value="${SETTINGS.spam_threshold||5}" oninput="this.nextElementSibling.textContent=this.value;SETTINGS.spam_threshold=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.spam_threshold||5}</span></div>
+                        <div class="var-hint">Messages per 5 seconds before mute</div>
+                    </div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-users"></i> Raid Threshold</div>
+                        <div class="range-wrap"><input type="range" min="1" max="50" value="${SETTINGS.raid_threshold||10}" oninput="this.nextElementSibling.textContent=this.value;SETTINGS.raid_threshold=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.raid_threshold||10}</span></div>
+                        <div class="var-hint">Joins before raid action triggers</div>
+                    </div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-clock"></i> Default Mute Duration (minutes)</div>
+                        <div class="range-wrap"><input type="range" min="1" max="1440" value="${SETTINGS.mute_duration||10}" oninput="this.nextElementSibling.textContent=this.value+'m';SETTINGS.mute_duration=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.mute_duration||10}m</span></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-info-circle" style="color:var(--blue)"></i> Server Info</h2></div>
+                    <div style="display:grid;gap:8px">
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem"><span style="color:var(--text4)">Server Name</span><span style="font-weight:600">${esc(g.name||'Unknown')}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem"><span style="color:var(--text4)">Server ID</span><span style="font-weight:600;font-family:'Courier New',monospace">${GUILD_ID}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem"><span style="color:var(--text4)">Owner ID</span><span style="font-weight:600;font-family:'Courier New',monospace">${g.owner_id||'Unknown'}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem"><span style="color:var(--text4)">Boost Level</span><span style="font-weight:600">Tier ${g.boost_level||0}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.8rem"><span style="color:var(--text4)">Features</span><span style="font-weight:600">${(g.features||[]).length} enabled</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="page" id="pg-activity">
+        <div class="pg-header"><h1><i class="fas fa-stream"></i> Activity Feed</h1><p>Real-time bot activity and events</p></div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-clock" style="color:var(--blue)"></i> Recent Activity</h2><button class="save-btn" onclick="loadActivity()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div><div id="activityFeed" style="max-height:500px;overflow-y:auto"></div></div>
+    </div>
+
+    <!-- EMOJIS -->
+    <div class="page" id="pg-emojis">
+        <div class="pg-header"><h1><i class="fas fa-face-smile"></i> Emojis</h1><p>View and manage server emojis</p></div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-face-smile" style="color:var(--orange)"></i> Server Emojis</h2><span class="badge badge-count" id="emojiCount">0</span></div><div id="emojiList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div></div>
+    </div>
+
+    <!-- INVITES -->
+    <div class="page" id="pg-invites">
+        <div class="pg-header"><h1><i class="fas fa-link"></i> Invites</h1><p>Track server invites and usage</p></div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-link" style="color:var(--green)"></i> Active Invites</h2><span class="badge badge-count" id="inviteCount">0</span></div><div id="inviteList" style="max-height:500px;overflow-y:auto"></div></div>
+    </div>
+
+    <!-- WEBHOOKS -->
+    <div class="page" id="pg-webhooks">
+        <div class="pg-header"><h1><i class="fas fa-plug"></i> Webhooks</h1><p>Manage server webhooks</p></div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-plug" style="color:var(--purple)"></i> Webhooks</h2><span class="badge badge-count" id="webhookCount">0</span></div><div id="webhookList"></div></div>
+    </div>
+
+    <!-- TAGS -->
+    <div class="page" id="pg-tags">
+        <div class="pg-header"><h1><i class="fas fa-tag"></i> Tags</h1><p>Quick response tags</p></div>
+        <div class="grid2">
+            <div class="card"><div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> New Tag</h2></div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <input class="input" id="tagName" placeholder="Tag name" style="max-width:100%">
+                    <textarea class="input" id="tagResponse" placeholder="Tag response..." style="max-width:100%;width:100%;min-height:80px"></textarea>
+                    <button class="save-btn" onclick="addTag()" style="padding:8px 18px;font-size:.78rem"><i class="fas fa-plus"></i> Create Tag</button>
+                </div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> Tags</h2><span class="badge badge-count" id="tagCount">0</span></div><div id="tagList"></div></div>
+        </div>
+    </div>
+
+    <!-- LEVELS -->
+    <div class="page" id="pg-levels">
+        <div class="pg-header"><h1><i class="fas fa-trophy"></i> Levels</h1><p>Member level and XP leaderboard</p></div>
+        <div class="card"><div class="card-head"><h2><i class="fas fa-trophy" style="color:var(--orange)"></i> Leaderboard</h2><span class="badge badge-count" id="levelCount">0</span></div><div id="levelList" style="max-height:500px;overflow-y:auto"></div></div>
+    </div>
+
+    <!-- BACKUP -->
+    <div class="page" id="pg-backup">
+        <div class="pg-header"><h1><i class="fas fa-database"></i> Backup</h1><p>Backup and restore server settings</p></div>
+        <div class="grid2">
+            <div class="card"><div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Backup</h2></div>
+                <p style="font-size:.8rem;color:var(--text4);margin-bottom:14px">Save current server settings as a backup. Channels and roles are saved for reference.</p>
+                <button class="save-btn" onclick="createBackup()" style="padding:10px 24px"><i class="fas fa-download"></i> Create Backup</button>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> Backups</h2><span class="badge badge-count" id="backupCount">0</span></div><div id="backupList" style="max-height:400px;overflow-y:auto"></div></div>
+        </div>
+    </div>
+
+    <!-- DOCS -->
+    <div class="page" id="pg-docs">
+        <div class="pg-header"><h1><i class="fas fa-book"></i> API Documentation</h1><p>Bot command reference and API docs</p></div>
+        <div class="grid2">
+            <div class="card"><div class="card-head"><h2><i class="fas fa-shield-halved" style="color:var(--red)"></i> Moderation</h2></div>
+                <div style="display:grid;gap:6px">${['/kick @user [reason]','/ban @user [reason]','/unban @user','/mute @user [duration] [reason]','/unmute @user','/warn @user [reason]','/warnings @user','/clear [amount]','/purge @user [amount]','/massban @user1 @user2','/masskick @user1 @user2'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--red)">${c}</div>`).join('')}</div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-gear" style="color:var(--blue)"></i> Utility</h2></div>
+                <div style="display:grid;gap:6px">${['/ping','/botinfo','/avatar @user','/userinfo @user','/serverinfo','/role add/remove @user @role','/nick @user [nickname]','/slowmode [seconds]','/lock /unlock','/emojis'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--blue)">${c}</div>`).join('')}</div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-star" style="color:var(--orange)"></i> Features</h2></div>
+                <div style="display:grid;gap:6px">${['/giveaway create [prize] [duration]','/reactionroles create [title] [roles]','/temprole @user @role [duration]','/social youtube/twitch','/welcomebanner set [color]','/levelroles add [level] [role]','/tag create [name] [response]','/template save/load [name]','/backup create','/voicerooms setup [lobby]','/status set/rotate'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--orange)">${c}</div>`).join('')}</div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-code" style="color:var(--green)"></i> REST API</h2></div>
+                <div style="display:grid;gap:6px">${['GET /api/user','GET /api/guilds','GET /api/guild/:id','GET /api/guild/:id/settings','POST /api/guild/:id/settings','GET /api/guild/:id/commands','GET /api/guild/:id/emojis','GET /api/guild/:id/webhooks','GET /api/guild/:id/invites','GET /api/guild/:id/events','GET /api/stats','GET /api/botinfo'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--green)">${c}</div>`).join('')}</div>
+            </div>
+        </div>
+    </div>`;
+
+    initMods();loadCustomCommands();bindNav();applySettings();
+    loadActivity();loadEmojis();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();
+    setTimeout(()=>{
+        document.querySelectorAll('.stat-val[data-count]').forEach(el=>animateVal(el,parseInt(el.dataset.count)||0));
+        updateWelcomePreview();initColorPicker();
+    },100);
+}
+
+/* === INNER TABS === */
+function switchInner(btn,group,id){
+    btn.parentElement.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll(`[id^="${group}-"]`).forEach(p=>{if(p.classList.contains('inner-panel'))p.classList.remove('active')});
+    document.getElementById(`${group}-${id}`).classList.add('active');
+}
+
+/* === WELCOME PREVIEW === */
+function updateWelcomePreview(){
+    const msg=SETTINGS.welcome_message||'Welcome {user} to {server}!';
+    const rendered=msg.replace('{user}','@User').replace('{server}',GUILD_DATA.name||'Server').replace('{member_count}',GUILD_DATA.member_count||'?').replace('{channel}','#general');
+    const isEmbed=SETTINGS.welcome_embed!==false;
+    const embedEl=document.getElementById('welcomePreviewEmbed');
+    const textEl=document.getElementById('welcomePreviewText');
+    if(embedEl){embedEl.style.display=isEmbed?'block':'none';embedEl.style.borderLeftColor=SETTINGS.welcome_color||'#5865F2';}
+    if(textEl){textEl.style.display=isEmbed?'none':'block';textEl.textContent=rendered;}
+    const titleEl=document.getElementById('welcomeEmbedTitle');
+    const descEl=document.getElementById('welcomeEmbedDesc');
+    if(titleEl)titleEl.textContent='Welcome!';
+    if(descEl)descEl.textContent=rendered;
+}
+
+function initColorPicker(){
+    const colors=['#5865F2','#EB459E','#FEE75C','#57F287','#ED4245','#ff5c5c','#34d399','#fbbf24','#a78bfa','#f472b6','#22d3ee','#ff6b6b'];
+    const el=document.getElementById('welcomeColors');
+    if(!el)return;
+    el.innerHTML=colors.map(c=>`<div class="color-opt ${SETTINGS.welcome_color===c?'selected':''}" style="background:${c}" onclick="selectColor(this,'${c}')"></div>`).join('');
+}
+function selectColor(el,color){
+    el.parentElement.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    SETTINGS.welcome_color=color;
+    markDirty();
+    updateWelcomePreview();
+    const embed=document.getElementById('welcomePreviewEmbed');
+    if(embed)embed.style.borderLeftColor=color;
+}
+
+/* === AUTO ROLE PREVIEW === */
+function updateAutoRolePreview(){
+    const roleId=SETTINGS.auto_role;
+    if(!roleId||!GUILD_DATA.roles)return;
+    const role=GUILD_DATA.roles.find(r=>r.id===roleId);
+    if(!role)return;
+    const el=document.querySelector('#pg-autorole .discord-content');
+    if(el)el.innerHTML=`Welcome to <strong>${esc(GUILD_DATA.name||'Server')}</strong>! You've been assigned the <span style="color:${role.color?'#'+role.color.toString(16).padStart(6,'0'):'#a78bfa'};font-weight:600">@${esc(role.name)}</span> role.`;
+}
+
+/* === CMD PREVIEW === */
+function insertCmdVar(v){
+    const ta=document.getElementById('cmdResponse');
+    if(ta){ta.value+=v;ta.focus();updateCmdPreview();}
+}
+function updateCmdPreview(){
+    const name=document.getElementById('cmdName')?.value||'command';
+    const resp=document.getElementById('cmdResponse')?.value||'Type a response...';
+    const el=document.getElementById('cmdPreviewText');
+    if(el)el.textContent=resp.replace('{user}','@User').replace('{server}',GUILD_DATA.name||'Server').replace('{channel}','#general').replace('{mention}','@User');
+}
+
+/* === MOD COMMANDS === */
+function initMods(){
+    const cmds=[
+        {n:'Kick',d:'Remove member from server',i:'fa-arrow-right-from-bracket',c:'si-red',cmd:'/kick'},
+        {n:'Ban',d:'Permanently ban member',i:'fa-ban',c:'si-red',cmd:'/ban'},
+        {n:'Unban',d:'Remove ban from user',i:'fa-unlock',c:'si-green',cmd:'/unban'},
+        {n:'Mute',d:'Timeout member',i:'fa-volume-xmark',c:'si-orange',cmd:'/mute'},
+        {n:'Unmute',d:'Remove timeout',i:'fa-volume-high',c:'si-green',cmd:'/unmute'},
+        {n:'Warn',d:'Issue a warning',i:'fa-triangle-exclamation',c:'si-orange',cmd:'/warn'},
+        {n:'Warnings',d:'View user warnings',i:'fa-list',c:'si-blue',cmd:'/warnings'},
+        {n:'Clear',d:'Delete messages',i:'fa-eraser',c:'si-blue',cmd:'/clear'},
+        {n:'Purge',d:'Bulk delete by user',i:'fa-trash',c:'si-red',cmd:'/purge'},
+        {n:'Lock',d:'Lock a channel',i:'fa-lock',c:'si-orange',cmd:'/lock'},
+        {n:'Unlock',d:'Unlock a channel',i:'fa-unlock',c:'si-green',cmd:'/unlock'},
+        {n:'Slowmode',d:'Set channel slowmode',i:'fa-clock',c:'si-blue',cmd:'/slowmode'},
+        {n:'Nick',d:'Change nickname',i:'fa-signature',c:'si-blue',cmd:'/nick'},
+        {n:'Role',d:'Add/remove roles',i:'fa-id-card',c:'si-purple',cmd:'/role'},
+        {n:'Mass Ban',d:'Ban multiple users',i:'fa-ban',c:'si-red',cmd:'/massban'},
+        {n:'Mass Kick',d:'Kick multiple users',i:'fa-arrow-right-from-bracket',c:'si-orange',cmd:'/masskick'}
+    ];
+    const mg=document.getElementById('modGrid');
+    if(!mg)return;
+    mg.innerHTML=cmds.map(m=>`<div class="mod-item"><div class="mod-icon ${m.c}"><i class="fas ${m.i}"></i></div><h4>${m.n}</h4><p>${m.d}</p><span class="mod-cmd">${m.cmd}</span></div>`).join('');
+}
+
+/* === CUSTOM COMMANDS === */
+async function loadCustomCommands(){
+    if(!GUILD_ID)return;
+    const cmds=await(await fetch(`/api/guild/${GUILD_ID}/commands`)).json().catch(()=>({}));
+    const list=document.getElementById('cmdList'),count=document.getElementById('cmdCount');
+    if(!list)return;
+    const keys=Object.keys(cmds);
+    if(count)count.textContent=keys.length;
+    if(keys.length===0){list.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-terminal"></i></div><h3>No custom commands</h3><p>Create one above to get started</p></div>';return}
+    list.innerHTML=keys.map(name=>{
+        const c=cmds[name];
+        return`<div class="cmd-item"><div style="flex:1"><div class="cmd-name">/${esc(c.name)}</div><div class="cmd-resp">${esc(c.response||'')}</div></div><div class="cmd-actions"><button class="cmd-btn toggle-cmd" title="Toggle" onclick="toggleCmd('${esc(c.name)}',${!c.enabled})"><i class="fas fa-${c.enabled?'check':'times'}"></i></button><button class="cmd-btn del" title="Delete" onclick="deleteCmd('${esc(c.name)}')"><i class="fas fa-trash"></i></button></div></div>`;
+    }).join('');
+}
+async function addCommand(){
+    const name=document.getElementById('cmdName')?.value?.trim();
+    const response=document.getElementById('cmdResponse')?.value?.trim();
+    if(!name||!response){showToast('Please fill in both fields','error');return}
+    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})});
+    document.getElementById('cmdName').value='';
+    document.getElementById('cmdResponse').value='';
+    loadCustomCommands();showToast('Command added!','success');
+}
+async function deleteCmd(name){
+    await fetch(`/api/guild/${GUILD_ID}/commands/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
+    loadCustomCommands();showToast('Command deleted','info');
+}
+async function toggleCmd(name,enabled){
+    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,enabled})});
+    loadCustomCommands();
+}
+
+/* === APPLY SETTINGS === */
+function applySettings(){
+    document.querySelectorAll('.toggle[data-key]').forEach(t=>{const v=SETTINGS[t.dataset.key];t.classList.toggle('on',v!==false&&v!==undefined)});
+    setSel('welcomeCh',SETTINGS.welcome_channel);setSel('logCh',SETTINGS.log_channel);setSel('ticketCh',SETTINGS.ticket_channel);
+    setSel('ticketCat',SETTINGS.ticket_category);setSel('statsCat',SETTINGS.stats_category);setSel('autoRole',SETTINGS.auto_role);
+    setSel('mutedRole',SETTINGS.muted_role);setSel('greetRole',SETTINGS.greet_role);setSel('modLogCh',SETTINGS.mod_log_channel);
+    setSel('ticketSupport',SETTINGS.ticket_support_role);
+    setInput('welcomeMsg',SETTINGS.welcome_message);
+    setInput('cmdName','');setInput('cmdResponse','');
+}
+
+/* === NAV === */
+function bindNav(){
+    document.querySelectorAll('.sb-menu a').forEach(link=>{
+        link.addEventListener('click',e=>{
+            e.preventDefault();const p=link.dataset.page;
+            document.querySelectorAll('.sb-menu a').forEach(l=>l.classList.remove('active'));link.classList.add('active');
+            document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
+            const el=document.getElementById('pg-'+p);if(el)el.classList.add('active');
+        });
+    });
+}
+
+/* === SAVE === */
+async function saveAll(){
+    if(!GUILD_ID)return;
+    const btn=document.getElementById('saveBtn');
+    btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';btn.disabled=true;
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/settings`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify(SETTINGS)});
+        btn.innerHTML='<i class="fas fa-check"></i> Saved!';btn.classList.add('saved');
+        showToast('Settings saved successfully!','success');
+        setTimeout(()=>{btn.innerHTML='<i class="fas fa-check"></i> Save Changes';btn.classList.remove('saved');document.getElementById('saveBar').style.display='none';DIRTY=false;btn.disabled=false},2000);
+    }catch(e){
+        showToast('Failed to save settings','error');
+        btn.innerHTML='<i class="fas fa-check"></i> Save Changes';btn.disabled=false;
+    }
+}
+
+/* === LOAD DATA FUNCTIONS === */
+async function loadActivity(){
+    if(!GUILD_ID)return;
+    try{
+        const data=await(await fetch('/api/activity')).json();
+        const el=document.getElementById('activityFeed');if(!el)return;
+        if(!data.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-stream"></i></div><h3>No activity yet</h3><p>Events will appear here as they happen</p></div>';return}
+        el.innerHTML=data.map(a=>`<div class="log-entry"><div class="log-icon si-${a.type==='ban'?'red':a.type==='join'?'green':a.type==='leave'?'orange':'blue'}"><i class="fas fa-${a.type==='ban'?'ban':a.type==='join'?'right-to-bracket':a.type==='leave'?'right-from-bracket':'info-circle'}"></i></div><div class="log-text"><strong>${esc(a.user||'System')}</strong> <span>${esc(a.action||'event')}</span></div><div class="log-time">${a.time?new Date(a.time).toLocaleTimeString():''}</div></div>`).join('');
+    }catch(e){}
+}
+async function loadEmojis(){
+    if(!GUILD_ID)return;
+    try{
+        const emojis=await(await fetch(`/api/guild/${GUILD_ID}/emojis`)).json();
+        const el=document.getElementById('emojiList'),cnt=document.getElementById('emojiCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=emojis.length;
+        if(!emojis.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-face-smile"></i></div><h3>No emojis</h3></div>';return}
+        el.innerHTML=emojis.map(e=>`<div style="text-align:center;padding:12px;background:var(--glass);border-radius:10px;border:1px solid var(--border);transition:var(--tr)"><img src="${e.url}" alt="${e.name}" style="width:48px;height:48px;${e.animated?'animation:spin 2s linear infinite':''}"><div style="font-size:.68rem;color:var(--text3);margin-top:6px;word-break:break-all">:${esc(e.name)}:</div></div>`).join('');
+    }catch(e){}
+}
+async function loadInvites(){
+    if(!GUILD_ID)return;
+    try{
+        const invites=await(await fetch(`/api/guild/${GUILD_ID}/invites`)).json();
+        const el=document.getElementById('inviteList'),cnt=document.getElementById('inviteCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=invites.length;
+        if(!invites.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-link"></i></div><h3>No invites</h3></div>';return}
+        el.innerHTML=invites.map(i=>`<div class="cmd-item"><div><div class="cmd-name">discord.gg/${esc(i.code)}</div><div class="cmd-resp">By ${esc(i.creator?.username||'Unknown')} • ${i.uses||0} uses${i.max_uses?` / ${i.max_uses} max`:''}</div></div></div>`).join('');
+    }catch(e){}
+}
+async function loadWebhooks(){
+    if(!GUILD_ID)return;
+    try{
+        const wh=await(await fetch(`/api/guild/${GUILD_ID}/webhooks`)).json();
+        const el=document.getElementById('webhookList'),cnt=document.getElementById('webhookCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=wh.length;
+        if(!wh.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-plug"></i></div><h3>No webhooks</h3></div>';return}
+        el.innerHTML=wh.map(w=>`<div class="cmd-item"><div><div class="cmd-name">${esc(w.name)}</div><div class="cmd-resp">Channel: <#${w.channel_id}> • ID: ${w.id}</div></div></div>`).join('');
+    }catch(e){}
+}
+async function loadTags(){
+    if(!GUILD_ID)return;
+    try{
+        const tags=await(await fetch(`/api/guild/${GUILD_ID}/tags`)).json();
+        const el=document.getElementById('tagList'),cnt=document.getElementById('tagCount');
+        if(!el)return;
+        const keys=Object.keys(tags);
+        if(cnt)cnt.textContent=keys.length;
+        if(!keys.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-tag"></i></div><h3>No tags</h3><p>Create one on the left</p></div>';return}
+        el.innerHTML=keys.map(n=>`<div class="cmd-item"><div><div class="cmd-name">/${esc(n)}</div><div class="cmd-resp">${esc(tags[n].response||'')}</div></div><div class="cmd-actions"><button class="cmd-btn del" title="Delete" onclick="deleteTag('${esc(n)}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
+    }catch(e){}
+}
+async function loadLevels(){
+    if(!GUILD_ID)return;
+    try{
+        const levels=await(await fetch(`/api/guild/${GUILD_ID}/levels`)).json();
+        const el=document.getElementById('levelList'),cnt=document.getElementById('levelCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=levels.length;
+        if(!levels.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-trophy"></i></div><h3>No level data</h3><p>Members will appear as they chat</p></div>';return}
+        el.innerHTML=levels.map((l,i)=>`<div class="cmd-item"><div style="display:flex;align-items:center;gap:10px;flex:1"><span style="font-size:.75rem;color:var(--text4);min-width:24px">#${i+1}</span><div><div class="cmd-name"><@${l.userId}></div><div class="cmd-resp">Level ${l.level} • ${l.xp} XP</div></div></div><div style="min-width:60px;text-align:right"><span style="font-size:1.1rem;font-weight:800;color:var(--orange)">${l.level}</span></div></div>`).join('');
+    }catch(e){}
+}
+async function loadBackups(){
+    if(!GUILD_ID)return;
+    try{
+        const backups=await(await fetch(`/api/guild/${GUILD_ID}/backup`)).json();
+        const el=document.getElementById('backupList'),cnt=document.getElementById('backupCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=backups.length;
+        if(!backups.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-database"></i></div><h3>No backups</h3><p>Create one on the left</p></div>';return}
+        el.innerHTML=backups.map(b=>`<div class="cmd-item"><div><div class="cmd-name">${esc(b.id)}</div><div class="cmd-resp">${esc(b.guildName||'Server')} • ${b.channels||0} channels • ${b.roles||0} roles • ${new Date(b.created).toLocaleDateString()}</div></div></div>`).join('');
+    }catch(e){}
+}
+async function addTag(){
+    const name=document.getElementById('tagName')?.value?.trim();
+    const response=document.getElementById('tagResponse')?.value?.trim();
+    if(!name||!response){showToast('Fill in both fields','error');return}
+    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})});
+    document.getElementById('tagName').value='';document.getElementById('tagResponse').value='';
+    loadTags();showToast('Tag created!','success');
+}
+async function deleteTag(name){
+    await fetch(`/api/guild/${GUILD_ID}/commands/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
+    loadTags();showToast('Tag deleted','info');
+}
+async function createBackup(){
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/backup`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({guildName:GUILD_DATA.name})});
+        loadBackups();showToast('Backup created!','success');
+    }catch(e){showToast('Backup failed','error')}
+}
+
+document.addEventListener('DOMContentLoaded',init);
+document.getElementById('cmdName')?.addEventListener('input',updateCmdPreview);
+document.getElementById('cmdResponse')?.addEventListener('input',updateCmdPreview);
+document.querySelectorAll('.var-tag[onclick]').forEach(v=>{if(v.closest('#pg-commands'))v.addEventListener('click',()=>insertCmdVar(v.textContent))});
+document.querySelectorAll('#pg-welcome .var-tag').forEach(v=>{v.style.cursor='pointer';v.addEventListener('click',()=>{
+    const ta=document.getElementById('welcomeMsg');if(ta){ta.value+=v.textContent;SETTINGS.welcome_message=ta.value;markDirty();updateWelcomePreview()}
+})});
+</script>
+</body>
+</html>

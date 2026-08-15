@@ -1,0 +1,8 @@
+node_modules/
+data/
+.env
+*.log
+check.js
+tunnel.js
+_lt_url.txt
+cloudflared.exe

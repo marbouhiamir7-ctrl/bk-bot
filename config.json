@@ -1,0 +1,18 @@
+{
+  "prefix": "!",
+  "botName": "Baktiriya Bot",
+  "embedColor": "#FF6B6B",
+  "welcomeChannel": "1529654849979945131",
+  "ticketChannel": "tickets",
+  "logChannel": "mod-logs",
+  "muteRole": "Muted",
+  "welcomeMessage": "Welcome to Baktiriya Team, {user}! We're glad to have you here!",
+  "levelRoles": {
+    "5": "Level 5",
+    "10": "Level 10",
+    "15": "Level 15",
+    "20": "Level 20",
+    "25": "Level 25",
+    "30": "Level 30"
+  }
+}

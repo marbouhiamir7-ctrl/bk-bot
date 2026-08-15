@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — BK BOT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root{--bg:#08080c;--card:#12121a;--border:rgba(255,255,255,.06);--text:#e8e8f0;--muted:#6b6b80;--red:#ff6b6b;--green:#2ed573;--blue:#5865F2}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+        /* Animated background */
+        .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+        .bg-orb{position:absolute;border-radius:50%;filter:blur(120px)}
+        .bg-orb.a{width:600px;height:600px;background:rgba(255,107,107,.06);top:-200px;left:-200px;animation:float1 20s ease-in-out infinite}
+        .bg-orb.b{width:500px;height:500px;background:rgba(88,101,242,.06);bottom:-200px;right:-200px;animation:float2 25s ease-in-out infinite}
+        .bg-orb.c{width:400px;height:400px;background:rgba(46,213,115,.04);top:40%;left:60%;animation:float3 18s ease-in-out infinite}
+        @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(80px,60px)}}
+        @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-60px,-80px)}}
+        @keyframes float3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,40px) scale(1.1)}}
+        .bg-grid{position:fixed;inset:0;z-index:0;background-image:radial-gradient(rgba(255,255,255,.02) 1px,transparent 1px);background-size:40px 40px}
+
+        /* Nav */
+        .nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+        .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+        .nav-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+        .nav-logo-icon i{color:#fff}
+        .nav-logo span{font-weight:800;font-size:1rem}
+        .nav-links{display:flex;align-items:center;gap:24px}
+        .nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+        .nav-links a:hover{color:var(--text)}
+        .nav-links a.active{color:var(--text)}
+        .nav-discord{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:var(--blue);color:#fff;border-radius:8px;text-decoration:none;font-size:.82rem;font-weight:600;transition:all .3s}
+        .nav-discord:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(88,101,242,.4)}
+
+        /* Login */
+        .login-section{flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:10;padding:40px 20px}
+        .login-container{width:100%;max-width:900px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+        
+        .login-left h1{font-size:2.4rem;font-weight:900;line-height:1.15;margin-bottom:16px}
+        .login-left h1 .grad{background:linear-gradient(135deg,#ff6b6b,#ee5a24);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .login-left p{color:var(--muted);font-size:.95rem;line-height:1.7;margin-bottom:32px}
+        
+        .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .stat-box{padding:16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px}
+        .stat-box .icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.85rem;margin-bottom:10px}
+        .stat-box .icon.red{background:rgba(255,107,107,.1);color:var(--red)}
+        .stat-box .icon.green{background:rgba(46,213,115,.1);color:var(--green)}
+        .stat-box .icon.blue{background:rgba(88,101,242,.1);color:var(--blue)}
+        .stat-box .icon.orange{background:rgba(255,165,2,.1);color:#ffa502}
+        .stat-box h3{font-size:1.1rem;font-weight:800;margin-bottom:2px}
+        .stat-box p{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}
+
+        .login-right{display:flex;justify-content:center}
+        .login-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;text-align:center;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+        .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff6b6b,#ee5a24,#ff6b6b);background-size:200%;animation:shimmer 3s linear infinite}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        .lc-logo{width:64px;height:64px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 32px rgba(255,107,107,.3);position:relative}
+        .lc-logo::after{content:'';position:absolute;inset:-4px;border-radius:22px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);opacity:.2;animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:.4;transform:scale(1.05)}}
+        .lc-logo i{color:#fff;font-size:1.6rem;position:relative;z-index:1}
+        .login-card h2{font-size:1.3rem;font-weight:800;margin-bottom:6px}
+        .login-card>p{color:var(--muted);font-size:.82rem;margin-bottom:28px;line-height:1.5}
+        
+        .error-box{background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.15);border-radius:10px;padding:12px;margin-bottom:20px;display:none;text-align:left}
+        .error-box h4{color:var(--red);font-size:.78rem;font-weight:600;margin-bottom:2px}
+        .error-box p{color:var(--muted);font-size:.7rem}
+        
+        .disc-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .3s;text-decoration:none;position:relative;overflow:hidden}
+        .disc-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:skewX(-20deg);transition:left .6s}
+        .disc-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(88,101,242,.4)}
+        .disc-btn:hover::before{left:100%}
+        .disc-btn i{font-size:1.2rem}
+        
+        .lc-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:.7rem}
+        .lc-divider::before,.lc-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+        
+        .lc-features{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+        .lc-feat{padding:12px 6px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border)}
+        .lc-feat i{font-size:.85rem;color:var(--red);margin-bottom:6px;display:block}
+        .lc-feat h4{font-size:.68rem;font-weight:600;margin-bottom:1px}
+        .lc-feat p{font-size:.58rem;color:var(--muted)}
+
+        .loading-dots{display:none;align-items:center;justify-content:center;gap:6px;margin-top:16px}
+        .loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--red);animation:bounce 1.4s infinite both}
+        .loading-dots span:nth-child(1){animation-delay:-.32s}
+        .loading-dots span:nth-child(2){animation-delay:-.16s}
+        @keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
+        .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:.78rem;margin-top:20px;transition:color .2s}
+        .back-link:hover{color:var(--text)}
+
+        @media(max-width:768px){.login-container{grid-template-columns:1fr;gap:32px}.login-left h1{font-size:1.8rem}.nav-links{gap:16px}.nav-links a:not(.nav-discord){display:none}}
+    </style>
+</head>
+<body>
+    <div class="bg"><div class="bg-orb a"></div><div class="bg-orb b"></div><div class="bg-orb c"></div></div>
+    <div class="bg-grid"></div>
+    
+    <nav class="nav">
+        <a href="/" class="nav-logo"><div class="nav-logo-icon"><i class="fas fa-shield-halved"></i></div><span>BK BOT</span></a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login.html" class="active">Login</a>
+            <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="nav-discord"><i class="fab fa-discord"></i> Add to Server</a>
+        </div>
+    </nav>
+
+    <section class="login-section">
+        <div class="login-container">
+            <div class="login-left">
+                <h1>Manage Your<br>Server Like a <span class="grad">Pro</span></h1>
+                <p>Full control over your Discord server with real-time security, live stats, moderation tools, and more — all from one dashboard.</p>
+                <div class="stats-row">
+                    <div class="stat-box"><div class="icon red"><i class="fas fa-shield-halved"></i></div><h3>Anti-Nuke</h3><p>Always active</p></div>
+                    <div class="stat-box"><div class="icon green"><i class="fas fa-chart-line"></i></div><h3>Live Stats</h3><p>Real-time data</p></div>
+                    <div class="stat-box"><div class="icon blue"><i class="fas fa-gavel"></i></div><h3>Mod Tools</h3><p>38+ commands</p></div>
+                    <div class="stat-box"><div class="icon orange"><i class="fas fa-gear"></i></div><h3>Full Control</h3><p>Every setting</p></div>
+                </div>
+            </div>
+            <div class="login-right">
+                <div class="login-card">
+                    <div class="lc-logo"><i class="fas fa-shield-halved"></i></div>
+                    <h2>Sign In</h2>
+                    <p>Connect your Discord account to access the dashboard</p>
+                    
+                    <div class="error-box" id="errorBox">
+                        <h4><i class="fas fa-exclamation-circle"></i> <span id="errorTitle">Login Failed</span></h4>
+                        <p id="errorMsg">Something went wrong.</p>
+                    </div>
+
+                    <a href="/login" class="disc-btn" id="loginBtn"><i class="fab fa-discord"></i> Sign in with Discord</a>
+                    <div class="loading-dots" id="loadingDots"><span></span><span></span><span></span></div>
+                    
+                    <div class="lc-divider">secured with discord oauth2</div>
+                    
+                    <div class="lc-features">
+                        <div class="lc-feat"><i class="fas fa-lock"></i><h4>Persistent</h4><p>30-day session</p></div>
+                        <div class="lc-feat"><i class="fas fa-bolt"></i><h4>Instant</h4><p>One-click sign in</p></div>
+                        <div class="lc-feat"><i class="fas fa-eye-slash"></i><h4>Private</h4><p>No data shared</p></div>
+                    </div>
+                    <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to home</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const err = params.get('error');
+        if (err) {
+            document.getElementById('errorBox').style.display = 'block';
+            const msgs = {
+                'token_failed': ['Token Exchange Failed', 'Discord rejected the authorization. Try again.'],
+                'user_failed': ['User Fetch Failed', 'Could not retrieve your Discord profile.'],
+                'callback_error': ['Callback Error', 'Server error during login. Check server logs.'],
+                'access_denied': ['Access Denied', 'You cancelled the Discord authorization.'],
+                'no_code': ['No Code', 'No authorization code received from Discord.'],
+                'not_logged_in': ['Session Expired', 'Your session has expired. Please sign in again.']
+            };
+            const [title, msg] = msgs[err] || ['Error', err];
+            document.getElementById('errorTitle').textContent = title;
+            document.getElementById('errorMsg').textContent = msg;
+            window.history.replaceState({}, '', '/login.html');
+        }
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            document.getElementById('loadingDots').style.display = 'flex';
+            this.style.opacity = '.6';
+            this.style.pointerEvents = 'none';
+            this.textContent = 'Connecting to Discord...';
+        });
+    </script>
+</body>
+</html>
