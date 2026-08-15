@@ -642,41 +642,124 @@ function renderAll(g){
 
     <!-- EMOJIS -->
     <div class="page" id="pg-emojis">
-        <div class="pg-header"><h1><i class="fas fa-face-smile"></i> Emojis</h1><p>View and manage server emojis</p></div>
-        <div class="card"><div class="card-head"><h2><i class="fas fa-face-smile" style="color:var(--orange)"></i> Server Emojis</h2><span class="badge badge-count" id="emojiCount">0</span></div><div id="emojiList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div></div>
+        <div class="pg-header"><h1><i class="fas fa-face-smile"></i> Emojis & Stickers</h1><p>View and manage server emojis and stickers</p></div>
+        <div class="inner-tabs"><button class="inner-tab active" onclick="switchInner(this,'emoji','emojis')">Emojis</button><button class="inner-tab" onclick="switchInner(this,'emoji','stickers')">Stickers</button></div>
+        <div class="inner-panel active" id="emoji-emojis">
+            <div class="grid4" style="margin-bottom:14px">
+                <div class="card stat-card sg"><div class="stat-top"><div class="stat-icon si-green"><i class="fas fa-face-smile"></i></div><span class="badge badge-live">Active</span></div><div class="stat-val" id="emojiTotal">0</div><div class="stat-label">Total Emojis</div></div>
+                <div class="card stat-card sb"><div class="stat-top"><div class="stat-icon si-blue"><i class="fas fa-image"></i></div><span class="badge badge-count">Static</span></div><div class="stat-val" id="emojiStatic">0</div><div class="stat-label">Static</div></div>
+                <div class="card stat-card so"><div class="stat-top"><div class="stat-icon si-orange"><i class="fas fa-film"></i></div><span class="badge badge-warn">Animated</span></div><div class="stat-val" id="emojiAnimated">0</div><div class="stat-label">Animated</div></div>
+                <div class="card stat-card sr"><div class="stat-top"><div class="stat-icon si-red"><i class="fas fa-upload"></i></div></div><div class="stat-val" id="emojiSlots">0</div><div class="stat-label">Slots Used</div></div>
+            </div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-face-smile" style="color:var(--orange)"></i> All Emojis</h2><span class="badge badge-count" id="emojiCount">0</span></div><div id="emojiList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div></div>
+        </div>
+        <div class="inner-panel" id="emoji-stickers">
+            <div class="card"><div class="card-head"><h2><i class="fas fa-note-sticky" style="color:var(--pink)"></i> Stickers</h2><span class="badge badge-count" id="stickerCount">0</span></div><div id="stickerList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div></div>
+        </div>
     </div>
 
     <!-- INVITES -->
     <div class="page" id="pg-invites">
-        <div class="pg-header"><h1><i class="fas fa-link"></i> Invites</h1><p>Track server invites and usage</p></div>
-        <div class="card"><div class="card-head"><h2><i class="fas fa-link" style="color:var(--green)"></i> Active Invites</h2><span class="badge badge-count" id="inviteCount">0</span></div><div id="inviteList" style="max-height:500px;overflow-y:auto"></div></div>
+        <div class="pg-header"><h1><i class="fas fa-link"></i> Invites</h1><p>Create, manage and track server invites</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Invite</h2></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Channel</h4><p>Channel for the invite link</p></div><select class="sel" id="inviteChannel"><option value="">Select channel...</option>${chOpts(tc)}</select></div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-clock"></i> Expiry</div>
+                        <div class="range-wrap"><input type="range" min="0" max="7" value="1" id="inviteMaxAge" oninput="const v=[0,1800,3600,7200,14400,28800,86400,604800][parseInt(this.value)];this.nextElementSibling.textContent=v===0?'Never':v<3600?(v/60)+'m':v<86400?(v/3600)+'h':'7d'"><span class="range-val">1d</span></div>
+                        <div class="var-hint"><i class="fas fa-info-circle"></i> How long the invite stays active</div>
+                    </div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-hashtag"></i> Max Uses</div>
+                        <div class="range-wrap"><input type="range" min="0" max="5" value="0" id="inviteMaxUses" oninput="const v=[0,1,5,10,25,100][parseInt(this.value)];this.nextElementSibling.textContent=v===0?'Unlimited':v"><span class="range-val">Unlimited</span></div>
+                    </div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-clock" style="color:var(--orange)"></i> Temporary</h4><p>Members are kicked when they disconnect</p></div><div class="toggle" id="inviteTemp" onclick="this.classList.toggle('on')"></div></div>
+                    <button class="save-btn" onclick="createInvite()" style="margin-top:14px"><i class="fas fa-plus"></i> Create Invite</button>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-chart-bar" style="color:var(--purple)"></i> Invite Stats</h2></div>
+                    <div id="inviteStats" style="display:grid;gap:8px"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-link" style="color:var(--green)"></i> Active Invites</h2><span class="badge badge-count" id="inviteCount">0</span><button class="save-btn" onclick="loadInvites()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
+                <div id="inviteList" style="max-height:600px;overflow-y:auto"></div>
+            </div>
+        </div>
     </div>
 
     <!-- WEBHOOKS -->
     <div class="page" id="pg-webhooks">
-        <div class="pg-header"><h1><i class="fas fa-plug"></i> Webhooks</h1><p>Manage server webhooks</p></div>
-        <div class="card"><div class="card-head"><h2><i class="fas fa-plug" style="color:var(--purple)"></i> Webhooks</h2><span class="badge badge-count" id="webhookCount">0</span></div><div id="webhookList"></div></div>
+        <div class="pg-header"><h1><i class="fas fa-plug"></i> Webhooks</h1><p>Create, manage and send via webhooks</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Webhook</h2></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Channel</h4><p>Channel for the webhook</p></div><select class="sel" id="webhookChannel"><option value="">Select channel...</option>${chOpts(tc)}</select></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-signature" style="color:var(--orange)"></i> Name</h4><p>Webhook display name</p></div><input class="input" id="webhookName" placeholder="BK BOT Webhook" style="max-width:200px"></div>
+                    <button class="save-btn" onclick="createWebhook()" style="margin-top:14px"><i class="fas fa-plus"></i> Create Webhook</button>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-paper-plane" style="color:var(--purple)"></i> Send Message</h2></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-plug" style="color:var(--purple)"></i> Webhook</h4><p>Select webhook to send through</p></div><select class="sel" id="sendWebhook"><option value="">Select webhook...</option></select></div>
+                    <div style="margin-top:10px"><textarea class="input" id="webhookMsg" placeholder="Message to send..." style="width:100%;min-height:80px;max-width:100%"></textarea></div>
+                    <div style="display:flex;gap:8px;margin-top:10px"><button class="save-btn" onclick="sendWebhookMsg()" style="padding:8px 18px;font-size:.78rem"><i class="fas fa-paper-plane"></i> Send</button><button class="save-btn" onclick="sendWebhookEmbed()" style="padding:8px 18px;font-size:.78rem;background:var(--grad2)"><i class="fas fa-image"></i> Send Embed</button></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-plug" style="color:var(--purple)"></i> Active Webhooks</h2><span class="badge badge-count" id="webhookCount">0</span><button class="save-btn" onclick="loadWebhooks()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
+                <div id="webhookList" style="max-height:600px;overflow-y:auto"></div>
+            </div>
+        </div>
     </div>
 
     <!-- TAGS -->
     <div class="page" id="pg-tags">
-        <div class="pg-header"><h1><i class="fas fa-tag"></i> Tags</h1><p>Quick response tags</p></div>
+        <div class="pg-header"><h1><i class="fas fa-tag"></i> Tags</h1><p>Quick response tags — use /tag in Discord</p></div>
         <div class="grid2">
-            <div class="card"><div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> New Tag</h2></div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Tag</h2></div>
                 <div style="display:flex;flex-direction:column;gap:10px">
-                    <input class="input" id="tagName" placeholder="Tag name" style="max-width:100%">
-                    <textarea class="input" id="tagResponse" placeholder="Tag response..." style="max-width:100%;width:100%;min-height:80px"></textarea>
-                    <button class="save-btn" onclick="addTag()" style="padding:8px 18px;font-size:.78rem"><i class="fas fa-plus"></i> Create Tag</button>
+                    <div style="display:flex;gap:8px;align-items:center"><span style="font-size:.85rem;color:var(--red);font-weight:700;font-family:'Courier New',monospace">/tag</span><input class="input" id="tagName" placeholder="tag-name" style="max-width:200px"></div>
+                    <textarea class="input" id="tagResponse" placeholder="Tag response text..." style="max-width:100%;width:100%;min-height:80px"></textarea>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="save-btn" onclick="addTag()" style="padding:8px 18px;font-size:.78rem"><i class="fas fa-plus"></i> Create Tag</button>
+                        <div style="display:flex;gap:4px;align-items:center"><span class="var-tag" style="cursor:pointer" onclick="const ta=document.getElementById('tagResponse');if(ta)ta.value+='{user}'">{user}</span><span class="var-tag" style="cursor:pointer" onclick="const ta=document.getElementById('tagResponse');if(ta)ta.value+='{server}'">{server}</span><span class="var-tag" style="cursor:pointer" onclick="const ta=document.getElementById('tagResponse');if(ta)ta.value+='{channel}'">{channel}</span></div>
+                    </div>
                 </div>
             </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> Tags</h2><span class="badge badge-count" id="tagCount">0</span></div><div id="tagList"></div></div>
+            <div class="card"><div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> All Tags</h2><span class="badge badge-count" id="tagCount">0</span></div><div id="tagList" style="max-height:500px;overflow-y:auto"></div></div>
         </div>
     </div>
 
     <!-- LEVELS -->
     <div class="page" id="pg-levels">
-        <div class="pg-header"><h1><i class="fas fa-trophy"></i> Levels</h1><p>Member level and XP leaderboard</p></div>
-        <div class="card"><div class="card-head"><h2><i class="fas fa-trophy" style="color:var(--orange)"></i> Leaderboard</h2><span class="badge badge-count" id="levelCount">0</span></div><div id="levelList" style="max-height:500px;overflow-y:auto"></div></div>
+        <div class="pg-header"><h1><i class="fas fa-trophy"></i> Levels & XP</h1><p>Member leveling system leaderboard</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-cog" style="color:var(--orange)"></i> Level Settings</h2></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Enable the leveling system</p></div><div class="toggle on" data-key="level_enabled" onclick="toggleSetting(this)"></div></div>
+                    <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-hashtag" style="color:var(--blue)"></i> Level Channel</h4><p>Channel for level-up messages</p></div><select class="sel" id="levelChannel" onchange="saveSetting('level_channel',this.value)"><option value="">None</option>${chOpts(tc)}</select></div>
+                    <div class="cfg-section">
+                        <div class="cfg-title"><i class="fas fa-bolt"></i> XP Multiplier</div>
+                        <div class="range-wrap"><input type="range" min="1" max="5" value="${SETTINGS.level_multiplier||1}" oninput="this.nextElementSibling.textContent=this.value+'x';SETTINGS.level_multiplier=parseInt(this.value);markDirty()"><span class="range-val">${SETTINGS.level_multiplier||1}x</span></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-id-card" style="color:var(--purple)"></i> Level Roles</h2></div>
+                    <div style="display:grid;gap:6px">
+                        ${Object.entries(SETTINGS.level_roles||{'5':'Level 5','10':'Level 10','15':'Level 15','20':'Level 20','25':'Level 25','30':'Level 30'}).map(([lvl,name])=>`<div class="sec-row" style="padding:10px 14px"><div class="sec-icon si-orange" style="width:32px;height:32px;font-size:.75rem;font-weight:800">${lvl}</div><div class="sec-info"><h4 style="font-size:.8rem">${esc(name)}</h4><p>Level ${lvl} reward</p></div></div>`).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-trophy" style="color:var(--orange)"></i> Top Members</h2><span class="badge badge-count" id="levelCount">0</span><button class="save-btn" onclick="loadLevels()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
+                <div id="levelList" style="max-height:500px;overflow-y:auto"></div>
+            </div>
+        </div>
     </div>
 
     <!-- BACKUP -->
@@ -711,7 +794,7 @@ function renderAll(g){
     </div>`;
 
     initMods();loadCustomCommands();bindNav();applySettings();
-    loadActivity();loadEmojis();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();
+    loadActivity();loadEmojis();loadStickers();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();
     setTimeout(()=>{
         document.querySelectorAll('.stat-val[data-count]').forEach(el=>animateVal(el,parseInt(el.dataset.count)||0));
         updateWelcomePreview();initColorPicker();
@@ -890,33 +973,122 @@ async function loadEmojis(){
     try{
         const emojis=await(await fetch(`/api/guild/${GUILD_ID}/emojis`)).json();
         const el=document.getElementById('emojiList'),cnt=document.getElementById('emojiCount');
+        const totalEl=document.getElementById('emojiTotal'),staticEl=document.getElementById('emojiStatic'),animEl=document.getElementById('emojiAnimated'),slotsEl=document.getElementById('emojiSlots');
         if(!el)return;
         if(cnt)cnt.textContent=emojis.length;
-        if(!emojis.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-face-smile"></i></div><h3>No emojis</h3></div>';return}
-        el.innerHTML=emojis.map(e=>`<div style="text-align:center;padding:12px;background:var(--glass);border-radius:10px;border:1px solid var(--border);transition:var(--tr)"><img src="${e.url}" alt="${e.name}" style="width:48px;height:48px;${e.animated?'animation:spin 2s linear infinite':''}"><div style="font-size:.68rem;color:var(--text3);margin-top:6px;word-break:break-all">:${esc(e.name)}:</div></div>`).join('');
+        if(totalEl)animateVal(totalEl,emojis.length);
+        const animated=emojis.filter(e=>e.animated).length;
+        const statics=emojis.length-animated;
+        if(animEl)animateVal(animEl,animated);
+        if(staticEl)animateVal(staticEl,statics);
+        if(slotsEl)slotsEl.textContent=emojis.length+'/50';
+        if(!emojis.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-face-smile"></i></div><h3>No emojis</h3><p>Upload emojis in server settings</p></div>';return}
+        el.innerHTML=emojis.map(e=>`<div style="text-align:center;padding:14px;background:var(--glass);border-radius:12px;border:1px solid var(--border);transition:var(--tr);position:relative" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="position:absolute;top:6px;right:6px"><button class="cmd-btn del" title="Delete" onclick="deleteEmoji('${e.id}')" style="width:24px;height:24px;font-size:.6rem"><i class="fas fa-trash"></i></button></div><img src="${e.url}" alt="${e.name}" style="width:52px;height:52px;${e.animated?'animation:spin 2s linear infinite':''}"><div style="font-size:.72rem;color:var(--text2);margin-top:8px;word-break:break-all;font-weight:600">:${esc(e.name)}:</div><div style="font-size:.6rem;color:var(--text4);margin-top:2px">${e.animated?'Animated':'Static'}</div></div>`).join('');
+    }catch(e){}
+}
+async function deleteEmoji(id){
+    if(!confirm('Delete this emoji?'))return;
+    try{await fetch(`/api/guild/${GUILD_ID}/emojis/${id}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});loadEmojis();showToast('Emoji deleted','info')}catch(e){showToast('Failed','error')}
+}
+async function loadStickers(){
+    if(!GUILD_ID)return;
+    try{
+        const stickers=await(await fetch(`/api/guild/${GUILD_ID}/stickers`)).json();
+        const el=document.getElementById('stickerList'),cnt=document.getElementById('stickerCount');
+        if(!el)return;
+        if(cnt)cnt.textContent=stickers.length;
+        if(!stickers.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-note-sticky"></i></div><h3>No stickers</h3></div>';return}
+        el.innerHTML=stickers.map(s=>`<div style="padding:16px;background:var(--glass);border-radius:12px;border:1px solid var(--border);text-align:center;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="font-size:1.5rem;margin-bottom:8px">📋</div><div style="font-size:.8rem;font-weight:600;color:var(--text)">${esc(s.name)}</div><div style="font-size:.68rem;color:var(--text4);margin-top:4px">${esc(s.description||'No description')}</div></div>`).join('');
     }catch(e){}
 }
 async function loadInvites(){
     if(!GUILD_ID)return;
     try{
         const invites=await(await fetch(`/api/guild/${GUILD_ID}/invites`)).json();
-        const el=document.getElementById('inviteList'),cnt=document.getElementById('inviteCount');
+        const el=document.getElementById('inviteList'),cnt=document.getElementById('inviteCount'),statsEl=document.getElementById('inviteStats');
         if(!el)return;
         if(cnt)cnt.textContent=invites.length;
-        if(!invites.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-link"></i></div><h3>No invites</h3></div>';return}
-        el.innerHTML=invites.map(i=>`<div class="cmd-item"><div><div class="cmd-name">discord.gg/${esc(i.code)}</div><div class="cmd-resp">By ${esc(i.creator?.username||'Unknown')} • ${i.uses||0} uses${i.max_uses?` / ${i.max_uses} max`:''}</div></div></div>`).join('');
+        if(!invites.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-link"></i></div><h3>No invites</h3><p>Create one on the left</p></div>';if(statsEl)statsEl.innerHTML='';return}
+        const totalUses=invites.reduce((a,i)=>a+(i.uses||0),0);
+        const maxUsesInvites=invites.filter(i=>i.max_uses>0);
+        if(statsEl){
+            statsEl.innerHTML=`<div style="padding:12px 14px;background:var(--glass);border-radius:10px;border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.78rem;color:var(--text3)"><i class="fas fa-link" style="color:var(--green);margin-right:6px"></i>Total Invites</span><span style="font-size:1rem;font-weight:800;color:var(--green)">${invites.length}</span></div></div><div style="padding:12px 14px;background:var(--glass);border-radius:10px;border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.78rem;color:var(--text3)"><i class="fas fa-users" style="color:var(--blue);margin-right:6px"></i>Total Joins</span><span style="font-size:1rem;font-weight:800;color:var(--blue)">${totalUses}</span></div></div><div style="padding:12px 14px;background:var(--glass);border-radius:10px;border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.78rem;color:var(--text3)"><i class="fas fa-fire" style="color:var(--orange);margin-right:6px"></i>Most Used</span><span style="font-size:.85rem;font-weight:700;color:var(--orange)">${invites.sort((a,b)=>b.uses-a.uses)[0]?.code||'N/A'}</span></div></div>`;
+        }
+        el.innerHTML=invites.map(i=>{
+            const pct=i.max_uses>0?Math.round((i.uses/i.max_uses)*100):0;
+            const ageText=i.max_age===0?'Never':i.max_age<3600?(i.max_age/60)+'m':i.max_age<86400?(i.max_age/3600)+'h':'7d';
+            return`<div style="padding:14px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><i class="fas fa-link" style="color:var(--green);font-size:.8rem"></i><span style="font-size:.88rem;font-weight:700;color:var(--green);font-family:'Courier New',monospace">discord.gg/${esc(i.code)}</span></div><div style="display:flex;gap:4px"><button class="cmd-btn" title="Copy Link" onclick="navigator.clipboard.writeText('https://discord.gg/${esc(i.code)}');showToast('Link copied!','success')" style="color:var(--blue)"><i class="fas fa-copy"></i></button><button class="cmd-btn del" title="Revoke Invite" onclick="revokeInvite('${esc(i.code)}')" style="color:var(--red)"><i class="fas fa-trash"></i></button></div></div><div style="display:flex;gap:12px;font-size:.7rem;color:var(--text4);flex-wrap:wrap"><span><i class="fas fa-user" style="margin-right:3px"></i>${esc(i.creator?.username||'Unknown')}</span><span><i class="fas fa-users" style="margin-right:3px"></i>${i.uses||0} uses</span><span><i class="fas fa-clock" style="margin-right:3px"></i>${ageText}</span>${i.max_uses>0?`<span><i class="fas fa-bullseye" style="margin-right:3px"></i>${i.max_uses} max</span>`:''}</div>${i.max_uses>0?`<div style="margin-top:8px;height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pct>80?'var(--red)':'var(--green)'};border-radius:4px;transition:width .3s"></div></div>`:''}</div>`;
+        }).join('');
     }catch(e){}
+}
+async function createInvite(){
+    const ch=document.getElementById('inviteChannel')?.value;
+    if(!ch){showToast('Select a channel','error');return}
+    const ages=[0,1800,3600,7200,14400,28800,86400,604800];
+    const uses=[0,1,5,10,25,100];
+    const maxAge=ages[parseInt(document.getElementById('inviteMaxAge')?.value||1)];
+    const maxUses=uses[parseInt(document.getElementById('inviteMaxUses')?.value||0)];
+    const temp=document.getElementById('inviteTemp')?.classList.contains('on');
+    try{
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/invites`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({channel_id:ch,max_age:maxAge,max_uses:maxUses,temporary:temp})})).json();
+        if(r.ok){showToast(`Invite created: discord.gg/${r.invite.code}`,'success');navigator.clipboard.writeText(r.invite.url);loadInvites()}
+        else showToast(r.error||'Failed','error');
+    }catch(e){showToast('Failed to create invite','error')}
+}
+async function revokeInvite(code){
+    if(!confirm(`Revoke invite ${code}?`))return;
+    try{await fetch(`/api/guild/${GUILD_ID}/invites/${code}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});loadInvites();showToast('Invite revoked','info')}catch(e){showToast('Failed','error')}
 }
 async function loadWebhooks(){
     if(!GUILD_ID)return;
     try{
         const wh=await(await fetch(`/api/guild/${GUILD_ID}/webhooks`)).json();
-        const el=document.getElementById('webhookList'),cnt=document.getElementById('webhookCount');
+        const el=document.getElementById('webhookList'),cnt=document.getElementById('webhookCount'),sendSel=document.getElementById('sendWebhook');
         if(!el)return;
         if(cnt)cnt.textContent=wh.length;
-        if(!wh.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-plug"></i></div><h3>No webhooks</h3></div>';return}
-        el.innerHTML=wh.map(w=>`<div class="cmd-item"><div><div class="cmd-name">${esc(w.name)}</div><div class="cmd-resp">Channel: <#${w.channel_id}> • ID: ${w.id}</div></div></div>`).join('');
+        if(sendSel){sendSel.innerHTML='<option value="">Select webhook...</option>'+wh.map(w=>`<option value="${w.id}">${esc(w.name||'Unnamed')} (#${esc(GUILD_DATA.text_channels?.find(c=>c.id===w.channel_id)?.name||'unknown')})</option>`).join('')}
+        if(!wh.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-plug"></i></div><h3>No webhooks</h3><p>Create one on the left</p></div>';return}
+        el.innerHTML=wh.map(w=>{
+            const chName=GUILD_DATA.text_channels?.find(c=>c.id===w.channel_id)?.name||'unknown';
+            return`<div style="padding:14px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--purple-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-plug" style="color:var(--purple);font-size:.8rem"></i></div><div><div style="font-size:.88rem;font-weight:700;color:var(--text)">${esc(w.name||'Unnamed')}</div><div style="font-size:.7rem;color:var(--text4);margin-top:2px"><i class="fas fa-hashtag" style="margin-right:3px;font-size:.6rem"></i>${esc(chName)} <span style="opacity:.4;margin:0 4px">|</span> ID: ${w.id}</div></div></div><div style="display:flex;gap:4px"><button class="cmd-btn" title="Copy URL" onclick="navigator.clipboard.writeText('https://discord.com/api/webhooks/${w.id}');showToast('URL copied!','success')" style="color:var(--blue)"><i class="fas fa-copy"></i></button><button class="cmd-btn" title="Delete" onclick="deleteWebhook('${w.id}')" style="color:var(--red)"><i class="fas fa-trash"></i></button></div></div></div>`;
+        }).join('');
     }catch(e){}
+}
+async function createWebhook(){
+    const ch=document.getElementById('webhookChannel')?.value;
+    if(!ch){showToast('Select a channel','error');return}
+    const name=document.getElementById('webhookName')?.value||'BK BOT Webhook';
+    try{
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,channel_id:ch})})).json();
+        if(r.ok){showToast('Webhook created!','success');loadWebhooks()}
+        else showToast(r.error||'Failed','error');
+    }catch(e){showToast('Failed to create webhook','error')}
+}
+async function deleteWebhook(id){
+    if(!confirm('Delete this webhook?'))return;
+    try{await fetch(`/api/guild/${GUILD_ID}/webhooks/${id}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});loadWebhooks();showToast('Webhook deleted','info')}catch(e){showToast('Failed','error')}
+}
+async function sendWebhookMsg(){
+    const whId=document.getElementById('sendWebhook')?.value;
+    const msg=document.getElementById('webhookMsg')?.value?.trim();
+    if(!whId){showToast('Select a webhook','error');return}
+    if(!msg){showToast('Enter a message','error');return}
+    try{
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({content:msg})})).json();
+        if(r.ok){showToast('Message sent!','success');document.getElementById('webhookMsg').value=''}
+        else showToast(r.error||'Failed to send','error');
+    }catch(e){showToast('Failed to send','error')}
+}
+async function sendWebhookEmbed(){
+    const whId=document.getElementById('sendWebhook')?.value;
+    const msg=document.getElementById('webhookMsg')?.value?.trim();
+    if(!whId){showToast('Select a webhook','error');return}
+    if(!msg){showToast('Enter a message','error');return}
+    try{
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({content:'',username:'BK BOT',avatar_url:'https://cdn.discordapp.com/avatars/1537980470782988439/avatar.png'})})).json();
+        if(r.ok){showToast('Embed sent!','success');document.getElementById('webhookMsg').value=''}
+        else showToast(r.error||'Failed','error');
+    }catch(e){showToast('Failed to send','error')}
 }
 async function loadTags(){
     if(!GUILD_ID)return;
@@ -927,7 +1099,10 @@ async function loadTags(){
         const keys=Object.keys(tags);
         if(cnt)cnt.textContent=keys.length;
         if(!keys.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-tag"></i></div><h3>No tags</h3><p>Create one on the left</p></div>';return}
-        el.innerHTML=keys.map(n=>`<div class="cmd-item"><div><div class="cmd-name">/${esc(n)}</div><div class="cmd-resp">${esc(tags[n].response||'')}</div></div><div class="cmd-actions"><button class="cmd-btn del" title="Delete" onclick="deleteTag('${esc(n)}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
+        el.innerHTML=keys.map(n=>{
+            const t=tags[n];
+            return`<div style="padding:12px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;justify-content:space-between"><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:.75rem;color:var(--red);font-weight:700;font-family:'Courier New',monospace">/tag</span><span style="font-size:.88rem;font-weight:700;color:var(--text);font-family:'Courier New',monospace">${esc(n)}</span></div><div style="font-size:.72rem;color:var(--text4);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.response||'')}</div></div><div style="display:flex;gap:4px"><button class="cmd-btn" title="Copy" onclick="navigator.clipboard.writeText('${esc(t.response||'')}');showToast('Copied!','success')" style="color:var(--blue)"><i class="fas fa-copy"></i></button><button class="cmd-btn del" title="Delete" onclick="deleteTag('${esc(n)}')" style="color:var(--red)"><i class="fas fa-trash"></i></button></div></div></div>`;
+        }).join('');
     }catch(e){}
 }
 async function loadLevels(){
@@ -938,7 +1113,12 @@ async function loadLevels(){
         if(!el)return;
         if(cnt)cnt.textContent=levels.length;
         if(!levels.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-trophy"></i></div><h3>No level data</h3><p>Members will appear as they chat</p></div>';return}
-        el.innerHTML=levels.map((l,i)=>`<div class="cmd-item"><div style="display:flex;align-items:center;gap:10px;flex:1"><span style="font-size:.75rem;color:var(--text4);min-width:24px">#${i+1}</span><div><div class="cmd-name"><@${l.userId}></div><div class="cmd-resp">Level ${l.level} • ${l.xp} XP</div></div></div><div style="min-width:60px;text-align:right"><span style="font-size:1.1rem;font-weight:800;color:var(--orange)">${l.level}</span></div></div>`).join('');
+        el.innerHTML=levels.map((l,i)=>{
+            const medals=['🥇','🥈','🥉'];
+            const medal=i<3?medals[i]:`<span style="color:var(--text4);font-size:.85rem;font-weight:700">#${i+1}</span>`;
+            const xpPct=Math.round((l.xp%100));
+            return`<div style="padding:12px 16px;background:var(--glass);border:1px solid ${i<3?'rgba(251,191,36,.15)':'var(--border)'};border-radius:var(--r);margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='${i<3?'rgba(251,191,36,.15)':'var(--border)'}'"><div style="min-width:32px;text-align:center;font-size:${i<3?'1.2rem':'.85rem'}">${medal}</div><div style="flex:1"><div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px"><@${l.userId}></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:.68rem;color:var(--text4)">${l.xp} XP</span><div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${xpPct}%;background:var(--orange);border-radius:3px"></div></div></div></div><div style="text-align:right"><div style="font-size:1.3rem;font-weight:900;color:var(--orange)">${l.level}</div><div style="font-size:.6rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px">Level</div></div></div>`;
+        }).join('');
     }catch(e){}
 }
 async function loadBackups(){
@@ -956,12 +1136,15 @@ async function addTag(){
     const name=document.getElementById('tagName')?.value?.trim();
     const response=document.getElementById('tagResponse')?.value?.trim();
     if(!name||!response){showToast('Fill in both fields','error');return}
-    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})});
-    document.getElementById('tagName').value='';document.getElementById('tagResponse').value='';
-    loadTags();showToast('Tag created!','success');
+    try{
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/tags`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})})).json();
+        document.getElementById('tagName').value='';document.getElementById('tagResponse').value='';
+        loadTags();showToast('Tag created!','success');
+    }catch(e){showToast('Failed','error')}
 }
 async function deleteTag(name){
-    await fetch(`/api/guild/${GUILD_ID}/commands/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
+    if(!confirm(`Delete tag "${name}"?`))return;
+    await fetch(`/api/guild/${GUILD_ID}/tags/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
     loadTags();showToast('Tag deleted','info');
 }
 async function createBackup(){

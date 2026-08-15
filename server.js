@@ -344,11 +344,14 @@ app.get('/api/guild/:id/settings', apiLimiter, authMiddleware, (req, res) => {
 
 app.post('/api/guild/:id/settings', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
-    const allowed = ['welcome_channel','welcome_message','welcome_enabled','log_channel','ticket_channel','ticket_category',
-        'stats_category','muted_role','auto_role','anti_spam','anti_link','anti_raid','anti_nuke',
-        'level_channel','level_multiplier','level_enabled','greet_role',
-        'spam_threshold','raid_threshold','raid_timeframe',
-        'log_messages','log_moderation','log_joinleave','log_edits'];
+    const allowed = ['welcome_channel','welcome_message','welcome_enabled','welcome_dm','welcome_embed','welcome_color','log_channel','ticket_channel','ticket_category',
+        'ticket_support_role','ticket_max','ticket_transcript',
+        'stats_category','muted_role','auto_role','autorole_enabled','autorole_delay','autorole_delay_time','greet_role',
+        'anti_spam','anti_link','anti_raid','anti_nuke','anti_spam','auto_mute_spam','auto_delete_links','auto_kick_unverified','lockdown_on_raid',
+        'level_channel','level_multiplier','level_enabled',
+        'log_messages','log_moderation','log_joinleave','log_edits','log_voice',
+        'dm_on_ban','dm_on_kick','dm_on_mute','embed_mode',
+        'spam_threshold','raid_threshold','raid_timeframe','punish_cooldown','mute_duration'];
     const filtered = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) filtered[k] = typeof req.body[k] === 'string' ? sanitize(req.body[k]) : req.body[k]; });
     db.saveGuildSettings(guildId, filtered);
@@ -473,6 +476,129 @@ app.get('/api/guild/:id/invites', apiLimiter, authMiddleware, (req, res) => {
         if (!Array.isArray(invites)) return res.json([]);
         res.json(invites.map(i => ({ code: i.code, uses: i.uses, max_uses: i.max_uses, creator: i.inviter, channel: i.channel, created_at: i.created_at, temporary: i.temporary })));
     }).catch(() => res.json([]));
+});
+
+// ====== Invite Management API ======
+
+app.post('/api/guild/:id/invites', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const { channel_id, max_age, max_uses, temporary } = req.body;
+    if (!channel_id) return res.status(400).json({ error: 'Channel ID required' });
+    botAPI(`/guilds/${guildId}/channels/${channel_id}/invites`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ max_age: max_age || 86400, max_uses: max_uses || 0, temporary: temporary || false })
+    }).then(invite => {
+        if (invite.code) {
+            res.json({ ok: true, invite: { code: invite.code, url: `https://discord.gg/${invite.code}`, uses: 0, max_uses: invite.max_uses, max_age: invite.max_age } });
+        } else {
+            res.json({ error: invite.message || 'Failed to create invite' });
+        }
+    }).catch(e => res.json({ error: e.message }));
+});
+
+app.delete('/api/guild/:id/invites/:code', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const code = req.params.code;
+    botAPI(`/guilds/${guildId}/invites/${code}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+    }).then(() => res.json({ ok: true })).catch(e => res.json({ error: e.message }));
+});
+
+// ====== Webhook Management API ======
+
+app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const { name, channel_id } = req.body;
+    if (!channel_id) return res.status(400).json({ error: 'Channel ID required' });
+    botAPI(`/guilds/${guildId}/webhooks`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name || 'BK BOT Webhook', channel_id })
+    }).then(wh => {
+        if (wh.id) {
+            res.json({ ok: true, webhook: { id: wh.id, name: wh.name, channel_id: wh.channel_id, token: wh.token, url: `https://discord.com/api/webhooks/${wh.id}/${wh.token}` } });
+        } else {
+            res.json({ error: wh.message || 'Failed to create webhook' });
+        }
+    }).catch(e => res.json({ error: e.message }));
+});
+
+app.patch('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const { whId } = req.params;
+    const { name, channel_id } = req.body;
+    const body = {};
+    if (name) body.name = name;
+    if (channel_id) body.channel_id = channel_id;
+    botAPI(`/webhooks/${whId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    }).then(wh => {
+        if (wh.id) res.json({ ok: true, webhook: { id: wh.id, name: wh.name, channel_id: wh.channel_id } });
+        else res.json({ error: wh.message || 'Failed to update webhook' });
+    }).catch(e => res.json({ error: e.message }));
+});
+
+app.delete('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    botAPI(`/webhooks/${req.params.whId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+    }).then(() => res.json({ ok: true })).catch(e => res.json({ error: e.message }));
+});
+
+app.post('/api/guild/:id/webhooks/:whId/send', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const { whId } = req.params;
+    const { content, username, avatar_url } = req.body;
+    if (!content) return res.status(400).json({ error: 'Content required' });
+    fetch(`https://discord.com/api/webhooks/${whId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content.substring(0, 2000), username: username || undefined, avatar_url: avatar_url || undefined })
+    }).then(r => r.json()).then(d => {
+        if (d.id) res.json({ ok: true });
+        else res.json({ error: d.message || 'Failed to send' });
+    }).catch(e => res.json({ error: e.message }));
+});
+
+// ====== Tags CRUD API ======
+
+app.post('/api/guild/:id/tags', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const fs = require('fs');
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const { name, response } = req.body;
+    if (!name || !response) return res.status(400).json({ error: 'Name and response required' });
+    const cleanName = sanitize(name.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30));
+    const tagsFile = path.join(__dirname, 'data', 'tags.json');
+    let tags = {};
+    try { tags = JSON.parse(fs.readFileSync(tagsFile, 'utf8')); } catch(e) {}
+    if (!tags[guildId]) tags[guildId] = {};
+    tags[guildId][cleanName] = { name: cleanName, response: sanitize(response.substring(0, 500)), created: Date.now() };
+    fs.writeFileSync(tagsFile, JSON.stringify(tags, null, 2));
+    res.json({ ok: true, tags: tags[guildId] });
+});
+
+app.delete('/api/guild/:id/tags/:name', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const fs = require('fs');
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const tagClean = sanitize(req.params.name.replace(/[^a-zA-Z0-9_-]/g, ''));
+    const tagsFile = path.join(__dirname, 'data', 'tags.json');
+    let tags = {};
+    try { tags = JSON.parse(fs.readFileSync(tagsFile, 'utf8')); } catch(e) {}
+    if (tags[guildId]) delete tags[guildId][tagClean];
+    fs.writeFileSync(tagsFile, JSON.stringify(tags, null, 2));
+    res.json({ ok: true });
+});
+
+// ====== Emoji Delete API ======
+
+app.delete('/api/guild/:id/emojis/:emojiId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    botAPI(`/guilds/${guildId}/emojis/${req.params.emojiId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+    }).then(() => res.json({ ok: true })).catch(e => res.json({ error: e.message }));
 });
 
 // ====== Scheduled Events API ======
