@@ -8,11 +8,11 @@ require('dotenv').config();
 const db = require('./db');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = `http://localhost:${PORT}/callback`;
+const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TOKEN;
 
 // ====== Security Headers ======
