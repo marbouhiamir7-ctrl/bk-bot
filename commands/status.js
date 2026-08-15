@@ -19,7 +19,7 @@ module.exports = {
                 { name: 'Listening', value: '2' }, { name: 'Watching', value: '3' },
                 { name: 'Competing', value: '5' })))
         .addSubcommand(sub => sub.setName('rotate').setDescription('Enable auto-rotating status')
-            .addIntegerOption(o => o.setName('interval').setDescription('Seconds between rotations').setMinValue(10).setMaxColor(3600)))
+            .addIntegerOption(o => o.setName('interval').setDescription('Seconds between rotations').setMinValue(10).setMaxValue(3600)))
         .addSubcommand(sub => sub.setName('stop').setDescription('Stop rotating status'))
         .addSubcommand(sub => sub.setName('current').setDescription('Show current status'))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
