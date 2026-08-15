@@ -181,6 +181,7 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
 .notif-bar .close{margin-left:auto;cursor:pointer;color:var(--text4);padding:4px}
 
 @media(max-width:1200px){.grid4{grid-template-columns:repeat(2,1fr)}}
+.doc-cmd-card{padding:14px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);transition:var(--tr);cursor:default}.doc-cmd-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow)}
 @media(max-width:1024px){.grid3{grid-template-columns:1fr 1fr}}
 @media(max-width:768px){.dashboard{padding-left:0}.sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}.grid4,.grid2,.grid3{grid-template-columns:1fr}.mobile-toggle{display:flex!important}}
 .mobile-toggle{display:none;position:fixed;top:16px;left:16px;z-index:60;width:40px;height:40px;background:var(--glass2);border:1px solid var(--border);border-radius:10px;align-items:center;justify-content:center;color:var(--text);cursor:pointer;font-size:1rem}
@@ -776,19 +777,219 @@ function renderAll(g){
 
     <!-- DOCS -->
     <div class="page" id="pg-docs">
-        <div class="pg-header"><h1><i class="fas fa-book"></i> API Documentation</h1><p>Bot command reference and API docs</p></div>
-        <div class="grid2">
-            <div class="card"><div class="card-head"><h2><i class="fas fa-shield-halved" style="color:var(--red)"></i> Moderation</h2></div>
-                <div style="display:grid;gap:6px">${['/kick @user [reason]','/ban @user [reason]','/unban @user','/mute @user [duration] [reason]','/unmute @user','/warn @user [reason]','/warnings @user','/clear [amount]','/purge @user [amount]','/massban @user1 @user2','/masskick @user1 @user2'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--red)">${c}</div>`).join('')}</div>
+        <div class="pg-header"><h1><i class="fas fa-book"></i> Documentation</h1><p>Command reference, REST API docs, and setup guides</p></div>
+        <div class="inner-tabs"><button class="inner-tab active" onclick="switchInner(this,'doc','commands')">Commands</button><button class="inner-tab" onclick="switchInner(this,'doc','api')">REST API</button><button class="inner-tab" onclick="switchInner(this,'doc','setup')">Setup Guide</button><button class="inner-tab" onclick="switchInner(this,'doc','faq')">FAQ</button></div>
+
+        <div class="inner-panel active" id="doc-commands">
+            <div style="margin-bottom:16px"><input class="input" id="cmdSearch" placeholder="Search commands..." oninput="filterDocs(this.value)" style="max-width:100%;width:100%"></div>
+
+            <div style="margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:32px;height:32px;border-radius:8px;background:var(--red-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-shield-halved" style="color:var(--red);font-size:.85rem"></i></div><h3 style="font-size:.95rem;font-weight:700">Moderation</h3></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px" id="docModCmds">
+                    ${[
+                        {cmd:'/kick',desc:'Remove a member from the server',args:'@user [reason]',perms:'Kick Members',cd:'3s'},
+                        {cmd:'/ban',desc:'Permanently ban a user',args:'@user [reason]',perms:'Ban Members',cd:'3s'},
+                        {cmd:'/unban',desc:'Remove ban from a user',args:'@user',perms:'Ban Members',cd:'3s'},
+                        {cmd:'/mute',desc:'Timeout a member',args:'@user [duration] [reason]',perms:'Moderate Members',cd:'3s'},
+                        {cmd:'/unmute',desc:'Remove timeout from member',args:'@user',perms:'Moderate Members',cd:'3s'},
+                        {cmd:'/warn',desc:'Issue a warning to a member',args:'@user [reason]',perms:'Moderate Members',cd:'3s'},
+                        {cmd:'/warnings',desc:'View all warnings for a user',args:'@user',perms:'Moderate Members',cd:'3s'},
+                        {cmd:'/clear',desc:'Delete messages from a channel',args:'[amount]',perms:'Manage Messages',cd:'5s'},
+                        {cmd:'/purge',desc:'Bulk delete messages by user',args:'@user [amount]',perms:'Manage Messages',cd:'5s'},
+                        {cmd:'/massban',desc:'Ban multiple users at once',args:'@user1 @user2 ...',perms:'Ban Members',cd:'10s'},
+                        {cmd:'/masskick',desc:'Kick multiple users at once',args:'@user1 @user2 ...',perms:'Kick Members',cd:'10s'}
+                    ].map(c=>`<div class="doc-cmd-card" data-search="${c.cmd} ${c.desc}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:.88rem;font-weight:700;color:var(--red);font-family:'Courier New',monospace">${c.cmd}</span><span style="font-size:.6rem;padding:2px 8px;border-radius:10px;background:rgba(255,92,92,.08);color:var(--red);font-weight:600;border:1px solid rgba(255,92,92,.1)">${c.cd}</span></div><div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">${c.desc}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${c.args}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(251,191,36,.08);color:var(--orange);font-weight:600">${c.perms}</span></div></div>`).join('')}
+                </div>
             </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-gear" style="color:var(--blue)"></i> Utility</h2></div>
-                <div style="display:grid;gap:6px">${['/ping','/botinfo','/avatar @user','/userinfo @user','/serverinfo','/role add/remove @user @role','/nick @user [nickname]','/slowmode [seconds]','/lock /unlock','/emojis'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--blue)">${c}</div>`).join('')}</div>
+
+            <div style="margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:32px;height:32px;border-radius:8px;background:var(--blue-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-gear" style="color:var(--blue);font-size:.85rem"></i></div><h3 style="font-size:.95rem;font-weight:700">Utility</h3></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px" id="docUtilCmds">
+                    ${[
+                        {cmd:'/ping',desc:'Check bot latency and API response time',args:'None',perms:'None',cd:'3s'},
+                        {cmd:'/botinfo',desc:'View bot statistics and information',args:'None',perms:'None',cd:'3s'},
+                        {cmd:'/avatar',desc:'Get a user\'s avatar in full resolution',args:'@user',perms:'None',cd:'3s'},
+                        {cmd:'/userinfo',desc:'View detailed user information',args:'@user',perms:'None',cd:'3s'},
+                        {cmd:'/serverinfo',desc:'View server information and stats',args:'None',perms:'None',cd:'5s'},
+                        {cmd:'/role',desc:'Add or remove roles from a member',args:'add/remove @user @role',perms:'Manage Roles',cd:'3s'},
+                        {cmd:'/nick',desc:'Change a member\'s nickname',args:'@user [nickname]',perms:'Manage Nicknames',cd:'3s'},
+                        {cmd:'/slowmode',desc:'Set channel slowmode delay',args:'[seconds]',perms:'Manage Channels',cd:'5s'},
+                        {cmd:'/lock',desc:'Lock a channel (no one can send)',args:'[channel]',perms:'Manage Channels',cd:'3s'},
+                        {cmd:'/unlock',desc:'Unlock a locked channel',args:'[channel]',perms:'Manage Channels',cd:'3s'},
+                        {cmd:'/emojis',desc:'View all server emojis',args:'None',perms:'None',cd:'5s'},
+                        {cmd:'/poll',desc:'Create a reaction poll',args:'[question] [options]',perms:'None',cd:'10s'},
+                        {cmd:'/remind',desc:'Set a reminder',args:'[time] [message]',perms:'None',cd:'3s'}
+                    ].map(c=>`<div class="doc-cmd-card" data-search="${c.cmd} ${c.desc}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:.88rem;font-weight:700;color:var(--blue);font-family:'Courier New',monospace">${c.cmd}</span><span style="font-size:.6rem;padding:2px 8px;border-radius:10px;background:rgba(96,165,250,.08);color:var(--blue);font-weight:600;border:1px solid rgba(96,165,250,.1)">${c.cd}</span></div><div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">${c.desc}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${c.args}</span>${c.perms!=='None'?`<span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(251,191,36,.08);color:var(--orange);font-weight:600">${c.perms}</span>`:''}</div></div>`).join('')}
+                </div>
             </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-star" style="color:var(--orange)"></i> Features</h2></div>
-                <div style="display:grid;gap:6px">${['/giveaway create [prize] [duration]','/reactionroles create [title] [roles]','/temprole @user @role [duration]','/social youtube/twitch','/welcomebanner set [color]','/levelroles add [level] [role]','/tag create [name] [response]','/template save/load [name]','/backup create','/voicerooms setup [lobby]','/status set/rotate'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--orange)">${c}</div>`).join('')}</div>
+
+            <div style="margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:32px;height:32px;border-radius:8px;background:var(--orange-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-star" style="color:var(--orange);font-size:.85rem"></i></div><h3 style="font-size:.95rem;font-weight:700">Features</h3></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px" id="docFeatCmds">
+                    ${[
+                        {cmd:'/giveaway',desc:'Create giveaways with prize and duration',args:'create [prize] [duration]',perms:'Manage Events',cd:'10s'},
+                        {cmd:'/reactionroles',desc:'Create reaction role messages',args:'create [title] [roles]',perms:'Manage Roles',cd:'10s'},
+                        {cmd:'/temprole',desc:'Assign a role temporarily',args:'@user @role [duration]',perms:'Manage Roles',cd:'5s'},
+                        {cmd:'/afk',desc:'Set yourself as AFK',args:'[reason]',perms:'None',cd:'3s'},
+                        {cmd:'/announce',desc:'Send an announcement embed',args:'[channel] [message]',perms:'Manage Messages',cd:'5s'},
+                        {cmd:'/tag',desc:'Quick response tags',args:'create [name] [response]',perms:'None',cd:'3s'},
+                        {cmd:'/levelroles',desc:'Set role rewards for levels',args:'add [level] [role]',perms:'Manage Roles',cd:'5s'},
+                        {cmd:'/voicerooms',desc:'Setup temporary voice channels',args:'setup [lobby]',perms:'Manage Channels',cd:'10s'},
+                        {cmd:'/status',desc:'Set bot status or auto-rotate',args:'set/rotate [text]',perms:'Administrator',cd:'5s'},
+                        {cmd:'/template',desc:'Save/load server templates',args:'save/load [name]',perms:'Administrator',cd:'10s'},
+                        {cmd:'/backup',desc:'Backup server settings and channels',args:'create',perms:'Administrator',cd:'10s'},
+                        {cmd:'/social',desc:'Set social media links',args:'youtube/twitch [url]',perms:'Manage Server',cd:'5s'}
+                    ].map(c=>`<div class="doc-cmd-card" data-search="${c.cmd} ${c.desc}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:.88rem;font-weight:700;color:var(--orange);font-family:'Courier New',monospace">${c.cmd}</span><span style="font-size:.6rem;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,.08);color:var(--orange);font-weight:600;border:1px solid rgba(251,191,36,.1)">${c.cd}</span></div><div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">${c.desc}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${c.args}</span>${c.perms!=='None'?`<span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(251,191,36,.08);color:var(--orange);font-weight:600">${c.perms}</span>`:''}</div></div>`).join('')}
+                </div>
             </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-code" style="color:var(--green)"></i> REST API</h2></div>
-                <div style="display:grid;gap:6px">${['GET /api/user','GET /api/guilds','GET /api/guild/:id','GET /api/guild/:id/settings','POST /api/guild/:id/settings','GET /api/guild/:id/commands','GET /api/guild/:id/emojis','GET /api/guild/:id/webhooks','GET /api/guild/:id/invites','GET /api/guild/:id/events','GET /api/stats','GET /api/botinfo'].map(c=>`<div style="padding:8px 12px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-family:'Courier New',monospace;font-size:.75rem;color:var(--green)">${c}</div>`).join('')}</div>
+
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><div style="width:32px;height:32px;border-radius:8px;background:var(--purple-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-crown" style="color:var(--purple);font-size:.85rem"></i></div><h3 style="font-size:.95rem;font-weight:700">Admin & Security</h3></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px" id="docAdminCmds">
+                    ${[
+                        {cmd:'/setupstats',desc:'Setup auto-updating stat voice channels',args:'None',perms:'Administrator',cd:'30s'},
+                        {cmd:'/setwelcome',desc:'Configure welcome channel and message',args:'[channel]',perms:'Manage Server',cd:'5s'},
+                        {cmd:'/security',desc:'View and configure security settings',args:'None',perms:'Administrator',cd:'5s'},
+                        {cmd:'/permcheck',desc:'Check bot permissions in a channel',args:'[channel]',perms:'None',cd:'5s'},
+                        {cmd:'/raidanalytics',desc:'View raid detection analytics',args:'None',perms:'Administrator',cd:'10s'},
+                        {cmd:'/commands',desc:'View all available commands',args:'None',perms:'None',cd:'3s'},
+                        {cmd:'/help',desc:'Get help with bot features',args:'[command]',perms:'None',cd:'3s'}
+                    ].map(c=>`<div class="doc-cmd-card" data-search="${c.cmd} ${c.desc}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:.88rem;font-weight:700;color:var(--purple);font-family:'Courier New',monospace">${c.cmd}</span><span style="font-size:.6rem;padding:2px 8px;border-radius:10px;background:rgba(167,139,250,.08);color:var(--purple);font-weight:600;border:1px solid rgba(167,139,250,.1)">${c.cd}</span></div><div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">${c.desc}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${c.args}</span>${c.perms!=='None'?`<span style="font-size:.6rem;padding:2px 7px;border-radius:5px;background:rgba(251,191,36,.08);color:var(--orange);font-weight:600">${c.perms}</span>`:''}</div></div>`).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="inner-panel" id="doc-api">
+            <div class="grid2">
+                <div>
+                    <div class="card" style="margin-bottom:14px">
+                        <div class="card-head"><h2><i class="fas fa-key" style="color:var(--green)"></i> Authentication</h2></div>
+                        <div style="padding:14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px">
+                            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">How to authenticate</div>
+                            <div style="font-size:.72rem;color:var(--text3);line-height:1.6">All API endpoints require a valid session cookie. Login through the dashboard OAuth2 flow at <code style="background:rgba(52,211,153,.1);color:var(--green);padding:2px 6px;border-radius:4px;font-size:.7rem">/login</code> to get a session. CSRF tokens are required for POST/DELETE requests — fetch one from <code style="background:rgba(96,165,250,.1);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:.7rem">GET /api/csrf</code></div>
+                        </div>
+                        <div style="padding:14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)">
+                            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Headers</div>
+                            <div style="display:grid;gap:4px">
+                                <div style="font-size:.72rem;font-family:'Courier New',monospace;color:var(--text3)"><span style="color:var(--green)">Cookie:</span> bk_session=&lt;token&gt;</div>
+                                <div style="font-size:.72rem;font-family:'Courier New',monospace;color:var(--text3)"><span style="color:var(--blue)">X-CSRF-Token:</span> &lt;csrf_token&gt;</div>
+                                <div style="font-size:.72rem;font-family:'Courier New',monospace;color:var(--text3)"><span style="color:var(--orange)">Content-Type:</span> application/json</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><h2><i class="fas fa-shield" style="color:var(--red)"></i> Rate Limits</h2></div>
+                        <div style="display:grid;gap:8px">
+                            <div style="padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between"><span style="font-size:.78rem;color:var(--text3)">General API</span><span style="font-size:.78rem;font-weight:700;color:var(--green)">200 / 15 min</span></div></div>
+                            <div style="padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between"><span style="font-size:.78rem;color:var(--text3)">Auth Routes</span><span style="font-size:.78rem;font-weight:700;color:var(--orange)">10 / 15 min</span></div></div>
+                            <div style="padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between"><span style="font-size:.78rem;color:var(--text3)">Write Operations</span><span style="font-size:.78rem;font-weight:700;color:var(--red)">30 / min</span></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head"><h2><i class="fas fa-code" style="color:var(--green)"></i> Endpoints</h2></div>
+                    <div style="display:grid;gap:6px;max-height:600px;overflow-y:auto">
+                        ${[
+                            {m:'GET',u:'/api/user',d:'Get current logged-in user info',a:'Auth'},
+                            {m:'GET',u:'/api/csrf',d:'Get CSRF token for POST/DELETE requests',a:'None'},
+                            {m:'GET',u:'/api/guilds',d:'List all servers the user has access to',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id',d:'Get full server info with channels, roles, members',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id/settings',d:'Get guild settings (welcome, security, etc)',a:'Auth'},
+                            {m:'POST',u:'/api/guild/:id/settings',d:'Update guild settings',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/commands',d:'List custom commands for guild',a:'Auth'},
+                            {m:'POST',u:'/api/guild/:id/commands',d:'Create or update a custom command',a:'Auth + CSRF'},
+                            {m:'DEL',u:'/api/guild/:id/commands/:name',d:'Delete a custom command',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/emojis',d:'List all guild emojis',a:'Auth'},
+                            {m:'DEL',u:'/api/guild/:id/emojis/:id',d:'Delete an emoji (Manage Emojis perm)',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/stickers',d:'List all guild stickers',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id/webhooks',d:'List all guild webhooks',a:'Auth'},
+                            {m:'POST',u:'/api/guild/:id/webhooks',d:'Create a new webhook',a:'Auth + CSRF'},
+                            {m:'PAT',u:'/api/guild/:id/webhooks/:id',d:'Update webhook name or channel',a:'Auth + CSRF'},
+                            {m:'DEL',u:'/api/guild/:id/webhooks/:id',d:'Delete a webhook',a:'Auth + CSRF'},
+                            {m:'POS',u:'/api/guild/:id/webhooks/:id/send',d:'Send a message through a webhook',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/invites',d:'List all guild invites with usage stats',a:'Auth'},
+                            {m:'POS',u:'/api/guild/:id/invites',d:'Create a new invite link',a:'Auth + CSRF'},
+                            {m:'DEL',u:'/api/guild/:id/invites/:code',d:'Revoke an invite link',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/tags',d:'List all tags for guild',a:'Auth'},
+                            {m:'POST',u:'/api/guild/:id/tags',d:'Create a new tag',a:'Auth + CSRF'},
+                            {m:'DEL',u:'/api/guild/:id/tags/:name',d:'Delete a tag',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/warnings',d:'Get all warnings for guild members',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id/levels',d:'Get XP leaderboard (top 50)',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id/events',d:'List scheduled events',a:'Auth'},
+                            {m:'GET',u:'/api/guild/:id/backup',d:'List server backups',a:'Auth'},
+                            {m:'POST',u:'/api/guild/:id/backup',d:'Create a new server backup',a:'Auth + CSRF'},
+                            {m:'GET',u:'/api/guild/:id/invite',d:'Redirect to bot invite with guild pre-selected',a:'None'},
+                            {m:'GET',u:'/api/activity',d:'Get recent bot activity feed',a:'None'},
+                            {m:'GET',u:'/api/botinfo',d:'Get bot info and global stats',a:'None'},
+                            {m:'GET',u:'/api/stats',d:'Get global bot statistics',a:'None'},
+                            {m:'GET',u:'/api/user/:id',d:'Look up any Discord user by ID',a:'None'}
+                        ].map(e=>{
+                            const mc={GET:'var(--green)',POST:'var(--blue)',DEL:'var(--red)',PAT:'var(--orange)',POS:'var(--cyan)'};
+                            const ml={GET:'GET',POST:'POST',DEL:'DELETE',PAT:'PATCH',POS:'POST'};
+                            return`<div style="padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border);transition:var(--tr);cursor:default" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;font-weight:800;letter-spacing:.5px;background:${mc[e.m]}15;color:${mc[e.m]};border:1px solid ${mc[e.m]}20;font-family:'Courier New',monospace">${ml[e.m]}</span><span style="font-size:.78rem;font-weight:600;color:var(--text);font-family:'Courier New',monospace">${e.u}</span></div><div style="font-size:.7rem;color:var(--text4);margin-bottom:4px">${e.d}</div><div style="display:flex;gap:4px">${e.a.split(' + ').map(a=>`<span style="font-size:.55rem;padding:1px 6px;border-radius:3px;background:${a==='Auth'?'rgba(52,211,153,.08)':a==='CSRF'?'rgba(251,191,36,.08)':'rgba(255,255,255,.04)'};color:${a==='Auth'?'var(--green)':a==='CSRF'?'var(--orange)':'var(--text4)'};font-weight:600">${a}</span>`).join('')}</div></div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inner-panel" id="doc-setup">
+            <div class="grid2">
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-rocket" style="color:var(--green)"></i> Quick Start</h2></div>
+                    <div style="display:grid;gap:12px">
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">1</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Add Bot to Server</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Click the <strong>Invite</strong> button and select your server. Grant all requested permissions for full functionality.</div></div></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">2</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Setup Moderation</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Create a <strong>#mod-logs</strong> channel. Go to <strong>Moderation → Mod Log</strong> and select it. Configure Auto-Mod settings.</div></div></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">3</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Configure Welcome</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Welcome</strong> tab. Enable it, select a channel, customize the message with <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">{user}</code> <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">{server}</code> variables.</div></div></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--red));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">4</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Enable Security</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Security</strong> tab. Anti-Nuke, Anti-Raid, Anti-Spam, and Anti-Link are ON by default. Adjust thresholds as needed.</div></div></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">5</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Setup Tickets</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Tickets</strong> tab. Enable, select channel, category, and support role. Use <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">/ticket</code> in Discord to post the panel.</div></div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom:14px">
+                        <div class="card-head"><h2><i class="fas fa-key" style="color:var(--orange)"></i> Required Permissions</h2></div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+                            ${['Administrator','Manage Channels','Manage Roles','Ban Members','Kick Members','Manage Messages','Manage Nicknames','Manage Webhooks','View Audit Log','Use Slash Commands','Send Messages','Embed Links','Attach Files','Read Message History','Add Reactions','Manage Emojis'].map(p=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--glass);border-radius:6px;border:1px solid var(--border);font-size:.7rem;color:var(--text2)"><i class="fas fa-check-circle" style="color:var(--green);font-size:.6rem;flex-shrink:0"></i>${p}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-head"><h2><i class="fas fa-server" style="color:var(--blue)"></i> Dashboard Features</h2></div>
+                        <div style="display:grid;gap:8px">
+                            ${[
+                                {i:'fa-shield-halved',n:'Security',d:'Anti-nuke, raid, spam, link protection',c:'var(--red)'},
+                                {i:'fa-gavel',n:'Moderation',d:'16 mod commands with auto-log',c:'var(--blue)'},
+                                {i:'fa-hand-sparkles',n:'Welcome',d:'Custom embeds with Discord preview',c:'var(--green)'},
+                                {i:'fa-user-plus',n:'Auto Role',d:'Assign roles on member join',c:'var(--orange)'},
+                                {i:'fa-ticket',n:'Tickets',d:'Full support ticket system',c:'var(--purple)'},
+                                {i:'fa-terminal',n:'Commands',d:'Custom auto-reply commands',c:'var(--cyan)'},
+                                {i:'fa-link',n:'Invites',d:'Create, track, revoke invites',c:'var(--green)'},
+                                {i:'fa-plug',n:'Webhooks',d:'Create and send via webhooks',c:'var(--purple)'},
+                                {i:'fa-trophy',n:'Levels',d:'XP system with leaderboard',c:'var(--orange)'},
+                                {i:'fa-database',n:'Backup',d:'Save and restore server config',c:'var(--blue)'}
+                            ].map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="width:34px;height:34px;border-radius:8px;background:${f.c}15;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas ${f.i}" style="color:${f.c};font-size:.8rem"></i></div><div style="flex:1"><div style="font-size:.82rem;font-weight:600;color:var(--text)">${f.n}</div><div style="font-size:.68rem;color:var(--text4)">${f.d}</div></div></div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inner-panel" id="doc-faq">
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-circle-question" style="color:var(--blue)"></i> Frequently Asked Questions</h2></div>
+                <div style="display:grid;gap:10px">
+                    ${[
+                        {q:'How do I add the bot to my server?',a:'Click the "Invite" button on the landing page or use the /invite command. Select your server and grant all permissions.'},
+                        {q:'The bot is not responding to commands, what do I do?',a:'Make sure the bot role is above all other roles in the server hierarchy. Check that the bot has "Use Slash Commands" permission. Try /ping to check latency.'},
+                        {q:'How do I configure welcome messages?',a:'Go to the Welcome tab in the dashboard. Enable it, select a channel, and customize the message. Use {user} for mention, {server} for server name, {member_count} for total members.'},
+                        {q:'What does Anti-Nuke do?',a:'Anti-Nuke monitors for mass channel/role deletions. If a user deletes multiple channels or roles in a short time, they are automatically banned. This prevents raid damage.'},
+                        {q:'How do I setup the ticket system?',a:'Go to Tickets tab → Enable → Select panel channel, ticket category, and support role. Then use /ticket in Discord to post the ticket panel embed.'},
+                        {q:'Can I customize the bot\'s responses?',a:'Yes! Use the Commands tab to create custom auto-reply commands. You can also use variables like {user}, {server}, {channel}, {mention} in responses.'},
+                        {q:'How do I get support?',a:'Join our Discord server or open a ticket using the bot. You can also check the API Documentation tab for technical details.'},
+                        {q:'Does the bot store any data?',a:'The bot stores server settings, custom commands, warnings, level data, and backups in a local JSON database. No personal data is shared with third parties.'},
+                        {q:'How do I disable a feature?',a:'Every feature has a toggle in the dashboard. Go to the relevant tab and toggle it off. Changes are saved when you click "Save Changes".'},
+                        {q:'What permissions does the bot need?',a:'The bot needs Administrator for full functionality. Minimum permissions: Manage Roles, Ban Members, Kick Members, Manage Messages, Manage Channels, and Use Slash Commands.'}
+                    ].map(f=>`<div style="padding:14px 16px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><i class="fas fa-circle-question" style="color:var(--blue);font-size:.75rem"></i><span style="font-size:.85rem;font-weight:700;color:var(--text)">${f.q}</span></div><div style="font-size:.78rem;color:var(--text3);line-height:1.6;padding-left:22px">${f.a}</div></div>`).join('')}
+                </div>
             </div>
         </div>
     </div>`;
@@ -848,6 +1049,15 @@ function updateAutoRolePreview(){
     if(!role)return;
     const el=document.querySelector('#pg-autorole .discord-content');
     if(el)el.innerHTML=`Welcome to <strong>${esc(GUILD_DATA.name||'Server')}</strong>! You've been assigned the <span style="color:${role.color?'#'+role.color.toString(16).padStart(6,'0'):'#a78bfa'};font-weight:600">@${esc(role.name)}</span> role.`;
+}
+
+/* === DOCS SEARCH === */
+function filterDocs(query){
+    const q=query.toLowerCase();
+    document.querySelectorAll('.doc-cmd-card').forEach(c=>{
+        const s=(c.dataset.search||'').toLowerCase();
+        c.style.display=!q||s.includes(q)?'':'none';
+    });
 }
 
 /* === CMD PREVIEW === */
