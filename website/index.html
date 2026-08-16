@@ -22,8 +22,11 @@
             </a>
             <div class="nav-links">
                 <a href="#features">Features</a>
+                <a href="#how">How It Works</a>
                 <a href="#commands">Commands</a>
+                <a href="#compare">Compare</a>
                 <a href="#security">Security</a>
+                <a href="#faq">FAQ</a>
                 <a href="/dashboard.html" class="btn-nav">Dashboard</a>
                 <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="btn-primary">
                     <i class="fab fa-discord"></i>
@@ -55,34 +58,34 @@
             </div>
             <div class="hero-stats">
                 <div class="stat">
-                    <div class="stat-icon"><i class="fas fa-server"></i></div>
+                    <div class="stat-icon"><i class="fas fa-message"></i></div>
                     <div class="stat-info">
-                        <span class="stat-number">1</span>
-                        <span class="stat-label">Servers</span>
-                    </div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-info">
-                        <span class="stat-number">36</span>
-                        <span class="stat-label">Users Protected</span>
+                        <span class="stat-number" data-stat="messages_seen">0</span>
+                        <span class="stat-label">Messages Scanned</span>
                     </div>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat">
                     <div class="stat-icon"><i class="fas fa-terminal"></i></div>
                     <div class="stat-info">
-                        <span class="stat-number">27</span>
-                        <span class="stat-label">Commands</span>
+                        <span class="stat-number" data-stat="commands_run">0</span>
+                        <span class="stat-label">Commands Run</span>
                     </div>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat">
-                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-icon"><i class="fas fa-shield-halved"></i></div>
                     <div class="stat-info">
-                        <span class="stat-number">99.9%</span>
-                        <span class="stat-label">Uptime</span>
+                        <span class="stat-number" data-stat="warnings_issued">0</span>
+                        <span class="stat-label">Threats Neutralized</span>
+                    </div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-number" data-stat="bans">0</span>
+                        <span class="stat-label">Raids Blocked</span>
                     </div>
                 </div>
             </div>
@@ -294,6 +297,123 @@
                     <h3>Real-time Updates</h3>
                     <p>All stats update instantly when something changes. No delays, no waiting.</p>
                     <div class="feature-tag">Performance</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how" id="how">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-bolt"></i> How It Works</div>
+                <h2>Protected in <span class="gradient">Under 2 Minutes</span></h2>
+                <p class="section-subtitle">No config files, no coding. Just three simple steps.</p>
+            </div>
+            <div class="how-grid">
+                <div class="how-step reveal stagger-1">
+                    <div class="how-step-number">01</div>
+                    <div class="how-step-icon"><i class="fab fa-discord"></i></div>
+                    <h3>Add the Bot</h3>
+                    <p>Click "Add to Server", pick your server and authorize. BK BOT only needs Administrator to enable full protection.</p>
+                    <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" class="how-step-link">Add BK BOT <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="how-arrow reveal stagger-2"><i class="fas fa-arrow-right-long"></i></div>
+                <div class="how-step reveal stagger-2">
+                    <div class="how-step-number">02</div>
+                    <div class="how-step-icon"><i class="fas fa-sliders"></i></div>
+                    <h3>Configure</h3>
+                    <p>Open the dashboard, pick your server and toggle the systems you want. Set channels, limits and welcome messages in seconds.</p>
+                    <a href="/dashboard.html" class="how-step-link">Open Dashboard <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="how-arrow reveal stagger-3"><i class="fas fa-arrow-right-long"></i></div>
+                <div class="how-step reveal stagger-3">
+                    <div class="how-step-number">03</div>
+                    <div class="how-step-icon"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Stay Protected</h3>
+                    <p>BK BOT monitors your server 24/7. Raids, nukes, spam and malicious links are detected and stopped automatically.</p>
+                    <span class="how-step-link ready"><i class="fas fa-check-circle"></i> Protection Active</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="showcase" id="showcase">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-wand-magic-sparkles"></i> See It In Action</div>
+                <h2>A Bot That <span class="gradient">Works While You Sleep</span></h2>
+                <p class="section-subtitle">Real protection, real results. Here's what BK BOT does for your server.</p>
+            </div>
+            <div class="showcase-grid">
+                <div class="mock reveal-left stagger-1">
+                    <div class="mock-bar">
+                        <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+                        <span class="mock-title"><i class="fab fa-discord"></i> #welcome</span>
+                    </div>
+                    <div class="mock-body">
+                        <div class="mock-msg">
+                            <div class="mock-avatar wave"><i class="fas fa-wave-square"></i></div>
+                            <div class="mock-msg-content">
+                                <div class="mock-msg-head"><span class="mock-username">BK BOT</span><span class="mock-badge">BOT</span><span class="mock-time">Today at 9:41 PM</span></div>
+                                <div class="mock-msg-text">Welcome to the server, <strong>@amir</strong>! <span class="emoji">👋</span></div>
+                                <div class="mock-embed">
+                                    <div class="mock-embed-left" style="background:linear-gradient(180deg,#2ed573,#ffa502)"></div>
+                                    <div class="mock-embed-body">
+                                        <div class="mock-embed-title">Read the rules and grab your roles</div>
+                                        <div class="mock-embed-desc">Use <code>/rules</code> to view rules and <code>/roles</code> to pick your roles.</div>
+                                        <div class="mock-embed-foot">BK BOT · Automatic welcome</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mock reveal stagger-2">
+                    <div class="mock-bar">
+                        <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+                        <span class="mock-title"><i class="fab fa-discord"></i> #security-logs</span>
+                    </div>
+                    <div class="mock-body">
+                        <div class="mock-msg">
+                            <div class="mock-avatar shield"><i class="fas fa-shield-halved"></i></div>
+                            <div class="mock-msg-content">
+                                <div class="mock-msg-head"><span class="mock-username">BK BOT</span><span class="mock-badge">BOT</span><span class="mock-time">Today at 3:12 AM</span></div>
+                                <div class="mock-embed danger">
+                                    <div class="mock-embed-left" style="background:linear-gradient(180deg,#ff4757,#ff6b6b)"></div>
+                                    <div class="mock-embed-body">
+                                        <div class="mock-embed-title"><i class="fas fa-bolt"></i> Raid Detected — 14 joins in 10s</div>
+                                        <div class="mock-embed-desc">Auto-ban enabled. <strong>3 raiders banned</strong> · 11 suspects kicked</div>
+                                        <div class="mock-embed-row"><i class="fas fa-user-slash"></i> raider_2381#4821 — banned</div>
+                                        <div class="mock-embed-row"><i class="fas fa-user-slash"></i> x_raider_99#1337 — banned</div>
+                                        <div class="mock-embed-foot">BK BOT · Anti-Raid · 0.4s response</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mock reveal-right stagger-3">
+                    <div class="mock-bar">
+                        <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+                        <span class="mock-title"><i class="fas fa-gauge-high"></i> BK BOT Dashboard</span>
+                    </div>
+                    <div class="mock-body dash">
+                        <div class="dash-top">
+                            <div class="dash-server"><div class="dash-server-avatar">BK</div><span>Baktiriya Server</span></div>
+                            <div class="dash-online"><span class="dash-pulse"></span> All systems operational</div>
+                        </div>
+                        <div class="dash-cards">
+                            <div class="dash-stat"><span class="dash-stat-val">14</span><span class="dash-stat-lbl">Raids blocked</span></div>
+                            <div class="dash-stat"><span class="dash-stat-val">1.2k</span><span class="dash-stat-lbl">Spam stopped</span></div>
+                            <div class="dash-stat"><span class="dash-stat-val">99.9%</span><span class="dash-stat-lbl">Uptime</span></div>
+                        </div>
+                        <div class="dash-toggles">
+                            <div class="dash-toggle"><span><i class="fas fa-shield-halved"></i> Anti-Nuke</span><span class="toggle-on">ON</span></div>
+                            <div class="dash-toggle"><span><i class="fas fa-user-shield"></i> Anti-Raid</span><span class="toggle-on">ON</span></div>
+                            <div class="dash-toggle"><span><i class="fas fa-ban"></i> Anti-Spam</span><span class="toggle-on">ON</span></div>
+                            <div class="dash-toggle"><span><i class="fas fa-link-slash"></i> Anti-Link</span><span class="toggle-on">ON</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -545,6 +665,104 @@
         </div>
     </section>
 
+    <section class="compare" id="compare">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-scale-balanced"></i> Compare</div>
+                <h2>Why Servers <span class="gradient">Choose BK BOT</span></h2>
+                <p class="section-subtitle">Security that goes far beyond standard moderation bots.</p>
+            </div>
+            <div class="compare-wrap reveal">
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th class="compare-feature">Feature</th>
+                            <th class="compare-bk"><div class="compare-logo"><i class="fas fa-shield-halved"></i> BK BOT</div></th>
+                            <th>MEE6</th>
+                            <th>Carl-bot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Anti-Nuke Protection</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>Anti-Raid (mass join)</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>Anti-Spam / Auto-mod</td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td></tr>
+                        <tr><td>Link / domain filtering</td><td class="ok"><i class="fas fa-check"></i></td><td class="half"><i class="fas fa-minus"></i></td><td class="half"><i class="fas fa-minus"></i></td></tr>
+                        <tr><td>Dedicated security dashboard</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>Live voice-channel stats</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>Giveaways</td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td></tr>
+                        <tr><td>Ticket system</td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td></tr>
+                        <tr><td>Leveling + leaderboards</td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td></tr>
+                        <tr><td>Custom commands</td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td><td class="ok"><i class="fas fa-check"></i></td></tr>
+                        <tr><td>Backup &amp; one-click restore</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>User lookup + notes</td><td class="ok"><i class="fas fa-check"></i></td><td class="no"><i class="fas fa-xmark"></i></td><td class="no"><i class="fas fa-xmark"></i></td></tr>
+                        <tr><td>Completely free</td><td class="ok"><i class="fas fa-check"></i></td><td class="half"><i class="fas fa-minus"></i></td><td class="half"><i class="fas fa-minus"></i></td></tr>
+                    </tbody>
+                </table>
+                <div class="compare-note"><i class="fas fa-circle-info"></i> Comparisons based on publicly available features. Only BK BOT is built specifically for server protection with a full dashboard.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tryit" id="try">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-terminal"></i> Try It</div>
+                <h2>Test the <span class="gradient">Commands Right Now</span></h2>
+                <p class="section-subtitle">Type a command below and watch BK BOT respond. No server needed.</p>
+            </div>
+            <div class="sim-wrap reveal-scale">
+                <div class="sim-head">
+                    <div class="sim-title"><i class="fab fa-discord"></i> BK BOT — Command Simulator</div>
+                    <div class="sim-live"><span class="sim-dot"></span> Online</div>
+                </div>
+                <div class="sim-log" id="simLog">
+                    <div class="sim-msg sys"><i class="fas fa-circle-info"></i> Try <code>/ban</code>, <code>/kick</code>, <code>/mute</code>, <code>/warn</code>, <code>/clear</code>, <code>/security</code>, <code>/level</code>, <code>/poll</code> or <code>/help</code></div>
+                </div>
+                <form class="sim-form" id="simForm">
+                    <span class="sim-prompt">/</span>
+                    <input type="text" id="simInput" placeholder="type a command... (e.g. ban @raider)" autocomplete="off" spellcheck="false">
+                    <button type="submit" class="sim-run"><i class="fas fa-paper-plane"></i> Run</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-badge"><i class="fas fa-circle-question"></i> FAQ</div>
+                <h2>Frequently Asked <span class="gradient">Questions</span></h2>
+                <p class="section-subtitle">Everything you need to know before inviting BK BOT.</p>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>Is BK BOT really free?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Yes. Every single feature — anti-nuke, anti-raid, tickets, giveaways, backups and the full dashboard — is free forever. No premium tiers, no paywalls, no credit card.</p></div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>What permissions does it need?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>BK BOT asks for Administrator so it can ban raiders, delete dangerous messages and lock down channels instantly. You can also give it only the moderation permissions you're comfortable with — the dashboard adapts to what the bot can do.</p></div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>What happens during a raid?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Anti-Raid detects unusual join patterns and auto-kicks or bans the attackers. Anti-Nuke stops mass channel/role deletion and mass bans, banning the attacker. Everything is logged to your security channel so you know exactly what happened.</p></div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>Can it work alongside other bots?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Yes, it can run alongside MEE6, Carl-bot and others. For best protection we recommend making BK BOT your main security bot — its anti-nuke and anti-raid are built for the job.</p></div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>How do I set it up?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Add the bot with Administrator, open the dashboard, select your server and toggle the systems you want. Welcome messages, logs and security settings can all be configured visually — it takes about 2 minutes.</p></div>
+                </div>
+                <div class="faq-item reveal">
+                    <button class="faq-question"><span>Is my server data safe?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Your data is never sold. Dashboard access is restricted to server administrators only, backups are private to your admins, and all dashboard connections are protected with encrypted, rotating sessions.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="cta">
         <div class="container">
             <div class="cta-content reveal-scale">
@@ -580,9 +798,9 @@
                     </div>
                     <p>The ultimate Discord security bot. Protecting servers 24/7 with enterprise-grade security.</p>
                     <div class="footer-social">
-                        <a href="#"><i class="fab fa-discord"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank" title="Add BK BOT"><i class="fab fa-discord"></i></a>
+                        <a href="https://github.com/marbouhiamir7-ctrl/bk-bot" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="/dashboard.html" title="Dashboard"><i class="fas fa-gauge-high"></i></a>
                     </div>
                 </div>
                 <div class="footer-links">
@@ -594,15 +812,15 @@
                 </div>
                 <div class="footer-links">
                     <h4>Support</h4>
-                    <a href="#">Discord Server</a>
-                    <a href="#">Documentation</a>
-                    <a href="#">Report Bug</a>
-                    <a href="#">Contact Us</a>
+                    <a href="https://discord.com/api/oauth2/authorize?client_id=1537980470782988439&permissions=8&scope=bot%20applications.commands" target="_blank">Add BK BOT</a>
+                    <a href="/dashboard.html">Documentation</a>
+                    <a href="https://github.com/marbouhiamir7-ctrl/bk-bot/issues" target="_blank">Report Bug</a>
+                    <a href="/#faq">Contact Us</a>
                 </div>
                 <div class="footer-links">
                     <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/terms.html">Terms of Service</a>
                 </div>
             </div>
             <div class="footer-bottom">
