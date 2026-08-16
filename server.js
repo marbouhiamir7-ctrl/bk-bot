@@ -649,7 +649,11 @@ app.get('/api/guild/:id/backup', apiLimiter, authMiddleware, guildAuth, (req, re
     try { backups = JSON.parse(fs.readFileSync(backupsFile, 'utf8')); } catch(e) {}
     const guildBackups = Object.entries(backups).filter(([_, b]) => b.guildId === guildId).map(([id, b]) => ({
         id, guildName: b.guildName, memberCount: b.memberCount, created: b.created,
-        channels: b.channels?.length || 0, roles: b.roles?.length || 0
+        channels: b.channels?.length || 0, roles: b.roles?.length || 0,
+        emojis: b.emojis?.length || 0, members: b.members?.length || 0,
+        bans: b.bans?.length || 0, webhooks: b.webhooks?.length || 0,
+        messages: b.messageCount || Object.values(b.messages || {}).reduce((a, m) => a + m.length, 0),
+        messageChannels: b.messageChannels || Object.keys(b.messages || {}).length
     }));
     res.json(guildBackups);
 });
@@ -661,29 +665,102 @@ app.post('/api/guild/:id/backup', apiLimiter, csrfCheck, authMiddleware, guildAu
     try { backups = JSON.parse(fs.readFileSync(backupsFile, 'utf8')); } catch(e) {}
     const settings = db.getGuildSettings(guildId);
     const customCmds = db.customCommands.get(guildId, {});
+    const levelData = db.levelData.get(guildId, {});
+    const warnings = db.warnings.get(guildId, {});
     const id = `bkp_${Date.now()}`;
+    const deep = req.body.deep !== false;
+    console.log(`[Backup] Creating backup for guild ${guildId}, deep: ${deep}`);
+
     botAPI(`/guilds/${guildId}?with_counts=true`).then(guild => {
+        if (guild.code) throw new Error(guild.message || 'Failed to fetch guild');
         return Promise.all([
             botAPI(`/guilds/${guildId}/channels`),
-            botAPI(`/guilds/${guildId}/roles`)
-        ]).then(([channels, roles]) => {
-            backups[id] = {
+            botAPI(`/guilds/${guildId}/roles`),
+            botAPI(`/guilds/${guildId}/emojis`),
+            botAPI(`/guilds/${guildId}/stickers`).catch(() => []),
+            botAPI(`/guilds/${guildId}/invites`).catch(() => []),
+            botAPI(`/guilds/${guildId}/bans`).catch(() => []),
+            botAPI(`/guilds/${guildId}/webhooks`).catch(() => []),
+            botAPI(`/guilds/${guildId}/members?limit=1000`).catch(() => [])
+        ]).then(([channels, roles, emojis, stickers, invites, bans, webhooks, members]) => {
+            const chArr = Array.isArray(channels) ? channels : [];
+            const rlArr = Array.isArray(roles) ? roles : [];
+            const emArr = Array.isArray(emojis) ? emojis : [];
+            const stArr = Array.isArray(stickers) ? stickers : [];
+            const invArr = Array.isArray(invites) ? invites : [];
+            const banArr = Array.isArray(bans) ? bans : [];
+            const whArr = Array.isArray(webhooks) ? webhooks : [];
+            const mbArr = Array.isArray(members) ? members : [];
+
+            const backupData = {
                 guildId, guildName: req.body.guildName || guild.name || 'Server',
-                settings, customCommands: customCmds,
-                channels: Array.isArray(channels) ? channels.map(c => ({ id: c.id, name: c.name, type: c.type })) : [],
-                roles: Array.isArray(roles) ? roles.map(r => ({ id: r.id, name: r.name, color: r.color })) : [],
+                icon: guild.icon, banner: guild.banner, description: guild.description,
+                settings, customCommands: customCmds, levelData, warnings,
+                channels: chArr.map(c => ({
+                    id: c.id, name: c.name, type: c.type, topic: c.topic || '',
+                    nsfw: c.nsfw || false, slowmode: c.rate_limit_per_user || 0,
+                    position: c.position, parent_id: c.parent_id,
+                    bitrate: c.bitrate, user_limit: c.user_limit
+                })),
+                roles: rlArr.map(r => ({
+                    id: r.id, name: r.name, color: r.color, permissions: r.permissions,
+                    position: r.position, hoist: r.hoist, mentionable: r.mentionable,
+                    managed: r.managed, icon: r.icon, unicode_emoji: r.unicode_emoji
+                })),
+                emojis: emArr.map(e => ({ id: e.id, name: e.name, url: e.url, animated: e.animated })),
+                stickers: stArr.map(s => ({ id: s.id, name: s.name, description: s.description, url: s.url })),
+                invites: invArr.map(i => ({ code: i.code, uses: i.uses, max_uses: i.max_uses, channel: i.channel, inviter: i.inviter, created_at: i.created_at, temporary: i.temporary })),
+                bans: banArr.map(b => ({ user: b.user, reason: b.reason })),
+                webhooks: whArr.map(w => ({ id: w.id, name: w.name, channel_id: w.channel_id, avatar: w.avatar })),
+                members: mbArr.map(m => ({ id: m.user?.id, username: m.user?.username, roles: m.roles, joined_at: m.joined_at, nick: m.nick, premium_since: m.premium_since })),
                 memberCount: guild.member_count || 0,
+                onlineCount: guild.approximate_presence_count || 0,
                 boostCount: guild.premium_subscription_count || 0,
+                boostTier: guild.premium_tier || 0,
+                owner_id: guild.owner_id,
+                features: guild.features || [],
                 created: Date.now()
             };
+
+            if (deep) {
+                const textChannels = chArr.filter(c => c.type === 0).slice(0, 10);
+                const messagePromises = textChannels.map(ch =>
+                    botAPI(`/channels/${ch.id}/messages?limit=100`).catch(() => [])
+                );
+                return Promise.all(messagePromises).then(messagesArr => {
+                    const messages = {};
+                    textChannels.forEach((ch, i) => {
+                        const msgs = Array.isArray(messagesArr[i]) ? messagesArr[i] : [];
+                        messages[ch.id] = msgs.map(m => ({
+                            id: m.id, content: m.content, author: m.author?.username,
+                            authorId: m.author?.id, timestamp: m.timestamp,
+                            attachments: (m.attachments || []).map(a => ({ url: a.url, filename: a.filename, size: a.size, content_type: a.content_type })),
+                            embeds: (m.embeds || []).map(e => ({ title: e.title, description: e.description, url: e.url, color: e.color })),
+                            reactions: (m.reactions || []).map(r => ({ emoji: r.emoji?.name, count: r.count })),
+                            pinned: m.pinned || false, type: m.type
+                        }));
+                    });
+                    backupData.messages = messages;
+                    backupData.messageChannels = Object.keys(messages).length;
+                    backupData.messageCount = Object.values(messages).reduce((a, m) => a + m.length, 0);
+                    backups[id] = backupData;
+                    fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
+                    console.log(`[Backup] Created ${id}: ${backupData.messageCount} messages from ${backupData.messageChannels} channels`);
+                    res.json({ ok: true, id, backup: { id, guildName: backupData.guildName, channels: backupData.channels.length, roles: backupData.roles.length, messages: backupData.messageCount || 0, emojis: backupData.emojis.length, members: backupData.members.length, created: backupData.created } });
+                });
+            }
+
+            backups[id] = backupData;
             fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
-            res.json({ ok: true, id, backup: { id, guildName: backups[id].guildName, channels: backups[id].channels.length, roles: backups[id].roles.length, created: backups[id].created } });
+            res.json({ ok: true, id, backup: { id, guildName: backupData.guildName, channels: backupData.channels.length, roles: backupData.roles.length, messages: 0, emojis: backupData.emojis.length, members: backupData.members.length, created: backupData.created } });
         });
     }).catch(err => {
+        console.error('[Backup] Error:', err.message);
         backups[id] = {
             guildId, guildName: req.body.guildName || 'Server',
-            settings, customCommands: customCmds,
-            channels: [], roles: [], memberCount: 0, boostCount: 0, created: Date.now()
+            settings, customCommands: customCmds, levelData, warnings,
+            channels: [], roles: [], emojis: [], stickers: [], invites: [], bans: [], webhooks: [], members: [],
+            messages: {}, memberCount: 0, boostCount: 0, created: Date.now()
         };
         fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
         res.json({ ok: true, id });
@@ -718,10 +795,19 @@ app.get('/api/user/:id', apiLimiter, authMiddleware, (req, res) => {
     const userId = req.params.id.replace(/[^0-9]/g, '');
     if (userId.length < 17 || userId.length > 20) return res.status(400).json({ error: 'Invalid user ID' });
     const guildId = req.query.guild ? req.query.guild.replace(/[^0-9]/g, '') : null;
+    console.log(`[UserLookup] Looking up user: ${userId}, guild: ${guildId}`);
 
     botAPI(`/users/${userId}`)
         .then(user => {
-            if (user.code) return res.status(404).json({ error: user.message || 'User not found' });
+            console.log(`[UserLookup] Discord response:`, JSON.stringify(user).substring(0, 300));
+            if (user._error || user._status >= 400 || user.code) {
+                console.log(`[UserLookup] Error:`, user.message || user._error || user._raw);
+                return res.status(404).json({ error: user.message || 'User not found. Make sure the ID is correct.' });
+            }
+            if (!user.id) {
+                console.log(`[UserLookup] No id in response:`, user);
+                return res.status(404).json({ error: 'Invalid response from Discord' });
+            }
 
             const result = {
                 id: user.id, username: user.username, discriminator: user.discriminator || '0',
