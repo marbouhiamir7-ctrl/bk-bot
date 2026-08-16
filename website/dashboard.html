@@ -225,6 +225,7 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
             <div class="sb-label">System</div>
             <ul class="sb-menu">
                 <li><a href="#" data-page="honeypot"><i class="fas fa-spider"></i> Honeypot</a></li>
+                <li><a href="#" data-page="userlookup"><i class="fas fa-magnifying-glass"></i> User Lookup</a></li>
                 <li><a href="#" data-page="settings"><i class="fas fa-gear"></i> Settings</a></li>
             </ul>
             <div class="sb-label">Management</div>
@@ -253,7 +254,7 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
 <div class="save-bar" id="saveBar"><button class="save-btn" id="saveBtn" onclick="saveAll()"><i class="fas fa-check"></i> Save Changes</button></div>
 
 <script>
-let GUILD_ID='',GUILD_DATA={},SETTINGS={},DIRTY=false,CSRF_TOKEN='';
+let GUILD_ID='',GUILD_DATA={},SETTINGS={},DIRTY=false,CSRF_TOKEN='',lookupHistory=[];
 
 function showToast(m,t='success'){const e=document.getElementById('toast'),s=document.getElementById('toastMsg');e.className='toast '+t;s.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
 function showConn(){const c=document.getElementById('connStatus');c.classList.add('show');setTimeout(()=>c.classList.remove('show'),2000)}
@@ -656,7 +657,7 @@ function renderAll(g){
             <div>
                 <div class="card" style="margin-bottom:14px">
                     <div class="card-head"><h2><i class="fas fa-shield" style="color:var(--red)"></i> Trap Configuration</h2><span class="badge badge-live" id="hpStatus">ACTIVE</span></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Active honeypot trap system</p></div><div class="toggle on" id="hpToggle" onclick="this.classList.toggle('on')"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Active honeypot trap system</p></div><div class="toggle${SETTINGS.honeypot_enabled?' on':''}" id="hpToggle" onclick="toggleHoneypot()"></div></div>
                     <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-terminal" style="color:var(--red)"></i> Trap Commands</h4><p>Auto-ban on malicious command usage</p></div><span class="badge badge-live">14 TRAPS</span></div>
                     <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-comment" style="color:var(--orange)"></i> Social Engineering</h4><p>Detect impersonation attempts</p></div><span class="badge badge-live">11 KEYWORDS</span></div>
                     <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link" style="color:var(--purple)"></i> Phishing Detection</h4><p>Block scam and phishing links</p></div><span class="badge badge-live">ACTIVE</span></div>
@@ -671,6 +672,31 @@ function renderAll(g){
             <div class="card">
                 <div class="card-head"><h2><i class="fas fa-scroll" style="color:var(--blue)"></i> Trap Log</h2><button class="save-btn" onclick="loadHoneypot()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
                 <div id="honeypotLog" style="max-height:500px;overflow-y:auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER LOOKUP -->
+    <div class="page" id="pg-userlookup">
+        <div class="pg-header"><h1><i class="fas fa-magnifying-glass"></i> User Lookup</h1><p>Search and inspect any Discord user</p></div>
+        <div class="grid2">
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-search" style="color:var(--blue)"></i> Search User</h2></div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <input class="input" id="lookupInput" placeholder="Enter User ID or @username" style="max-width:100%;flex:1">
+                        <button class="save-btn" onclick="lookupUser()" style="padding:9px 18px"><i class="fas fa-search"></i> Search</button>
+                    </div>
+                    <div style="margin-top:10px;font-size:.7rem;color:var(--text4)"><i class="fas fa-info-circle" style="margin-right:4px"></i> Enter a Discord user ID (17-20 digits) to look up their profile</div>
+                </div>
+                <div class="card" id="lookupResult" style="display:none">
+                    <div class="card-head"><h2><i class="fas fa-user" style="color:var(--green)"></i> User Info</h2></div>
+                    <div id="lookupData"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-clock" style="color:var(--orange)"></i> Recent Lookups</h2><button class="save-btn" onclick="document.getElementById('lookupHistory').innerHTML='';lookupHistory=[]" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-trash"></i> Clear</button></div>
+                <div id="lookupHistory" style="max-height:500px;overflow-y:auto"><div class="empty"><div class="empty-icon"><i class="fas fa-magnifying-glass"></i></div><h3>No lookups yet</h3><p>Search for a user to see them here</p></div></div>
             </div>
         </div>
     </div>
@@ -855,13 +881,25 @@ function renderAll(g){
 
     <!-- BACKUP -->
     <div class="page" id="pg-backup">
-        <div class="pg-header"><h1><i class="fas fa-database"></i> Backup</h1><p>Backup and restore server settings</p></div>
+        <div class="pg-header"><h1><i class="fas fa-database"></i> Backup</h1><p>Backup, restore and download server configurations</p></div>
         <div class="grid2">
-            <div class="card"><div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Backup</h2></div>
-                <p style="font-size:.8rem;color:var(--text4);margin-bottom:14px">Save current server settings as a backup. Channels and roles are saved for reference.</p>
-                <button class="save-btn" onclick="createBackup()" style="padding:10px 24px"><i class="fas fa-download"></i> Create Backup</button>
+            <div>
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Backup</h2></div>
+                    <p style="font-size:.8rem;color:var(--text4);margin-bottom:14px">Save current server settings, channels, roles and custom commands as a backup.</p>
+                    <div style="display:grid;gap:8px;margin-bottom:14px">
+                        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-cog" style="color:var(--blue);font-size:.75rem;width:16px"></i><span style="font-size:.78rem;color:var(--text2)">Server Settings</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-hashtag" style="color:var(--green);font-size:.75rem;width:16px"></i><span style="font-size:.78rem;color:var(--text2)">Channels (${tc.length})</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-id-card" style="color:var(--pink);font-size:.75rem;width:16px"></i><span style="font-size:.78rem;color:var(--text2)">Roles (${rl.length})</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><i class="fas fa-terminal" style="color:var(--orange);font-size:.75rem;width:16px"></i><span style="font-size:.78rem;color:var(--text2)">Custom Commands</span></div>
+                    </div>
+                    <button class="save-btn" onclick="createBackup()" style="width:100%"><i class="fas fa-download"></i> Create Backup Now</button>
+                </div>
             </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> Backups</h2><span class="badge badge-count" id="backupCount">0</span></div><div id="backupList" style="max-height:400px;overflow-y:auto"></div></div>
+            <div class="card">
+                <div class="card-head"><h2><i class="fas fa-list" style="color:var(--blue)"></i> All Backups</h2><span class="badge badge-count" id="backupCount">0</span><button class="save-btn" onclick="loadBackups()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i></button></div>
+                <div id="backupList" style="max-height:500px;overflow-y:auto"></div>
+            </div>
         </div>
     </div>
 
@@ -1146,6 +1184,13 @@ function updateAutoRolePreview(){
 }
 
 /* === OVERVIEW DATA === */
+function toggleHoneypot(){
+    const el=document.getElementById('hpToggle');
+    el.classList.toggle('on');
+    SETTINGS.honeypot_enabled=el.classList.contains('on');
+    markDirty();
+}
+
 async function loadHoneypot(){
     if(!GUILD_ID)return;
     try{
@@ -1180,6 +1225,42 @@ async function loadOvInvites(){
         const top=invites.sort((a,b)=>b.uses-a.uses).slice(0,8);
         el.innerHTML=top.map(i=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border);margin-bottom:4px"><div style="flex:1;min-width:0"><div style="font-size:.78rem;font-weight:600;color:var(--green);font-family:'Courier New',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(i.code)}</div><div style="font-size:.65rem;color:var(--text4)">${esc(i.creator?.username||'Unknown')}</div></div><div style="text-align:right"><div style="font-size:.85rem;font-weight:800;color:var(--text)">${i.uses||0}</div><div style="font-size:.55rem;color:var(--text4)">uses</div></div></div>`).join('');
     }catch(e){}
+}
+
+/* === USER LOOKUP === */
+async function lookupUser(){
+    const input=document.getElementById('lookupInput')?.value?.trim();
+    if(!input){showToast('Enter a user ID','error');return}
+    const userId=input.replace(/[^0-9]/g,'');
+    if(userId.length<17){showToast('Invalid user ID','error');return}
+    const resultCard=document.getElementById('lookupResult');
+    const dataEl=document.getElementById('lookupData');
+    resultCard.style.display='block';
+    dataEl.innerHTML='<div style="text-align:center;padding:20px"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;color:var(--blue)"></i><div style="margin-top:8px;color:var(--text3);font-size:.8rem">Looking up user...</div></div>';
+    try{
+        const data=await(await fetch(`/api/user/${userId}`)).json();
+        if(data.error){
+            dataEl.innerHTML=`<div style="text-align:center;padding:30px"><div style="width:48px;height:48px;border-radius:50%;background:rgba(255,92,92,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="fas fa-user-slash" style="color:var(--red);font-size:1.2rem"></i></div><div style="font-weight:600;color:var(--text);margin-bottom:4px">User Not Found</div><div style="font-size:.78rem;color:var(--text4)">${esc(data.error)}</div></div>`;
+            return;
+        }
+        const avatar=data.avatar?`https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png?size=256`:`https://cdn.discordapp.com/embed/avatars/${parseInt(data.discriminator||'0')%5}.png`;
+        dataEl.innerHTML=`
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+                <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:3px solid var(--border2);box-shadow:0 4px 16px rgba(0,0,0,.3)"><img src="${avatar}" style="width:100%;height:100%;object-fit:cover"></div>
+                <div><div style="font-size:1.1rem;font-weight:800;color:var(--text)">${esc(data.username||'Unknown')}</div><div style="font-size:.75rem;color:var(--text4);margin-top:2px">ID: <span style="font-family:'Courier New',monospace">${data.id}</span></div><div style="font-size:.72rem;color:var(--text4)">Discriminator: #${data.discriminator||'0'}</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><div style="font-size:.65rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Avatar URL</div><div style="font-size:.7rem;color:var(--blue);word-break:break-all;font-family:'Courier New',monospace">${avatar}</div></div>
+                <div style="padding:10px 14px;background:var(--glass);border-radius:8px;border:1px solid var(--border)"><div style="font-size:.65rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Profile Link</div><a href="https://discord.com/users/${data.id}" target="_blank" style="font-size:.7rem;color:var(--green);text-decoration:none">Open in Discord</a></div>
+            </div>`;
+        const hist=document.getElementById('lookupHistory');
+        if(hist.querySelector('.empty'))hist.innerHTML='';
+        lookupHistory.unshift({id:data.id,username:data.username,avatar,time:Date.now()});
+        if(lookupHistory.length>20)lookupHistory.pop();
+        hist.innerHTML=lookupHistory.map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--glass);border-radius:8px;border:1px solid var(--border);margin-bottom:4px;cursor:pointer;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="document.getElementById('lookupInput').value='${h.id}';lookupUser()"><div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${h.avatar?`https://cdn.discordapp.com/avatars/${h.id}/${h.avatar}.png?size=64`:`https://cdn.discordapp.com/embed/avatars/0.png`}" style="width:100%;height:100%;object-fit:cover"></div><div style="flex:1;min-width:0"><div style="font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(h.username)}</div><div style="font-size:.65rem;color:var(--text4);font-family:'Courier New',monospace">${h.id}</div></div><div style="font-size:.6rem;color:var(--text4)">${new Date(h.time).toLocaleTimeString()}</div></div>`).join('');
+    }catch(e){
+        dataEl.innerHTML=`<div style="text-align:center;padding:20px;color:var(--red);font-size:.85rem">Failed to look up user</div>`;
+    }
 }
 
 /* === DOCS SEARCH === */
@@ -1246,18 +1327,24 @@ async function addCommand(){
     const name=document.getElementById('cmdName')?.value?.trim();
     const response=document.getElementById('cmdResponse')?.value?.trim();
     if(!name||!response){showToast('Please fill in both fields','error');return}
-    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})});
-    document.getElementById('cmdName').value='';
-    document.getElementById('cmdResponse').value='';
-    loadCustomCommands();showToast('Command added!','success');
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,response})});
+        document.getElementById('cmdName').value='';
+        document.getElementById('cmdResponse').value='';
+        loadCustomCommands();showToast('Command added!','success');
+    }catch(e){showToast('Failed to add command','error')}
 }
 async function deleteCmd(name){
-    await fetch(`/api/guild/${GUILD_ID}/commands/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
-    loadCustomCommands();showToast('Command deleted','info');
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/commands/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
+        loadCustomCommands();showToast('Command deleted','info');
+    }catch(e){showToast('Failed to delete','error')}
 }
 async function toggleCmd(name,enabled){
-    await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,enabled})});
-    loadCustomCommands();
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/commands`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({name,enabled})});
+        loadCustomCommands();
+    }catch(e){showToast('Failed to toggle','error')}
 }
 
 /* === APPLY SETTINGS === */
@@ -1426,8 +1513,8 @@ async function sendWebhookEmbed(){
     if(!whId){showToast('Select a webhook','error');return}
     if(!msg){showToast('Enter a message','error');return}
     try{
-        const embed=JSON.stringify({content:msg,username:'BK BOT',embeds:[{title:'BK BOT',description:msg,color:0xFF5C5C,footer:{text:'BK BOT Dashboard'}}]});
-        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({content:msg})})).json();
+        const embedPayload={content:msg,embeds:[{title:'BK BOT',description:msg,color:0xFF5C5C,footer:{text:'BK BOT Dashboard'}}]};
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/webhooks/${whId}/send`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify(embedPayload)})).json();
         if(r.ok){showToast('Embed sent!','success');document.getElementById('webhookMsg').value=''}
         else showToast(r.error||'Failed','error');
     }catch(e){showToast('Failed to send','error')}
@@ -1471,7 +1558,7 @@ async function loadBackups(){
         if(!el)return;
         if(cnt)cnt.textContent=backups.length;
         if(!backups.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-database"></i></div><h3>No backups</h3><p>Create one on the left</p></div>';return}
-        el.innerHTML=backups.map(b=>`<div class="cmd-item"><div><div class="cmd-name">${esc(b.id)}</div><div class="cmd-resp">${esc(b.guildName||'Server')} • ${b.channels||0} channels • ${b.roles||0} roles • ${new Date(b.created).toLocaleDateString()}</div></div></div>`).join('');
+        el.innerHTML=backups.map(b=>`<div style="padding:14px 16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:8px;background:var(--blue-glow);display:flex;align-items:center;justify-content:center"><i class="fas fa-database" style="color:var(--blue);font-size:.8rem"></i></div><div><div style="font-size:.85rem;font-weight:700;color:var(--text)">${esc(b.guildName||'Server')}</div><div style="font-size:.65rem;color:var(--text4);font-family:'Courier New',monospace">${esc(b.id)}</div></div></div><div style="display:flex;gap:4px"><button class="cmd-btn" title="Download" onclick="downloadBackup('${esc(b.id)}')" style="color:var(--green)"><i class="fas fa-download"></i></button><button class="cmd-btn del" title="Delete" onclick="deleteBackup('${esc(b.id)}')" style="color:var(--red)"><i class="fas fa-trash"></i></button></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;font-size:.68rem;color:var(--text4)"><span><i class="fas fa-hashtag" style="margin-right:3px;color:var(--blue)"></i>${b.channels||0} channels</span><span><i class="fas fa-id-card" style="margin-right:3px;color:var(--pink)"></i>${b.roles||0} roles</span><span><i class="fas fa-users" style="margin-right:3px;color:var(--green)"></i>${b.memberCount||0} members</span><span><i class="fas fa-calendar" style="margin-right:3px"></i>${new Date(b.created).toLocaleDateString()}</span></div></div>`).join('');
     }catch(e){}
 }
 async function addTag(){
@@ -1486,14 +1573,30 @@ async function addTag(){
 }
 async function deleteTag(name){
     if(!confirm(`Delete tag "${name}"?`))return;
-    await fetch(`/api/guild/${GUILD_ID}/tags/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
-    loadTags();showToast('Tag deleted','info');
+    try{
+        await fetch(`/api/guild/${GUILD_ID}/tags/${name}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});
+        loadTags();showToast('Tag deleted','info');
+    }catch(e){showToast('Failed to delete tag','error')}
 }
 async function createBackup(){
     try{
-        await fetch(`/api/guild/${GUILD_ID}/backup`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({guildName:GUILD_DATA.name})});
-        loadBackups();showToast('Backup created!','success');
+        const r=await(await fetch(`/api/guild/${GUILD_ID}/backup`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify({guildName:GUILD_DATA.name})})).json();
+        if(r.ok){loadBackups();showToast(`Backup ${r.id} created!`,'success')}
+        else showToast('Backup failed','error');
     }catch(e){showToast('Backup failed','error')}
+}
+async function downloadBackup(id){
+    try{
+        const data=await(await fetch(`/api/guild/${GUILD_ID}/backup/${id}`)).json();
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=url;a.download=`${id}.json`;a.click();
+        URL.revokeObjectURL(url);showToast('Backup downloaded!','success');
+    }catch(e){showToast('Download failed','error')}
+}
+async function deleteBackup(id){
+    if(!confirm(`Delete backup ${id}?`))return;
+    try{await fetch(`/api/guild/${GUILD_ID}/backup/${id}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});loadBackups();showToast('Backup deleted','info')}catch(e){showToast('Failed','error')}
 }
 
 document.addEventListener('DOMContentLoaded',init);

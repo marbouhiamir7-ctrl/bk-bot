@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -176,6 +177,14 @@ function authMiddleware(req, res, next) {
     next();
 }
 
+function guildAuth(req, res, next) {
+    const guildId = req.params.id?.replace(/[^0-9]/g, '');
+    if (!guildId || !req.guilds || !req.guilds.some(g => g.id === guildId)) {
+        return res.status(403).json({ error: 'You do not have access to this server' });
+    }
+    next();
+}
+
 // ====== Auth Routes ======
 
 app.get('/login', authLimiter, (req, res) => {
@@ -287,7 +296,7 @@ app.get('/api/guilds', apiLimiter, authMiddleware, (req, res) => {
     res.json(req.guilds || []);
 });
 
-app.get('/api/guild/:id', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const botInGuild = req.guilds ? req.guilds.some(g => g.id === guildId) : false;
     console.log(`[API] Guild: ${guildId}`);
@@ -301,7 +310,7 @@ app.get('/api/guild/:id', apiLimiter, authMiddleware, (req, res) => {
             return res.json({
                 id: guild.id, name: guild.name,
                 icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : null,
-                member_count: guild.member_count || 0, online_count: guild.approximate_presence_count || 0,
+                member_count: guild.approximate_member_count || guild.member_count || 0, online_count: guild.approximate_presence_count || 0,
                 boost_count: guild.premium_subscription_count || 0,
                 channel_count: 0, role_count: 0,
                 text_channels: [], voice_channels: [], categories: [], roles: [],
@@ -346,7 +355,7 @@ app.get('/api/guild/:id', apiLimiter, authMiddleware, (req, res) => {
                 icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : null,
                 banner: guild.banner ? `https://cdn.discordapp.com/banners/${guild.id}/${guild.banner}.png?size=600` : null,
                 description: guild.description,
-                member_count: guild.member_count || 0,
+                member_count: guild.approximate_member_count || guild.member_count || members.length || 0,
                 online_count: guild.approximate_presence_count || onlineMembers,
                 human_count: humanMembers, bot_count: botCount,
                 boost_count: guild.premium_subscription_count || 0,
@@ -370,16 +379,16 @@ app.get('/api/guild/:id', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Settings API ======
 
-app.get('/api/guild/:id/settings', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/settings', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     res.json(db.getGuildSettings(req.params.id.replace(/[^0-9]/g, '')));
 });
 
-app.post('/api/guild/:id/settings', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/settings', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const allowed = ['welcome_channel','welcome_message','welcome_enabled','welcome_dm','welcome_embed','welcome_color','log_channel','ticket_channel','ticket_category',
         'ticket_support_role','ticket_max','ticket_transcript',
         'stats_category','muted_role','auto_role','autorole_enabled','autorole_delay','autorole_delay_time','greet_role',
-        'anti_spam','anti_link','anti_raid','anti_nuke','anti_spam','auto_mute_spam','auto_delete_links','auto_kick_unverified','lockdown_on_raid',
+        'anti_spam','anti_link','anti_raid','anti_nuke','auto_mute_spam','auto_delete_links','auto_kick_unverified','lockdown_on_raid','honeypot_enabled',
         'level_channel','level_multiplier','level_enabled',
         'log_messages','log_moderation','log_joinleave','log_edits','log_voice',
         'dm_on_ban','dm_on_kick','dm_on_mute','embed_mode',
@@ -392,11 +401,11 @@ app.post('/api/guild/:id/settings', apiLimiter, csrfCheck, authMiddleware, (req,
 
 // ====== Profile API ======
 
-app.get('/api/guild/:id/profile', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/profile', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     res.json(db.getGuildProfile(req.params.id.replace(/[^0-9]/g, '')));
 });
 
-app.post('/api/guild/:id/profile', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/profile', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const allowed = ['banner','color','description','links','tags'];
     const filtered = {};
@@ -407,11 +416,11 @@ app.post('/api/guild/:id/profile', apiLimiter, csrfCheck, authMiddleware, (req, 
 
 // ====== Custom Commands API ======
 
-app.get('/api/guild/:id/commands', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/commands', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     res.json(db.customCommands.get(req.params.id.replace(/[^0-9]/g, ''), {}));
 });
 
-app.post('/api/guild/:id/commands', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/commands', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const { name, response, enabled } = req.body;
     if (!name || typeof name !== 'string') return res.json({ error: 'Invalid name' });
@@ -424,7 +433,7 @@ app.post('/api/guild/:id/commands', apiLimiter, csrfCheck, authMiddleware, (req,
     res.json({ ok: true, commands: cmds });
 });
 
-app.delete('/api/guild/:id/commands/:name', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.delete('/api/guild/:id/commands/:name', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const cmdName = sanitize(req.params.name.replace(/[^a-zA-Z0-9_-]/g, ''));
     const cmds = db.customCommands.get(guildId, {});
@@ -459,20 +468,10 @@ app.get('/api/activity', apiLimiter, (req, res) => {
     res.json(activity.slice(-50).reverse());
 });
 
-// ====== User Lookup ======
-
-app.get('/api/user/:id', apiLimiter, (req, res) => {
-    const userId = req.params.id.replace(/[^0-9]/g, '');
-    if (!userId) return res.json({ error: 'Invalid user ID' });
-    botAPI(`/users/${userId}`).then(user => {
-        if (user.code) return res.json({ error: 'User not found' });
-        res.json({ id: user.id, username: user.username, avatar: user.avatar, discriminator: user.discriminator });
-    }).catch(() => res.json({ error: 'Failed to fetch user' }));
-});
 
 // ====== Emojis API ======
 
-app.get('/api/guild/:id/emojis', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/emojis', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/emojis`).then(emojis => {
         if (!Array.isArray(emojis)) return res.json([]);
@@ -482,7 +481,7 @@ app.get('/api/guild/:id/emojis', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Stickers API ======
 
-app.get('/api/guild/:id/stickers', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/stickers', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/stickers`).then(stickers => {
         if (!Array.isArray(stickers)) return res.json([]);
@@ -492,7 +491,7 @@ app.get('/api/guild/:id/stickers', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Webhooks API ======
 
-app.get('/api/guild/:id/webhooks', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/webhooks', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/webhooks`).then(webhooks => {
         if (!Array.isArray(webhooks)) return res.json([]);
@@ -502,7 +501,7 @@ app.get('/api/guild/:id/webhooks', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Invites API ======
 
-app.get('/api/guild/:id/invites', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/invites', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/invites`).then(invites => {
         if (!Array.isArray(invites)) return res.json([]);
@@ -512,7 +511,7 @@ app.get('/api/guild/:id/invites', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Invite Management API ======
 
-app.post('/api/guild/:id/invites', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/invites', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const { channel_id, max_age, max_uses, temporary } = req.body;
     if (!channel_id) return res.status(400).json({ error: 'Channel ID required' });
@@ -529,7 +528,7 @@ app.post('/api/guild/:id/invites', apiLimiter, csrfCheck, authMiddleware, (req, 
     }).catch(e => res.json({ error: e.message }));
 });
 
-app.delete('/api/guild/:id/invites/:code', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.delete('/api/guild/:id/invites/:code', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const code = req.params.code;
     botAPI(`/guilds/${guildId}/invites/${code}`, {
@@ -540,7 +539,7 @@ app.delete('/api/guild/:id/invites/:code', apiLimiter, csrfCheck, authMiddleware
 
 // ====== Webhook Management API ======
 
-app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const { name, channel_id } = req.body;
     if (!channel_id) return res.status(400).json({ error: 'Channel ID required' });
@@ -557,7 +556,7 @@ app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, (req,
     }).catch(e => res.json({ error: e.message }));
 });
 
-app.patch('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.patch('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const { whId } = req.params;
     const { name, channel_id } = req.body;
     const body = {};
@@ -573,14 +572,14 @@ app.patch('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware
     }).catch(e => res.json({ error: e.message }));
 });
 
-app.delete('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.delete('/api/guild/:id/webhooks/:whId', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     botAPI(`/webhooks/${req.params.whId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
     }).then(() => res.json({ ok: true })).catch(e => res.json({ error: e.message }));
 });
 
-app.post('/api/guild/:id/webhooks/:whId/send', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.post('/api/guild/:id/webhooks/:whId/send', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const { whId } = req.params;
     const { content, username, avatar_url } = req.body;
     if (!content) return res.status(400).json({ error: 'Content required' });
@@ -596,8 +595,7 @@ app.post('/api/guild/:id/webhooks/:whId/send', apiLimiter, csrfCheck, authMiddle
 
 // ====== Tags CRUD API ======
 
-app.post('/api/guild/:id/tags', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
-    const fs = require('fs');
+app.post('/api/guild/:id/tags', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const { name, response } = req.body;
     if (!name || !response) return res.status(400).json({ error: 'Name and response required' });
@@ -611,8 +609,7 @@ app.post('/api/guild/:id/tags', apiLimiter, csrfCheck, authMiddleware, (req, res
     res.json({ ok: true, tags: tags[guildId] });
 });
 
-app.delete('/api/guild/:id/tags/:name', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
-    const fs = require('fs');
+app.delete('/api/guild/:id/tags/:name', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const tagClean = sanitize(req.params.name.replace(/[^a-zA-Z0-9_-]/g, ''));
     const tagsFile = path.join(__dirname, 'data', 'tags.json');
@@ -625,7 +622,7 @@ app.delete('/api/guild/:id/tags/:name', apiLimiter, csrfCheck, authMiddleware, (
 
 // ====== Emoji Delete API ======
 
-app.delete('/api/guild/:id/emojis/:emojiId', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+app.delete('/api/guild/:id/emojis/:emojiId', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/emojis/${req.params.emojiId}`, {
         method: 'DELETE',
@@ -635,7 +632,7 @@ app.delete('/api/guild/:id/emojis/:emojiId', apiLimiter, csrfCheck, authMiddlewa
 
 // ====== Scheduled Events API ======
 
-app.get('/api/guild/:id/events', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/events', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     botAPI(`/guilds/${guildId}/scheduled-events`).then(events => {
         if (!Array.isArray(events)) return res.json([]);
@@ -645,8 +642,7 @@ app.get('/api/guild/:id/events', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Backup API ======
 
-app.get('/api/guild/:id/backup', apiLimiter, authMiddleware, (req, res) => {
-    const fs = require('fs');
+app.get('/api/guild/:id/backup', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const backupsFile = path.join(__dirname, 'data', 'backups.json');
     let backups = {};
@@ -658,23 +654,80 @@ app.get('/api/guild/:id/backup', apiLimiter, authMiddleware, (req, res) => {
     res.json(guildBackups);
 });
 
-app.post('/api/guild/:id/backup', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
-    const fs = require('fs');
+app.post('/api/guild/:id/backup', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const backupsFile = path.join(__dirname, 'data', 'backups.json');
     let backups = {};
     try { backups = JSON.parse(fs.readFileSync(backupsFile, 'utf8')); } catch(e) {}
     const settings = db.getGuildSettings(guildId);
+    const customCmds = db.customCommands.get(guildId, {});
     const id = `bkp_${Date.now()}`;
-    backups[id] = { guildId, guildName: req.body.guildName || 'Server', settings, created: Date.now() };
-    fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
-    res.json({ ok: true, id });
+    botAPI(`/guilds/${guildId}?with_counts=true`).then(guild => {
+        return Promise.all([
+            botAPI(`/guilds/${guildId}/channels`),
+            botAPI(`/guilds/${guildId}/roles`)
+        ]).then(([channels, roles]) => {
+            backups[id] = {
+                guildId, guildName: req.body.guildName || guild.name || 'Server',
+                settings, customCommands: customCmds,
+                channels: Array.isArray(channels) ? channels.map(c => ({ id: c.id, name: c.name, type: c.type })) : [],
+                roles: Array.isArray(roles) ? roles.map(r => ({ id: r.id, name: r.name, color: r.color })) : [],
+                memberCount: guild.member_count || 0,
+                boostCount: guild.premium_subscription_count || 0,
+                created: Date.now()
+            };
+            fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
+            res.json({ ok: true, id, backup: { id, guildName: backups[id].guildName, channels: backups[id].channels.length, roles: backups[id].roles.length, created: backups[id].created } });
+        });
+    }).catch(err => {
+        backups[id] = {
+            guildId, guildName: req.body.guildName || 'Server',
+            settings, customCommands: customCmds,
+            channels: [], roles: [], memberCount: 0, boostCount: 0, created: Date.now()
+        };
+        fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
+        res.json({ ok: true, id });
+    });
+});
+
+app.get('/api/guild/:id/backup/:backupId', apiLimiter, authMiddleware, guildAuth, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const backupsFile = path.join(__dirname, 'data', 'backups.json');
+    let backups = {};
+    try { backups = JSON.parse(fs.readFileSync(backupsFile, 'utf8')); } catch(e) {}
+    const backup = backups[req.params.backupId];
+    if (!backup || backup.guildId !== guildId) return res.status(404).json({ error: 'Backup not found' });
+    res.json(backup);
+});
+
+app.delete('/api/guild/:id/backup/:backupId', apiLimiter, csrfCheck, authMiddleware, guildAuth, (req, res) => {
+    const guildId = req.params.id.replace(/[^0-9]/g, '');
+    const backupsFile = path.join(__dirname, 'data', 'backups.json');
+    let backups = {};
+    try { backups = JSON.parse(fs.readFileSync(backupsFile, 'utf8')); } catch(e) {}
+    if (backups[req.params.backupId] && backups[req.params.backupId].guildId === guildId) {
+        delete backups[req.params.backupId];
+        fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
+    }
+    res.json({ ok: true });
+});
+
+// ====== User Lookup API ======
+
+app.get('/api/user/:id', apiLimiter, authMiddleware, (req, res) => {
+    const userId = req.params.id.replace(/[^0-9]/g, '');
+    if (userId.length < 17 || userId.length > 20) return res.status(400).json({ error: 'Invalid user ID' });
+    botAPI(`/users/${userId}`, { headers: { 'Authorization': `Bot ${BOT_TOKEN}` } })
+        .then(user => {
+            if (user.code) return res.status(404).json({ error: user.message || 'User not found' });
+            res.json({ id: user.id, username: user.username, discriminator: user.discriminator || '0', avatar: user.avatar, banner: user.banner, accent_color: user.accent_color, global_name: user.global_name, public_flags: user.public_flags, bot: user.bot || false });
+        })
+        .catch(e => res.status(500).json({ error: 'Failed to look up user' }));
 });
 
 // ====== Tags API ======
 
-app.get('/api/guild/:id/tags', apiLimiter, authMiddleware, (req, res) => {
-    const fs = require('fs');
+app.get('/api/guild/:id/tags', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const tagsFile = path.join(__dirname, 'data', 'tags.json');
     let tags = {};
@@ -684,7 +737,7 @@ app.get('/api/guild/:id/tags', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Warning API ======
 
-app.get('/api/guild/:id/warnings', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/warnings', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const warns = db.warnings.get(guildId, {});
     res.json(warns);
@@ -692,7 +745,7 @@ app.get('/api/guild/:id/warnings', apiLimiter, authMiddleware, (req, res) => {
 
 // ====== Level Data API ======
 
-app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, (req, res) => {
+app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, guildAuth, (req, res) => {
     const guildId = req.params.id.replace(/[^0-9]/g, '');
     const levels = db.levelData.get(guildId, {});
     const sorted = Object.entries(levels).sort((a, b) => (b[1].xp || 0) - (a[1].xp || 0)).slice(0, 50);
