@@ -110,7 +110,7 @@ app.use((req, res, next) => {
 function csrfCheck(req, res, next) {
     const cookieToken = req.cookies.bk_csrf;
     const headerToken = req.headers['x-csrf-token'];
-    if (req.method !== 'GET' && headerToken !== cookieToken) {
+    if (req.method !== 'GET' && (!cookieToken || !headerToken || headerToken !== cookieToken)) {
         return res.status(403).json({ error: 'Invalid CSRF token' });
     }
     next();
@@ -756,14 +756,7 @@ app.post('/api/guild/:id/backup', apiLimiter, csrfCheck, authMiddleware, guildAu
         });
     }).catch(err => {
         console.error('[Backup] Error:', err.message);
-        backups[id] = {
-            guildId, guildName: req.body.guildName || 'Server',
-            settings, customCommands: customCmds, levelData, warnings,
-            channels: [], roles: [], emojis: [], stickers: [], invites: [], bans: [], webhooks: [], members: [],
-            messages: {}, memberCount: 0, boostCount: 0, created: Date.now()
-        };
-        fs.writeFileSync(backupsFile, JSON.stringify(backups, null, 2));
-        res.json({ ok: true, id });
+        res.status(500).json({ ok: false, error: 'Backup failed: ' + err.message });
     });
 });
 
@@ -880,6 +873,9 @@ app.get('/api/user/:id', apiLimiter, authMiddleware, (req, res) => {
                 result.notes = (notes[guildId] && notes[guildId][userId]) || [];
 
                 res.json(result);
+            }).catch(e => {
+                console.error('[UserLookup] Guild data error:', e.message);
+                res.json(result);
             });
         })
         .catch(e => res.status(500).json({ error: 'Failed to look up user' }));
@@ -905,8 +901,10 @@ app.post('/api/user/:id/notes', apiLimiter, csrfCheck, authMiddleware, (req, res
 
 app.delete('/api/user/:id/notes/:index', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
     const userId = req.params.id.replace(/[^0-9]/g, '');
-    const guildId = req.body?.guild_id?.replace(/[^0-9]/g, '') || req.query.guild?.replace(/[^0-9]/g, '');
+    const guildId = req.query.guild?.replace(/[^0-9]/g, '') || req.body?.guild_id?.replace(/[^0-9]/g, '');
     if (!guildId) return res.status(400).json({ error: 'Guild ID required' });
+    const hasAccess = req.guilds && req.guilds.some(g => g.id === guildId);
+    if (!hasAccess) return res.status(403).json({ error: 'No access' });
     const notesFile = path.join(__dirname, 'data', 'user_notes.json');
     let notes = {};
     try { notes = JSON.parse(fs.readFileSync(notesFile, 'utf8')); } catch(e) {}
