@@ -708,21 +708,93 @@
             <div class="section-header reveal">
                 <div class="section-badge"><i class="fas fa-terminal"></i> Try It</div>
                 <h2>Test the <span class="gradient">Commands Right Now</span></h2>
-                <p class="section-subtitle">Type a command below and watch BK BOT respond. No server needed.</p>
+                <p class="section-subtitle">Type a command or click a suggestion — watch BK BOT respond in real time.</p>
             </div>
             <div class="sim-wrap reveal-scale">
                 <div class="sim-head">
-                    <div class="sim-title"><i class="fab fa-discord"></i> BK BOT — Command Simulator</div>
+                    <div class="sim-head-left">
+                        <div class="sim-logo"><i class="fas fa-shield-halved"></i></div>
+                        <div class="sim-head-text">
+                            <div class="sim-title">BK BOT</div>
+                            <div class="sim-sub">Command Simulator</div>
+                        </div>
+                    </div>
                     <div class="sim-live"><span class="sim-dot"></span> Online</div>
                 </div>
-                <div class="sim-log" id="simLog">
-                    <div class="sim-msg sys"><i class="fas fa-circle-info"></i> Try <code>/ban</code>, <code>/kick</code>, <code>/mute</code>, <code>/warn</code>, <code>/clear</code>, <code>/security</code>, <code>/level</code>, <code>/poll</code> or <code>/help</code></div>
+                <div class="sim-chips" id="simChips">
+                    <span class="sim-chip-label">Try:</span>
+                    <button class="sim-chip" data-cmd="ban @raider">/ban</button>
+                    <button class="sim-chip" data-cmd="kick @spammer">/kick</button>
+                    <button class="sim-chip" data-cmd="mute @toxic">/mute</button>
+                    <button class="sim-chip" data-cmd="security">/security</button>
+                    <button class="sim-chip" data-cmd="level @amir">/level</button>
+                    <button class="sim-chip" data-cmd="leaderboard">/leaderboard</button>
+                    <button class="sim-chip" data-cmd="poll">/poll</button>
+                    <button class="sim-chip" data-cmd="help">/help</button>
                 </div>
+                <div class="sim-log" id="simLog"></div>
                 <form class="sim-form" id="simForm">
                     <span class="sim-prompt">/</span>
-                    <input type="text" id="simInput" placeholder="type a command... (e.g. ban @raider)" autocomplete="off" spellcheck="false">
+                    <input type="text" id="simInput" placeholder="type a command (e.g. ban @raider)..." autocomplete="off" spellcheck="false">
                     <button type="submit" class="sim-run"><i class="fas fa-paper-plane"></i> Run</button>
                 </form>
+            </div>
+            <div class="cmdcats reveal">
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-gavel"></i> Moderation</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="ban @user">/ban</button>
+                        <button class="cmdcat-btn" data-cmd="kick @user">/kick</button>
+                        <button class="cmdcat-btn" data-cmd="mute @user">/mute</button>
+                        <button class="cmdcat-btn" data-cmd="warn @user">/warn</button>
+                        <button class="cmdcat-btn" data-cmd="warnings @user">/warnings</button>
+                        <button class="cmdcat-btn" data-cmd="clear 50">/clear</button>
+                        <button class="cmdcat-btn" data-cmd="massban @raider1 @raider2">/massban</button>
+                        <button class="cmdcat-btn" data-cmd="masskick @spammer1">/masskick</button>
+                    </div>
+                </div>
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-shield-halved"></i> Security</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="security">/security</button>
+                        <button class="cmdcat-btn" data-cmd="status">/status</button>
+                    </div>
+                </div>
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-chart-line"></i> Info</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="serverinfo">/serverinfo</button>
+                        <button class="cmdcat-btn" data-cmd="userinfo @amir">/userinfo</button>
+                        <button class="cmdcat-btn" data-cmd="level @amir">/level</button>
+                        <button class="cmdcat-btn" data-cmd="leaderboard">/leaderboard</button>
+                    </div>
+                </div>
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-screwdriver-wrench"></i> Utility</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="help">/help</button>
+                        <button class="cmdcat-btn" data-cmd="poll">/poll</button>
+                        <button class="cmdcat-btn" data-cmd="announce">/announce</button>
+                        <button class="cmdcat-btn" data-cmd="giveaway">/giveaway</button>
+                        <button class="cmdcat-btn" data-cmd="remind 30m Check the oven">/remind</button>
+                    </div>
+                </div>
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-ticket"></i> Tickets</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="ticket">/ticket</button>
+                        <button class="cmdcat-btn" data-cmd="close">/close</button>
+                    </div>
+                </div>
+                <div class="cmdcat-card">
+                    <div class="cmdcat-head"><i class="fas fa-hand-sparkles"></i> Welcome</div>
+                    <div class="cmdcat-list">
+                        <button class="cmdcat-btn" data-cmd="welcome">/welcome</button>
+                        <button class="cmdcat-btn" data-cmd="setupstats">/setupstats</button>
+                        <button class="cmdcat-btn" data-cmd="addcommand">/addcommand</button>
+                        <button class="cmdcat-btn" data-cmd="commands">/commands</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
