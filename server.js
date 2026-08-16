@@ -717,12 +717,119 @@ app.delete('/api/guild/:id/backup/:backupId', apiLimiter, csrfCheck, authMiddlew
 app.get('/api/user/:id', apiLimiter, authMiddleware, (req, res) => {
     const userId = req.params.id.replace(/[^0-9]/g, '');
     if (userId.length < 17 || userId.length > 20) return res.status(400).json({ error: 'Invalid user ID' });
-    botAPI(`/users/${userId}`, { headers: { 'Authorization': `Bot ${BOT_TOKEN}` } })
+    const guildId = req.query.guild ? req.query.guild.replace(/[^0-9]/g, '') : null;
+
+    botAPI(`/users/${userId}`)
         .then(user => {
             if (user.code) return res.status(404).json({ error: user.message || 'User not found' });
-            res.json({ id: user.id, username: user.username, discriminator: user.discriminator || '0', avatar: user.avatar, banner: user.banner, accent_color: user.accent_color, global_name: user.global_name, public_flags: user.public_flags, bot: user.bot || false });
+
+            const result = {
+                id: user.id, username: user.username, discriminator: user.discriminator || '0',
+                avatar: user.avatar, banner: user.banner, accent_color: user.accent_color,
+                global_name: user.global_name, public_flags: user.public_flags, bot: user.bot || false,
+                created_at: user.id ? new Date((BigInt(user.id) >> 22n) + 1420070400000n).toISOString() : null,
+                flags: user.public_flags || 0
+            };
+
+            if (!guildId) return res.json(result);
+
+            const hasAccess = req.guilds && req.guilds.some(g => g.id === guildId);
+            if (!hasAccess) return res.json(result);
+
+            Promise.all([
+                botAPI(`/guilds/${guildId}/members/${userId}`).catch(() => null),
+                botAPI(`/guilds/${guildId}/bans/${userId}`).catch(() => null),
+                botAPI(`/guilds/${guildId}/roles`).catch(() => [])
+            ]).then(([member, ban, guildRoles]) => {
+                if (member && !member.code) {
+                    const settings = db.getGuildSettings(guildId);
+                    const mutedRoleId = settings?.muted_role;
+                    const roles = Array.isArray(guildRoles) ? guildRoles : [];
+                    const memberRoles = (member.roles || []).map(rid => {
+                        const r = roles.find(x => x.id === rid);
+                        return r ? { id: r.id, name: r.name, color: r.color, position: r.position } : { id: rid, name: 'Unknown', color: 0, position: 0 };
+                    }).filter(r => r.name !== '@everyone').sort((a, b) => b.position - a.position);
+
+                    let permFlags = 0;
+                    const everyoneRole = roles.find(r => r.name === '@everyone');
+                    if (everyoneRole) permFlags = everyoneRole.permissions;
+                    (member.roles || []).forEach(rid => { const r = roles.find(x => x.id === rid); if (r) permFlags |= r.permissions; });
+
+                    result.joined_at = member.joined_at;
+                    result.nickname = member.nick;
+                    result.roles = memberRoles;
+                    result.role_count = memberRoles.length;
+                    result.is_muted = mutedRoleId ? (member.roles || []).includes(mutedRoleId) : false;
+                    result.is_deaf = member.deaf || false;
+                    result.is_pending = member.pending || false;
+                    result.premium_since = member.premium_since;
+                    result.permissions = permFlags;
+                    result.hoisted_role = memberRoles.find(r => r.hoist)?.name || null;
+                    result.top_role = memberRoles[0]?.name || '@everyone';
+                }
+
+                result.is_banned = ban && !ban.code;
+                result.ban_reason = ban?.reason || null;
+
+                const userWarnings = db.warnings.get(guildId, {});
+                const userWarns = userWarnings[userId] || [];
+                result.warnings = userWarns.map(w => ({ reason: w.reason, moderator: w.moderator, date: w.date }));
+                result.warning_count = userWarns.length;
+
+                const guildLevels = db.levelData.get(guildId, {});
+                const levelData = guildLevels[userId] || { xp: 0, level: 1 };
+                result.level = levelData.level || 1;
+                result.xp = levelData.xp || 0;
+                result.xp_needed = (levelData.level || 1) * 100;
+
+                const allLevels = Object.entries(guildLevels).sort((a, b) => (b[1].xp || 0) - (a[1].xp || 0));
+                result.level_rank = allLevels.findIndex(([id]) => id === userId) + 1 || null;
+
+                const activity = db.botStats.get('activity_feed', []);
+                result.recent_activity = activity.filter(a => a.userId === userId || a.user === userId || a.targetId === userId).slice(-10).reverse();
+
+                const notesFile = path.join(__dirname, 'data', 'user_notes.json');
+                let notes = {};
+                try { notes = JSON.parse(fs.readFileSync(notesFile, 'utf8')); } catch(e) {}
+                result.notes = (notes[guildId] && notes[guildId][userId]) || [];
+
+                res.json(result);
+            });
         })
         .catch(e => res.status(500).json({ error: 'Failed to look up user' }));
+});
+
+app.post('/api/user/:id/notes', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const userId = req.params.id.replace(/[^0-9]/g, '');
+    const guildId = req.body.guild_id?.replace(/[^0-9]/g, '');
+    if (!guildId) return res.status(400).json({ error: 'Guild ID required' });
+    const hasAccess = req.guilds && req.guilds.some(g => g.id === guildId);
+    if (!hasAccess) return res.status(403).json({ error: 'No access' });
+    const { note } = req.body;
+    if (!note) return res.status(400).json({ error: 'Note required' });
+    const notesFile = path.join(__dirname, 'data', 'user_notes.json');
+    let notes = {};
+    try { notes = JSON.parse(fs.readFileSync(notesFile, 'utf8')); } catch(e) {}
+    if (!notes[guildId]) notes[guildId] = {};
+    if (!notes[guildId][userId]) notes[guildId][userId] = [];
+    notes[guildId][userId].push({ text: sanitize(note.substring(0, 500)), author: req.user.username, date: new Date().toISOString() });
+    fs.writeFileSync(notesFile, JSON.stringify(notes, null, 2));
+    res.json({ ok: true, notes: notes[guildId][userId] });
+});
+
+app.delete('/api/user/:id/notes/:index', apiLimiter, csrfCheck, authMiddleware, (req, res) => {
+    const userId = req.params.id.replace(/[^0-9]/g, '');
+    const guildId = req.body?.guild_id?.replace(/[^0-9]/g, '') || req.query.guild?.replace(/[^0-9]/g, '');
+    if (!guildId) return res.status(400).json({ error: 'Guild ID required' });
+    const notesFile = path.join(__dirname, 'data', 'user_notes.json');
+    let notes = {};
+    try { notes = JSON.parse(fs.readFileSync(notesFile, 'utf8')); } catch(e) {}
+    if (notes[guildId]?.[userId]) {
+        const idx = parseInt(req.params.index);
+        if (!isNaN(idx)) notes[guildId][userId].splice(idx, 1);
+        fs.writeFileSync(notesFile, JSON.stringify(notes, null, 2));
+    }
+    res.json({ ok: true });
 });
 
 // ====== Tags API ======
