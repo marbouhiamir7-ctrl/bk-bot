@@ -1004,27 +1004,12 @@ body {
 
 /* Deep space background */
 .deep-space {
-    position: absolute;
-    inset: -50px;
-    background: radial-gradient(ellipse at 60% 30%, rgba(20,15,35,1) 0%, rgba(8,6,18,1) 40%, rgba(4,3,10,1) 60%, transparent 100%);
-    z-index: -1;
-    pointer-events: none;
-    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 50%, transparent 100%);
-    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 50%, transparent 100%);
+    display: none;
 }
 
 /* Galaxy band */
 .galaxy-band {
-    position: absolute;
-    top: 30%;
-    left: -20%;
-    right: -20%;
-    height: 80px;
-    background: linear-gradient(180deg, transparent, rgba(120,100,180,0.03) 30%, rgba(150,120,200,0.05) 50%, rgba(120,100,180,0.03) 70%, transparent);
-    transform: rotate(-8deg);
-    filter: blur(20px);
-    pointer-events: none;
-    z-index: 0;
+    display: none;
 }
 
 /* Sun corona */
