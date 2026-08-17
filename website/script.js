@@ -134,6 +134,10 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     let currentRotateY = 0;
     let targetRotateX = 0;
     let targetRotateY = 0;
+    let currentLightX = 0;
+    let currentLightY = 0;
+    let targetLightX = 0;
+    let targetLightY = 0;
     let isHovering = false;
 
     function updateBounds() {
@@ -317,7 +321,7 @@ function buildRichResponse(cmd, target) {
 
     switch (cmd) {
         case 'ban':
-            return `<div class="sim-embed sim-embed-danger">${author}<div class="sim-embed-title">🔨 Member Banned</div><div class="sim-embed-fields"><div class="sim-embed-field"><div class="sim-embed-field-name">User</div><div class="sim-embed-field-value"><strong>${t}</strong></div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Moderator</div><div class="sim-embed-field-value"><strong>@admin</strong></div></div><div class="sim-embed-field full"><div class="sim-embed-field-name">Reason</div><div class="sim-embed-field-value">Raiding the server — mass-pinging members</div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Duration</div><div class="sim-embed-field-value">Permanent</div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Case</div><div class="sim-embed-field-value">#2847</div></div></div><div class="sim-embed-footer"><div class="sim-embed-footer-left"><i class="fas fa-gavel"></i> BK BOT Moderation</div><span>${simNow()}</span></div></div><div class="sim-reactions"><span class="sim-reaction active">👍 1</span><span class="sim-reaction">🗑️ 0</span></div>`, `<div class="sim-suggestion" data-cmd="unban ${t}"><i class="fas fa-wand-magic-sparkles"></i> Try <code>/unban ${t}</code> to reverse this</div>`;
+            return [`<div class="sim-embed sim-embed-danger">${author}<div class="sim-embed-title">🔨 Member Banned</div><div class="sim-embed-fields"><div class="sim-embed-field"><div class="sim-embed-field-name">User</div><div class="sim-embed-field-value"><strong>${t}</strong></div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Moderator</div><div class="sim-embed-field-value"><strong>@admin</strong></div></div><div class="sim-embed-field full"><div class="sim-embed-field-name">Reason</div><div class="sim-embed-field-value">Raiding the server — mass-pinging members</div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Duration</div><div class="sim-embed-field-value">Permanent</div></div><div class="sim-embed-field"><div class="sim-embed-field-name">Case</div><div class="sim-embed-field-value">#2847</div></div></div><div class="sim-embed-footer"><div class="sim-embed-footer-left"><i class="fas fa-gavel"></i> BK BOT Moderation</div><span>${simNow()}</span></div></div><div class="sim-reactions"><span class="sim-reaction active">👍 1</span><span class="sim-reaction">🗑️ 0</span></div>`, `<div class="sim-suggestion" data-cmd="unban ${t}"><i class="fas fa-wand-magic-sparkles"></i> Try <code>/unban ${t}</code> to reverse this</div>`];
 
         case 'unban':
             return `<div class="sim-embed sim-embed-success">${author}<div class="sim-embed-title">✅ Member Unbanned</div><div class="sim-embed-desc"><strong>${t}</strong> has been unbanned and can rejoin the server.</div><div class="sim-embed-footer"><div class="sim-embed-footer-left"><i class="fas fa-gavel"></i> BK BOT Moderation</div><span>${simNow()}</span></div></div>`;
@@ -410,7 +414,9 @@ function runCommand(raw) {
         const parts = raw.split(/\s+/);
         const cmd = (parts[0] || '').toLowerCase();
         const target = parts.slice(1).join(' ');
-        const [embedHTML, extraHTML] = buildRichResponse(cmd, target);
+        const result = buildRichResponse(cmd, target);
+        const embedHTML = Array.isArray(result) ? result[0] : result;
+        const extraHTML = Array.isArray(result) ? result[1] : '';
         simBotMsg(embedHTML, extraHTML);
     }, 600 + Math.random() * 400);
 }
