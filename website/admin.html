@@ -284,6 +284,55 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
 .toast.info i{color:var(--blue)}
 @media(max-width:1100px){.sidebar{position:fixed;left:0;top:0;transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,0.6)}.hamburger{display:flex;align-items:center;justify-content:center}.main{padding:20px 18px 50px}}
 @media(max-width:700px){.grid-2{grid-template-columns:1fr}.clock{display:none}.topbar{flex-wrap:wrap}.bot-hero{flex-direction:column;text-align:center}.bot-hero-stats{justify-content:center}}
+.theme-toggle,.notif-bell{width:38px;height:38px;border-radius:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .25s}
+.theme-toggle:hover,.notif-bell:hover{background:rgba(255,255,255,0.09);color:var(--text)}
+body.light{--bg:#f5f5f9;--surface:rgba(0,0,0,0.02);--surface2:rgba(0,0,0,0.04);--border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);--text:#1a1a2e;--text2:#5c5c74;--text3:#9a9ab2}
+body.light .sidebar{background:linear-gradient(180deg,rgba(245,245,249,0.98),rgba(235,235,242,0.99))}
+body.light .stat-card{background:linear-gradient(160deg,rgba(255,255,255,0.8),rgba(255,255,255,0.5))}
+body.light .section{background:linear-gradient(160deg,rgba(255,255,255,0.7),rgba(255,255,255,0.4))}
+body.light .login-card{background:linear-gradient(160deg,rgba(255,255,255,0.95),rgba(245,245,249,0.98))}
+body.light .bg-orbs::before{background:radial-gradient(circle,rgba(255,107,107,0.04),transparent 60%)}
+body.light .bg-orbs::after{background:radial-gradient(circle,rgba(79,140,255,0.03),transparent 60%)}
+body.light .bg-grid{background-image:linear-gradient(rgba(0,0,0,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.03) 1px,transparent 1px)}
+body.light .srv-card,body.light .card{background:rgba(255,255,255,0.6);border-color:rgba(0,0,0,0.08)}
+body.light .stat-value{background:linear-gradient(120deg,#1a1a2e,#5c5c74);-webkit-background-clip:text;background-clip:text}
+body.light .modal{background:linear-gradient(160deg,rgba(255,255,255,0.98),rgba(245,245,249,0.99));border-color:rgba(0,0,0,0.12)}
+body.light .toast{background:linear-gradient(160deg,rgba(255,255,255,0.98),rgba(245,245,249,0.99));border-color:rgba(0,0,0,0.12)}
+body.light .chart-bar-track{background:rgba(0,0,0,0.06)}
+body.light .health-item{background:rgba(255,255,255,0.5)}
+body.light .hourly-track{background:rgba(0,0,0,0.05)}
+body.light .search-box input,body.light .global-search input{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.1)}
+body.light .bot-hero{background:linear-gradient(135deg,rgba(255,107,107,0.05),rgba(79,140,255,0.03))}
+body.light .topbar-breadcrumb{color:var(--text3)}
+body.light .tabs{border-bottom-color:rgba(0,0,0,0.08)}
+.notif-bell{position:relative}
+.notif-badge{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:.55rem;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid var(--bg);animation:notifPop .3s cubic-bezier(.68,-.55,.27,1.55)}
+.notif-badge.show{display:flex}
+@keyframes notifPop{from{transform:scale(0)}to{transform:scale(1)}}
+.notif-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:340px;max-height:380px;overflow-y:auto;background:linear-gradient(160deg,rgba(22,22,34,0.98),rgba(14,14,22,0.99));border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:50;display:none;animation:pageIn .2s ease}
+body.light .notif-dropdown{background:linear-gradient(160deg,rgba(255,255,255,0.98),rgba(245,245,249,0.99))}
+.notif-dropdown.show{display:block}
+.notif-header{padding:14px 16px;border-bottom:1px solid var(--border);font-size:.78rem;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);font-size:.74rem;color:var(--text2);transition:background .15s}
+.notif-item:last-child{border-bottom:none}
+.notif-item .notif-type{font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:10px;margin-right:8px}
+.notif-item .notif-type.danger{background:rgba(239,68,68,0.15);color:var(--red)}
+.notif-item .notif-type.warn{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.notif-item .notif-type.info{background:rgba(79,140,255,0.15);color:var(--blue)}
+.notif-item .notif-time{display:block;font-size:.6rem;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.global-search{position:relative;width:260px}
+.global-search input{width:100%;padding:9px 14px 9px 34px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.78rem;outline:none;transition:all .25s}
+.global-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,107,0.1);width:320px}
+.global-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:.75rem}
+.global-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:linear-gradient(160deg,rgba(22,22,34,0.98),rgba(14,14,22,0.99));border:1px solid var(--border2);border-radius:var(--r);box-shadow:0 16px 50px rgba(0,0,0,0.6);z-index:50;display:none;max-height:320px;overflow-y:auto}
+body.light .global-search-results{background:linear-gradient(160deg,rgba(255,255,255,0.98),rgba(245,245,249,0.99))}
+.global-search-results.show{display:block}
+.gsr-item{padding:10px 14px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:10px;font-size:.78rem}
+.gsr-item:hover{background:rgba(255,255,255,0.04)}
+.gsr-item i{color:var(--text3);width:18px;text-align:center}
+.gsr-item span{color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kbd-hint{display:inline-block;font-size:.58rem;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text3);margin-left:4px;vertical-align:middle}
+.export-btn{font-size:.68rem;padding:5px 10px;border-radius:8px}
 </style>
 </head>
 <body>
@@ -329,6 +378,12 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
             <div class="nav-item" data-page="audit"><i class="fas fa-clipboard-list"></i> Audit Log</div>
         </nav>
         <div class="sidebar-foot">
+            <div style="padding:4px 10px 10px;font-size:.6rem;color:var(--text3);display:flex;flex-wrap:wrap;gap:6px">
+                <span><span class="kbd-hint">R</span> Refresh</span>
+                <span><span class="kbd-hint">1-9</span> Navigate</span>
+                <span><span class="kbd-hint">Ctrl+K</span> Search</span>
+                <span><span class="kbd-hint">Esc</span> Close</span>
+            </div>
             <div class="sidebar-user" onclick="doLogout()" title="Click to logout">
                 <div class="u-avatar" id="u-avatar">AD</div>
                 <div>
@@ -348,8 +403,11 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
                 <div class="topbar-breadcrumb" id="topbar-breadcrumb">Dashboard / Overview</div>
             </div>
             <div class="topbar-actions">
+                <div class="global-search"><i class="fas fa-search"></i><input id="global-search-input" placeholder="Search... (Ctrl+K)" oninput="handleGlobalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''"><div class="global-search-results" id="gsr"></div></div>
+                <div class="notif-bell" onclick="toggleNotif()" id="notif-bell"><i class="fas fa-bell"></i><span class="notif-badge" id="notif-count">0</span><div class="notif-dropdown" id="notif-dropdown"><div class="notif-header"><span>Notifications</span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();clearNotifs()">Clear</button></div><div id="notif-list"></div></div></div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon" id="theme-icon"></i></button>
                 <div class="clock" id="clock">--:--:--</div>
-                <button class="btn btn-ghost" onclick="refreshCurrent()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-ghost" onclick="refreshCurrent()" title="Refresh (R)"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn btn-danger-outline" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
@@ -445,19 +503,28 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
 
         <!-- WARNINGS -->
         <div class="page" id="p-warnings">
-            <div class="search-box"><input id="warn-search" placeholder="Search warnings by user, reason, server..." oninput="filterWarnings()"><i class="fas fa-search"></i></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+                <div class="search-box" style="flex:1;margin:0"><input id="warn-search" placeholder="Search warnings by user, reason, server..." oninput="filterWarnings()"><i class="fas fa-search"></i></div>
+                <button class="btn btn-ghost btn-sm export-btn" onclick="exportTable('warn-table','warnings')"><i class="fas fa-download"></i> Export</button>
+            </div>
             <div class="card"><div class="card-body no-pad"><div class="table-wrap"><table id="warn-table"></table></div></div></div>
         </div>
 
         <!-- LEVELS -->
         <div class="page" id="p-levels">
-            <div class="search-box"><input id="lvl-search" placeholder="Search users by ID..." oninput="filterLevels()"><i class="fas fa-search"></i></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+                <div class="search-box" style="flex:1;margin:0"><input id="lvl-search" placeholder="Search users by ID..." oninput="filterLevels()"><i class="fas fa-search"></i></div>
+                <button class="btn btn-ghost btn-sm export-btn" onclick="exportTable('levels-table','levels')"><i class="fas fa-download"></i> Export</button>
+            </div>
             <div class="card"><div class="card-body no-pad"><div class="table-wrap"><table id="levels-table"></table></div></div></div>
         </div>
 
         <!-- COMMANDS -->
         <div class="page" id="p-commands">
-            <div class="search-box"><input id="cmds-search" placeholder="Search commands..." oninput="filterCommands()"><i class="fas fa-search"></i></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+                <div class="search-box" style="flex:1;margin:0"><input id="cmds-search" placeholder="Search commands..." oninput="filterCommands()"><i class="fas fa-search"></i></div>
+                <button class="btn btn-ghost btn-sm export-btn" onclick="exportTable('cmds-table','commands')"><i class="fas fa-download"></i> Export</button>
+            </div>
             <div class="card"><div class="card-body no-pad"><div class="table-wrap"><table id="cmds-table"></table></div></div></div>
         </div>
 
@@ -473,7 +540,10 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
 
         <!-- AUDIT -->
         <div class="page" id="p-audit">
-            <div class="search-box"><input id="audit-search" placeholder="Search audit log by action or IP..." oninput="filterAudit()"><i class="fas fa-search"></i></div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+                <div class="search-box" style="flex:1;margin:0"><input id="audit-search" placeholder="Search audit log by action or IP..." oninput="filterAudit()"><i class="fas fa-search"></i></div>
+                <button class="btn btn-ghost btn-sm export-btn" onclick="exportTable('audit-table','audit-log')"><i class="fas fa-download"></i> Export</button>
+            </div>
             <div class="card"><div class="card-body no-pad"><div class="table-wrap"><table id="audit-table"></table></div></div></div>
         </div>
     </div>
@@ -499,7 +569,7 @@ const API='';
 let curServer=null,allServers=[],globalData=null,currentPage='overview',pingHistory=[];
 const ESC=s=>{const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML};
 const FMT=n=>{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n||0)};
-const AVATAR=u=>u?.avatar?`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`:`https://cdn.discordapp.com/embed/avatars/${Number(BigInt(u?.id||'0')>>22n%6n)}.png`;
+const AVATAR=u=>u?.avatar?`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`:`https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u?.id||'0')>>22n)%6n)}.png`;
 const GICON=g=>g?.icon?`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`:'';
 const TIME=d=>{if(!d)return'';const s=Math.floor((Date.now()-new Date(d))/1000);if(s<10)return'just now';if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'};
 const DUR=s=>{s=Math.floor(s||0);const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?`${d}d ${h}h ${m}m`:h?`${h}h ${m}m`:m?`${m}m ${s%60}s`:`${s}s`};
@@ -598,7 +668,7 @@ async function initApp(){
         try{
             const ov=await api('/admin/api/overview');
             const s=ov.stats||{},b=ov.bot||{};
-            const vals={ov-srv:s.servers||0,ov-mem:b.totals?.members||s.totalMembers||0,ov-cmd:s.commandsRun||0,ov-msg:s.messagesSeen||0,ov-warn:s.warningsIssued||0,ov-ban:s.bans||0,ov-kick:s.kicks||0,ov-mute:s.mutes||0};
+            const vals={'ov-srv':s.servers||0,'ov-mem':b.totals?.members||s.totalMembers||0,'ov-cmd':s.commandsRun||0,'ov-msg':s.messagesSeen||0,'ov-warn':s.warningsIssued||0,'ov-ban':s.bans||0,'ov-kick':s.kicks||0,'ov-mute':s.mutes||0};
             for(const [id,v] of Object.entries(vals)){
                 const el=document.getElementById(id);
                 if(el&&el.dataset.val!==String(v)){el.dataset.val=String(v);el.textContent=FMT(v)}
@@ -641,7 +711,7 @@ function renderOverview(d){
     renderSecurity(b.security||{});
     renderBotHealthMini(b);
     renderActivity(d.recentActivity||[],'ov-activity');
-    document.getElementById('ov-cmd-total').textContent='LOADED';
+    document.getElementById('ov-cmd-total').innerHTML=`<i class="fas fa-terminal"></i> ${Object.values(usage).reduce((a,b)=>a+b,0)} runs`;
 }
 function renderCommandChart(usage){
     const el=document.getElementById('ov-chart');
@@ -839,7 +909,7 @@ function renderBotHero(b){
         <div class="bot-avatar">${b.avatar?`<img src="${ESC(b.avatar)}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">`:'<i class="fas fa-robot"></i>'}</div>
         <div class="bot-hero-info">
             <div class="bot-hero-name">${ESC(b.tag||'Offline')} <span class="badge-sm ${b.online?'on':'off'}"><i class="fas fa-circle" style="font-size:.4rem"></i> ${b.online?'ONLINE':'OFFLINE'}</span></div>
-            <div class="bot-hero-tag">${b.id||'—'} · Node ${b.nodeVersion} · sync ${b.lastSync?TIME(b.lastSync):'—'}</div>
+            <div class="bot-hero-tag">${b.id||'—'}${b.nodeVersion?' · Node '+b.nodeVersion:''}${b.lastSync?' · sync '+TIME(b.lastSync):''}</div>
             <div class="bot-hero-stats">
                 <div class="bot-hero-stat"><b id="hero-uptime">${DUR(b.uptime)}</b><span>Uptime</span></div>
                 <div class="bot-hero-stat"><b>${b.ping||0}ms</b><span>Latency</span></div>
@@ -1076,6 +1146,100 @@ function filterAudit(){
     const q=(document.getElementById('audit-search').value||'').toLowerCase();
     renderAudit(allAudit.filter(a=>(a.action||'').toLowerCase().includes(q)||(a.ip||'').includes(q)));
 }
+
+// ====== THEME ======
+function toggleTheme(){
+    const l=document.body.classList.toggle('light');
+    localStorage.setItem('bk_theme',l?'light':'dark');
+    document.getElementById('theme-icon').className=l?'fas fa-sun':'fas fa-moon';
+}
+(function(){const t=localStorage.getItem('bk_theme');if(t==='light'){document.body.classList.add('light');setTimeout(()=>{const i=document.getElementById('theme-icon');if(i)i.className='fas fa-sun'},0)}})();
+
+// ====== KEYBOARD SHORTCUTS ======
+const PAGE_KEYS={'1':'overview','2':'servers','3':'bot','4':'warnings','5':'levels','6':'commands','7':'activity','8':'honeypot','9':'audit'};
+document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable)return;
+    if(e.key==='r'||e.key==='R'){e.preventDefault();refreshCurrent();return}
+    if(PAGE_KEYS[e.key]){e.preventDefault();showPage(PAGE_KEYS[e.key]);document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.querySelector(`[data-page="${PAGE_KEYS[e.key]}"]`)?.classList.add('active');return}
+    if(e.key==='Escape'){closeModal();const gi=document.getElementById('global-search-input');if(gi){gi.value='';gi.blur()}const dd=document.getElementById('notif-dropdown');if(dd)dd.classList.remove('show');const gsr=document.getElementById('gsr');if(gsr)gsr.classList.remove('show');return}
+    if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();const gi=document.getElementById('global-search-input');if(gi)gi.focus()}
+});
+
+// ====== NOTIFICATIONS ======
+let notifications=[];
+function toggleNotif(){document.getElementById('notif-dropdown').classList.toggle('show')}
+function addNotif(type,msg){
+    notifications.unshift({type,msg,time:Date.now()});
+    if(notifications.length>50)notifications.pop();
+    renderNotifs();
+}
+function renderNotifs(){
+    const c=document.getElementById('notif-count');
+    const l=document.getElementById('notif-list');
+    const recent=notifications.filter(n=>Date.now()-n.time<300000);
+    c.textContent=recent.length;
+    c.classList.toggle('show',recent.length>0);
+    if(!notifications.length){l.innerHTML='<div class="notif-item" style="color:var(--text3);text-align:center">No notifications yet</div>';return}
+    l.innerHTML=notifications.slice(0,20).map(n=>`<div class="notif-item"><span class="notif-type ${n.type}">${n.type==='danger'?'ALERT':n.type==='warn'?'WARN':'INFO'}</span>${ESC(n.msg)}<span class="notif-time">${TIME(n.time)}</span></div>`).join('');
+}
+function clearNotifs(){notifications=[];renderNotifs()}
+
+// ====== GLOBAL SEARCH ======
+function handleGlobalSearch(q){
+    const r=document.getElementById('gsr');
+    q=(q||'').toLowerCase().trim();
+    if(!q||q.length<2){r.classList.remove('show');return}
+    const results=[];
+    if(allServers.length){
+        allServers.forEach(s=>{
+            if((s.name||'').toLowerCase().includes(q)||s.id.includes(q))
+                results.push({icon:'fa-server',text:`${s.name} (${s.id})`,page:'servers',action:`openServer('${s.id}')`});
+        });
+    }
+    const pgMap=[['overview','fa-th-large','Overview'],['bot','fa-robot','Bot Status'],['warnings','fa-exclamation-triangle','Warnings'],['levels','fa-trophy','Levels'],['commands','fa-terminal','Commands'],['activity','fa-stream','Activity'],['honeypot','fa-spider','Honeypot'],['audit','fa-clipboard-list','Audit Log']];
+    pgMap.forEach(([pg,ic,name])=>{if(name.toLowerCase().includes(q))results.push({icon:ic,text:name,page:pg,action:`showPage('${pg}')`})});
+    if(!results.length){r.innerHTML='<div class="gsr-item"><span style="color:var(--text3)">No results found</span></div>'}
+    else{r.innerHTML=results.slice(0,10).map(x=>`<div class="gsr-item" onclick="document.getElementById('gsr').classList.remove('show');document.getElementById('global-search-input').value='';${x.action}"><i class="fas ${x.icon}"></i><span>${ESC(x.text)}</span></div>`).join('')}
+    r.classList.add('show');
+}
+document.addEventListener('click',e=>{
+    if(!e.target.closest('.global-search'))document.getElementById('gsr')?.classList.remove('show');
+    if(!e.target.closest('.notif-bell'))document.getElementById('notif-dropdown')?.classList.remove('show');
+});
+
+// ====== EXPORT CSV ======
+function exportTable(tableId,filename){
+    const t=document.getElementById(tableId);if(!t)return;
+    const rows=Array.from(t.querySelectorAll('tr'));
+    if(!rows.length){toast('No data to export','info');return}
+    const csv=rows.map(r=>Array.from(r.querySelectorAll('th,td')).map(c=>{
+        let v=c.textContent.trim().replace(/"/g,'""');
+        return `"${v}"`;
+    }).join(',')).join('\n');
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download=`bk-bot-${filename}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();URL.revokeObjectURL(a.href);
+    toast(`Exported ${filename}`,'success');
+}
+
+// ====== ENHANCED INIT WITH NOTIFICATIONS ======
+const _origLoadBot=typeof loadBot==='function'?loadBot:null;
+const _origLoadOverview=typeof loadOverview==='function'?loadOverview:null;
+
+// Override initApp to add notification hooks
+const _origInitApp=initApp;
+initApp=async function(){
+    await _origInitApp();
+    renderNotifs();
+    addNotif('info','Dashboard loaded — all systems operational');
+    setInterval(async()=>{
+        try{
+            const b=await api('/admin/api/bot');
+            if(!b.online){addNotif('danger','Bot is OFFLINE')}
+        }catch(e){}
+    },60000);
+};
 
 checkAuth();
 </script>
