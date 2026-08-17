@@ -1499,10 +1499,17 @@ app.get('/admin/api/server/:id/members', adminAuth, adminApiLimiter, async (req,
         }
         if (search) members = members.filter(m => m.user.username.toLowerCase().includes(search) || m.user.id.includes(search) || (m.nick && m.nick.toLowerCase().includes(search)));
         members.sort((a, b) => (b.joined_at > a.joined_at ? 1 : -1));
+
+        const rolesRes = await discordAPI(`/guilds/${gid}/roles`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+        const rolesMap = {};
+        if (isOk(rolesRes) && Array.isArray(rolesRes)) {
+            rolesRes.forEach(r => { rolesMap[r.id] = r.name; });
+        }
+
         adminAudit('SEARCH_MEMBERS', { guild: gid, search }, req.adminIp);
         res.json(members.slice(0, 200).map(m => ({
             id: m.user.id, username: sanitize(m.user.username), avatar: m.user.avatar,
-            nick: sanitize(m.nick), roles: m.roles, joined: m.joined_at, boosted: m.premium_since
+            nick: sanitize(m.nick), roles: (m.roles || []).map(rid => rolesMap[rid] || rid), joined: m.joined_at, boosted: m.premium_since
         })));
     } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -1532,12 +1539,16 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
 
     try {
         if (action === 'ban') {
-            await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { delete_message_days: 1, reason: safeReason || 'Admin panel action' } });
+            const banBody = { delete_message_seconds: 86400 };
+            if (safeReason) banBody.reason = safeReason;
+            const banRes = await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json', 'X-Audit-Log-Reason': encodeURIComponent(safeReason || 'Admin panel action') }, body: banBody });
+            if (banRes.code) return res.status(400).json({ error: `Discord API error: ${banRes.message || banRes.code}` });
             const stats = db.botStats.get('global', {}); stats.bans = (stats.bans || 0) + 1; db.botStats.set('global', stats);
             adminAudit('BAN', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Banned ${userId}` });
         } else if (action === 'kick') {
-            await discordAPI(`/guilds/${gid}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            const kickRes = await discordAPI(`/guilds/${gid}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'X-Audit-Log-Reason': encodeURIComponent(safeReason || 'Admin panel action') } });
+            if (kickRes.code) return res.status(400).json({ error: `Discord API error: ${kickRes.message || kickRes.code}` });
             const stats = db.botStats.get('global', {}); stats.kicks = (stats.kicks || 0) + 1; db.botStats.set('global', stats);
             adminAudit('KICK', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Kicked ${userId}` });
