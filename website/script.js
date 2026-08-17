@@ -46,6 +46,10 @@ async function loadLiveStats() {
             const key = el.getAttribute('data-stat');
             if (key && stats[key] !== undefined) countUp(el, Number(stats[key]) || 0);
         });
+        if (data.avatar) {
+            const logo = document.querySelector('.orb-logo');
+            if (logo) logo.src = data.avatar;
+        }
     } catch (e) {
         console.warn('Live stats unavailable:', e);
     }

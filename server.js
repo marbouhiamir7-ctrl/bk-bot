@@ -481,8 +481,11 @@ app.get('/api/guild/:id/invite', apiLimiter, authMiddleware, guildAuth, (req, re
 
 app.get('/api/botinfo', apiLimiter, (req, res) => {
     botAPI('/users/@me').then(me => {
-        res.json({ id: me.id, username: me.username, stats: db.getStats() });
-    }).catch(() => res.json({ username: 'BK BOT', stats: db.getStats() }));
+        const avatarURL = me.avatar
+            ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=256`
+            : `https://cdn.discordapp.com/embed/avatars/0.png`;
+        res.json({ id: me.id, username: me.username, avatar: avatarURL, stats: db.getStats() });
+    }).catch(() => res.json({ username: 'BK BOT', avatar: '', stats: db.getStats() }));
 });
 
 // ====== Activity Feed ======
