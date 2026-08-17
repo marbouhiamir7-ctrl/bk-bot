@@ -1537,16 +1537,29 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
 
     const safeReason = typeof reason === 'string' ? sanitize(reason.slice(0, 500)) : '';
 
+    async function sendDM(userId, content) {
+        try {
+            const dmRes = await discordAPI(`/users/@me/channels`, { method: 'POST', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { recipient_id: userId } });
+            if (dmRes.id) {
+                await discordAPI(`/channels/${dmRes.id}/messages`, { method: 'POST', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { content } });
+                return true;
+            }
+        } catch (e) { console.log('[DM Error]', e.message); }
+        return false;
+    }
+
     try {
         if (action === 'ban') {
+            await sendDM(userId, `**You have been banned from this server.**\n\n**Reason:** ${safeReason || 'No reason provided'}\n\nIf you believe this is a mistake, contact the server administrators.`);
             const banBody = { delete_message_seconds: 86400 };
             if (safeReason) banBody.reason = safeReason;
             const banRes = await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json', 'X-Audit-Log-Reason': encodeURIComponent(safeReason || 'Admin panel action') }, body: banBody });
             if (banRes.code) return res.status(400).json({ error: `Discord API error: ${banRes.message || banRes.code}` });
             const stats = db.botStats.get('global', {}); stats.bans = (stats.bans || 0) + 1; db.botStats.set('global', stats);
             adminAudit('BAN', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
-            res.json({ ok: true, message: `Banned ${userId}` });
+            res.json({ ok: true, message: `Banned **${userId}**` });
         } else if (action === 'kick') {
+            await sendDM(userId, `**You have been kicked from this server.**\n\n**Reason:** ${safeReason || 'No reason provided'}\n\nYou may rejoin with a new invite.`);
             const kickRes = await discordAPI(`/guilds/${gid}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'X-Audit-Log-Reason': encodeURIComponent(safeReason || 'Admin panel action') } });
             if (kickRes.code) return res.status(400).json({ error: `Discord API error: ${kickRes.message || kickRes.code}` });
             const stats = db.botStats.get('global', {}); stats.kicks = (stats.kicks || 0) + 1; db.botStats.set('global', stats);
@@ -1561,6 +1574,8 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
             if (!warns[userId]) warns[userId] = [];
             warns[userId].push({ reason: safeReason || 'Admin panel warning', moderator: 'Admin Panel', date: new Date().toISOString() });
             db.warnings.set(gid, warns);
+            const warnCount = warns[userId].length;
+            await sendDM(userId, `**You have been warned in this server.**\n\n**Reason:** ${safeReason || 'No reason provided'}\n**Warning #${warnCount}** — Further violations may result in a kick or ban.`);
             const stats = db.botStats.get('global', {}); stats.warnings_issued = (stats.warnings_issued || 0) + 1; db.botStats.set('global', stats);
             adminAudit('WARN', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Warned ${userId}` });

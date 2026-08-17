@@ -923,11 +923,14 @@ function doMemberAction(action,uid,name){
     document.getElementById('modal').classList.add('show');
     document.getElementById('modal-confirm').onclick=async()=>{
         const reason=(document.getElementById('act-reason').value||'').trim();
+        const btn=document.getElementById('modal-confirm');
+        btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing...';
         try{
-            await api(`/admin/api/server/${curServer}/action`,{method:'POST',body:JSON.stringify({action,userId:uid,reason})});
-            toast(`${action} executed on ${name}`);
+            const r=await api(`/admin/api/server/${curServer}/action`,{method:'POST',body:JSON.stringify({action,userId:uid,reason})});
+            toast(r.message||`${action} executed on ${name}`);
             closeModal();searchMembers();
         }catch(e){toast(e.message,'error')}
+        btn.disabled=false;btn.innerHTML='Confirm';
     };
 }
 
