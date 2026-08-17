@@ -122,26 +122,22 @@ window.addEventListener('scroll', () => {
 console.log('%c BK BOT ', 'background: linear-gradient(135deg, #FF6B6B, #FFA502); color: white; font-size: 20px; padding: 10px 20px; border-radius: 5px;');
 console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size: 12px;');
 
-// 3D Interactive Card Mouse Tracking
+// 3D Shield Orb Mouse Tracking
 (function() {
-    const card = document.getElementById('card3d');
+    const orb = document.getElementById('card3d');
     const scene = document.getElementById('scene');
     
-    if (!card || !scene) return;
+    if (!orb || !scene) return;
 
     let bounds;
     let currentRotateX = 0;
     let currentRotateY = 0;
     let targetRotateX = 0;
     let targetRotateY = 0;
-    let currentLightX = 0;
-    let currentLightY = 0;
-    let targetLightX = 0;
-    let targetLightY = 0;
     let isHovering = false;
 
     function updateBounds() {
-        bounds = card.getBoundingClientRect();
+        bounds = orb.getBoundingClientRect();
     }
 
     function lerp(a, b, t) {
@@ -155,44 +151,20 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     function animate() {
         currentRotateX = lerp(currentRotateX, targetRotateX, 0.08);
         currentRotateY = lerp(currentRotateY, targetRotateY, 0.08);
-        currentLightX = lerp(currentLightX, targetLightX, 0.06);
-        currentLightY = lerp(currentLightY, targetLightY, 0.06);
 
-        const rx = currentRotateX * 18;
-        const ry = currentRotateY * 18;
-        const scaleVal = isHovering ? 1.02 : 1;
-        const tz = isHovering ? 30 : 0;
+        const rx = currentRotateX * 20;
+        const ry = currentRotateY * 20;
+        const scaleVal = isHovering ? 1.05 : 1;
 
-        card.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scaleVal}) translateZ(${tz}px)`;
-
-        // No light overlay - clean dark card
+        orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(${-rx}deg) rotateY(${ry}deg) scale(${scaleVal})`;
 
         // Parallax floating badges
         const badges = document.querySelectorAll('.floating-3d-badge');
         badges.forEach((badge, i) => {
-            const depth = 0.6 + i * 0.25;
-            const bx = currentRotateY * 12 * depth;
-            const by = currentRotateX * 12 * depth;
-            badge.style.transform = `translateZ(30px) translateX(${bx}px) translateY(${by}px)`;
-        });
-
-        // Parallax orbit rings
-        const rings = document.querySelectorAll('.orbit-3d-ring');
-        rings.forEach((ring, i) => {
-            const depth = 0.15 + i * 0.1;
-            const rx2 = currentRotateY * 8 * depth;
-            const ry2 = currentRotateX * 8 * depth;
-            const baseRotation = [0, 60, 120][i];
-            ring.style.transform = `translate(calc(-50% + ${rx2}px), calc(-50% + ${ry2}px)) rotateX(75deg) rotateZ(${baseRotation}deg)`;
-        });
-
-        // Parallax particles
-        const particles = document.querySelectorAll('.particle');
-        particles.forEach((p, i) => {
-            const depth = 0.4 + i * 0.15;
-            const px = currentRotateY * 20 * depth;
-            const py = currentRotateX * 20 * depth;
-            p.style.transform = `translate(${px}px, ${py}px)`;
+            const depth = 0.5 + i * 0.3;
+            const bx = currentRotateY * 15 * depth;
+            const by = currentRotateX * 15 * depth;
+            badge.style.transform = `translateX(${bx}px) translateY(${by}px)`;
         });
 
         requestAnimationFrame(animate);
@@ -234,24 +206,6 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         isHovering = false;
         targetRotateX = 0;
         targetRotateY = 0;
-    });
-
-    // Per-item tilt
-    document.querySelectorAll('[data-tilt]').forEach(item => {
-        item.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateZ(18px) scale(1.04)';
-        });
-        
-        item.addEventListener('mousemove', function(e) {
-            const r = this.getBoundingClientRect();
-            const x = (e.clientX - r.left - r.width / 2) / (r.width / 2);
-            const y = (e.clientY - r.top - r.height / 2) / (r.height / 2);
-            this.style.transform = `translateZ(18px) rotateX(${-y * 12}deg) rotateY(${x * 12}deg) scale(1.04)`;
-        });
-        
-        item.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateZ(8px)';
-        });
     });
 
     animate();
