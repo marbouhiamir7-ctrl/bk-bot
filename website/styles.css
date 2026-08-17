@@ -478,11 +478,11 @@ body {
 
 .sun-glow {
     position: absolute;
-    top: -40px;
-    right: -20px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(255,200,120,0.35), rgba(255,160,60,0.1) 40%, transparent 70%);
+    top: -30px;
+    right: -10px;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(255,210,140,0.5), rgba(255,170,70,0.15) 45%, transparent 70%);
     border-radius: 50%;
     z-index: 1;
     animation: sunPulse 6s ease-in-out infinite;
@@ -540,9 +540,9 @@ body {
 
 .orb-atmosphere {
     position: absolute;
-    inset: -18px;
+    inset: -14px;
     border-radius: 50%;
-    background: radial-gradient(circle, transparent 55%, rgba(100,180,255,0.06) 70%, rgba(100,180,255,0.02) 85%, transparent 100%);
+    background: radial-gradient(circle, transparent 58%, rgba(120,180,255,0.04) 72%, rgba(120,180,255,0.01) 88%, transparent 100%);
     pointer-events: none;
     animation: atmoPulse 5s ease-in-out infinite;
 }
@@ -550,16 +550,16 @@ body {
 
 .orb-glow-outer {
     position: absolute;
-    inset: -100px;
-    background: radial-gradient(circle, rgba(255,107,107,0.1) 0%, rgba(255,165,2,0.03) 40%, transparent 65%);
+    inset: -80px;
+    background: radial-gradient(circle, rgba(255,107,107,0.06) 0%, rgba(255,165,2,0.02) 40%, transparent 60%);
     border-radius: 50%;
     animation: orbOuterPulse 5s ease-in-out infinite;
     pointer-events: none;
 }
 .orb-glow-mid {
     position: absolute;
-    inset: -55px;
-    background: radial-gradient(circle, rgba(255,107,107,0.18) 0%, rgba(255,80,80,0.05) 50%, transparent 70%);
+    inset: -40px;
+    background: radial-gradient(circle, rgba(255,107,107,0.1) 0%, rgba(255,80,80,0.03) 50%, transparent 70%);
     border-radius: 50%;
     animation: orbMidPulse 3.5s ease-in-out infinite;
     pointer-events: none;
@@ -585,15 +585,15 @@ body {
     inset: 0;
     border-radius: 50%;
     background:
-        radial-gradient(circle at 30% 25%, rgba(30,30,38,0.9) 0%, transparent 50%),
-        radial-gradient(circle at 70% 60%, rgba(20,20,28,0.6) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, var(--bg-dark) 0%, rgba(7,7,10,1) 70%);
-    border: 1px solid rgba(255,255,255,0.04);
+        radial-gradient(circle at 35% 28%, rgba(40,40,50,0.8) 0%, transparent 45%),
+        radial-gradient(circle at 65% 65%, rgba(15,15,22,0.6) 0%, transparent 35%),
+        radial-gradient(circle at 50% 50%, #111118 0%, #0a0a0f 60%, #07070a 100%);
+    border: 1px solid rgba(255,255,255,0.03);
     box-shadow:
-        0 0 80px rgba(255,107,107,0.06),
-        0 0 160px rgba(255,107,107,0.02),
-        inset -20px -10px 40px rgba(0,0,0,0.5),
-        inset 10px 10px 30px rgba(255,255,255,0.01);
+        0 0 60px rgba(255,107,107,0.04),
+        0 0 120px rgba(255,107,107,0.01),
+        inset -25px -15px 50px rgba(0,0,0,0.6),
+        inset 12px 12px 35px rgba(255,255,255,0.008);
 }
 
 .orb-terminator {
@@ -619,11 +619,11 @@ body {
 .orb-logo {
     position: relative;
     z-index: 2;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    border-radius: 0;
     object-fit: contain;
-    filter: drop-shadow(0 0 20px rgba(255,255,255,0.15)) drop-shadow(0 0 40px rgba(255,107,107,0.1));
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.2)) drop-shadow(0 0 30px rgba(255,255,255,0.08));
     animation: iconFloat 4s ease-in-out infinite;
 }
 
@@ -870,9 +870,9 @@ body {
 .ob-text strong { font-size:.82rem;font-weight:700;color:var(--text); }
 .ob-text span { font-size:.62rem;color:var(--text-muted); }
 
-.ob-1 { top:5%;left:0;animation:obf1 6s ease-in-out infinite }
-.ob-2 { bottom:30%;left:-10px;animation:obf2 7s ease-in-out infinite }
-.ob-3 { bottom:3%;right:0;animation:obf3 6.5s ease-in-out infinite }
+.ob-1 { top:8%;left:2%;animation:obf1 6s ease-in-out infinite }
+.ob-2 { bottom:28%;left:0;animation:obf2 7s ease-in-out infinite }
+.ob-3 { bottom:8%;right:2%;animation:obf3 6.5s ease-in-out infinite }
 
 @keyframes obf1{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes obf2{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
@@ -1059,54 +1059,30 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 320px;
-    height: 320px;
-    margin: -160px 0 0 -160px;
+    width: 300px;
+    height: 300px;
+    margin: -150px 0 0 -150px;
     border-radius: 50%;
-    border: none;
-    background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(180,160,140,0.06) 20deg,
-        rgba(200,180,160,0.1) 40deg,
-        rgba(180,160,140,0.04) 60deg,
-        transparent 90deg,
-        rgba(180,160,140,0.08) 140deg,
-        rgba(200,180,160,0.12) 180deg,
-        rgba(180,160,140,0.06) 220deg,
-        transparent 270deg,
-        rgba(180,160,140,0.05) 310deg,
-        transparent 360deg
-    );
+    border: 1.5px solid rgba(200,180,160,0.08);
+    background: transparent;
     animation: orbSpin1 14s linear infinite;
     pointer-events: none;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .orb-saturn-ring-2 {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 360px;
-    height: 360px;
-    margin: -180px 0 0 -180px;
+    width: 340px;
+    height: 340px;
+    margin: -170px 0 0 -170px;
     border-radius: 50%;
-    border: none;
-    background: conic-gradient(
-        from 45deg,
-        transparent 0deg,
-        rgba(150,140,130,0.04) 30deg,
-        rgba(170,160,150,0.07) 60deg,
-        transparent 100deg,
-        rgba(150,140,130,0.05) 160deg,
-        rgba(170,160,150,0.08) 200deg,
-        transparent 260deg,
-        rgba(150,140,130,0.04) 310deg,
-        transparent 360deg
-    );
+    border: 1px solid rgba(200,180,160,0.05);
+    background: transparent;
     animation: orbSpin2 20s linear infinite;
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
 /* Planet crest / rim light */
