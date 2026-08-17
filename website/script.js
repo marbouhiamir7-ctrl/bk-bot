@@ -159,7 +159,7 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(${-rx}deg) rotateY(${ry}deg) scale(${scaleVal})`;
 
         // Parallax floating badges
-        const badges = document.querySelectorAll('.floating-3d-badge');
+        const badges = document.querySelectorAll('.orb-badge');
         badges.forEach((badge, i) => {
             const depth = 0.5 + i * 0.3;
             const bx = currentRotateY * 15 * depth;

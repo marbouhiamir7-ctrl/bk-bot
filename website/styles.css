@@ -471,9 +471,8 @@ body {
 /* Shield Orb */
 .hero-3d-scene {
     position: relative;
-    width: 420px;
-    height: 420px;
-    perspective: 1000px;
+    width: 520px;
+    height: 480px;
 }
 
 .shield-orb {
@@ -481,57 +480,91 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
+    width: 220px;
+    height: 220px;
     transform-style: preserve-3d;
+    z-index: 2;
 }
 
-.orb-glow {
+.orb-glow-outer {
     position: absolute;
-    inset: -40px;
-    background: radial-gradient(circle, rgba(255,107,107,0.15) 0%, rgba(255,165,2,0.05) 50%, transparent 70%);
+    inset: -100px;
+    background: radial-gradient(circle, rgba(255,107,107,0.12) 0%, rgba(255,165,2,0.04) 40%, transparent 65%);
     border-radius: 50%;
-    animation: orbGlowPulse 4s ease-in-out infinite;
+    animation: orbOuterPulse 5s ease-in-out infinite;
     pointer-events: none;
 }
 
-@keyframes orbGlowPulse {
+.orb-glow-mid {
+    position: absolute;
+    inset: -55px;
+    background: radial-gradient(circle, rgba(255,107,107,0.2) 0%, rgba(255,80,80,0.06) 50%, transparent 70%);
+    border-radius: 50%;
+    animation: orbMidPulse 3.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes orbOuterPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+@keyframes orbMidPulse {
     0%, 100% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.12); }
+    50% { opacity: 1; transform: scale(1.05); }
 }
 
 .orb-core {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.06), rgba(12,12,16,0.95) 70%);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: radial-gradient(circle at 38% 32%, rgba(40,40,50,0.9), rgba(10,10,14,0.98) 65%);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     box-shadow:
-        0 0 60px rgba(255,107,107,0.08),
-        0 0 120px rgba(255,107,107,0.04),
-        inset 0 0 40px rgba(255,107,107,0.03);
-    z-index: 2;
+        0 0 80px rgba(255,107,107,0.1),
+        0 0 160px rgba(255,107,107,0.04),
+        inset 0 -8px 30px rgba(0,0,0,0.4),
+        inset 0 8px 30px rgba(255,255,255,0.02);
+    z-index: 3;
+    overflow: hidden;
+}
+
+.orb-shine {
+    position: absolute;
+    top: -30%;
+    left: -30%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 .orb-icon {
-    font-size: 2.4rem;
-    background: var(--gradient);
+    font-size: 3rem;
+    background: linear-gradient(180deg, #ff6b6b, #ff4757, #ff3838);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 12px rgba(255,107,107,0.3));
+    filter: drop-shadow(0 0 20px rgba(255,71,87,0.4));
+    animation: iconFloat 4s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
 }
 
 .orb-label {
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 800;
-    letter-spacing: 1.5px;
-    background: linear-gradient(135deg, #fff, #999);
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #fff, #aaa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -540,101 +573,218 @@ body {
 .orb-status {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.6rem;
+    gap: 6px;
+    font-size: 0.58rem;
     color: var(--secondary);
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
 
 .orb-dot {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background: var(--secondary);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--secondary);
+    box-shadow: 0 0 6px var(--secondary);
     animation: orbDotPulse 2s ease-in-out infinite;
 }
 
 @keyframes orbDotPulse {
-    0%, 100% { box-shadow: 0 0 6px var(--secondary), 0 0 12px rgba(46,213,115,0.2); }
-    50% { box-shadow: 0 0 12px var(--secondary), 0 0 24px rgba(46,213,115,0.4); }
+    0%, 100% { box-shadow: 0 0 4px var(--secondary), 0 0 10px rgba(46,213,115,0.3); }
+    50% { box-shadow: 0 0 10px var(--secondary), 0 0 22px rgba(46,213,115,0.5); }
 }
 
 .orb-ring {
     position: absolute;
     top: 50%;
     left: 50%;
-    border: 1px solid rgba(255,107,107,0.1);
     border-radius: 50%;
     pointer-events: none;
+    transform-style: preserve-3d;
 }
 
 .ring-1 {
-    width: 260px;
-    height: 260px;
-    margin-top: -130px;
-    margin-left: -130px;
-    animation: orbRingSpin1 16s linear infinite;
+    width: 280px;
+    height: 280px;
+    margin-top: -140px;
+    margin-left: -140px;
+    border: 1.5px solid rgba(255,107,107,0.12);
+    animation: orbSpin1 14s linear infinite;
+}
+
+.ring-1::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--primary), 0 0 20px rgba(255,107,107,0.3);
+    transform: translateX(-50%);
 }
 
 .ring-2 {
-    width: 320px;
-    height: 320px;
-    margin-top: -160px;
-    margin-left: -160px;
-    border-color: rgba(52,152,219,0.07);
-    animation: orbRingSpin2 22s linear infinite;
+    width: 340px;
+    height: 340px;
+    margin-top: -170px;
+    margin-left: -170px;
+    border: 1px solid rgba(52,152,219,0.08);
+    animation: orbSpin2 20s linear infinite;
+}
+
+.ring-2::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: var(--blue);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--blue);
+    transform: translateX(-50%);
 }
 
 .ring-3 {
-    width: 380px;
-    height: 380px;
-    margin-top: -190px;
-    margin-left: -190px;
-    border-color: rgba(155,89,182,0.05);
-    animation: orbRingSpin3 30s linear infinite;
+    width: 410px;
+    height: 410px;
+    margin-top: -205px;
+    margin-left: -205px;
+    border: 1px solid rgba(155,89,182,0.06);
+    animation: orbSpin3 28s linear infinite;
 }
 
-@keyframes orbRingSpin1 {
-    from { transform: rotateX(70deg) rotateZ(0deg); }
-    to { transform: rotateX(70deg) rotateZ(360deg); }
+.ring-3::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 3px;
+    height: 3px;
+    background: var(--purple);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--purple);
+    transform: translateX(-50%);
 }
-@keyframes orbRingSpin2 {
-    from { transform: rotateX(65deg) rotateZ(60deg); }
-    to { transform: rotateX(65deg) rotateZ(420deg); }
+
+.ring-dot {
+    display: none;
 }
-@keyframes orbRingSpin3 {
-    from { transform: rotateX(72deg) rotateZ(120deg); }
-    to { transform: rotateX(72deg) rotateZ(480deg); }
-}
+
+@keyframes orbSpin1 { from { transform: rotateX(72deg) rotateZ(0deg); } to { transform: rotateX(72deg) rotateZ(360deg); } }
+@keyframes orbSpin2 { from { transform: rotateX(68deg) rotateZ(60deg); } to { transform: rotateX(68deg) rotateZ(420deg); } }
+@keyframes orbSpin3 { from { transform: rotateX(75deg) rotateZ(120deg); } to { transform: rotateX(75deg) rotateZ(480deg); } }
 
 .orb-particle {
     position: absolute;
-    width: 3px;
-    height: 3px;
-    background: var(--primary);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--primary);
     pointer-events: none;
     z-index: 1;
 }
 
-.p1 { top: 8%; left: 50%; animation: op1 8s ease-in-out infinite; }
-.p2 { top: 25%; right: 8%; animation: op2 10s ease-in-out infinite; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-.p3 { bottom: 20%; right: 12%; animation: op3 9s ease-in-out infinite; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
-.p4 { bottom: 8%; left: 40%; animation: op4 11s ease-in-out infinite; background: var(--purple); box-shadow: 0 0 8px var(--purple); }
-.p5 { top: 40%; left: 5%; animation: op5 7s ease-in-out infinite; background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
-.p6 { top: 60%; right: 5%; animation: op6 12s ease-in-out infinite; }
-.p7 { bottom: 35%; left: 10%; animation: op1 9.5s ease-in-out infinite 1s; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-.p8 { top: 15%; left: 15%; animation: op3 8.5s ease-in-out infinite 2s; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+.p1 { width:4px;height:4px;top:5%;left:45%;background:var(--primary);box-shadow:0 0 10px var(--primary);animation:of1 7s ease-in-out infinite; }
+.p2 { width:3px;height:3px;top:18%;right:5%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:of2 9s ease-in-out infinite; }
+.p3 { width:3px;height:3px;bottom:15%;right:8%;background:var(--blue);box-shadow:0 0 8px var(--blue);animation:of3 8s ease-in-out infinite; }
+.p4 { width:4px;height:4px;bottom:5%;left:42%;background:var(--purple);box-shadow:0 0 10px var(--purple);animation:of4 10s ease-in-out infinite; }
+.p5 { width:3px;height:3px;top:35%;left:2%;background:var(--secondary);box-shadow:0 0 8px var(--secondary);animation:of5 6s ease-in-out infinite; }
+.p6 { width:3px;height:3px;top:55%;right:2%;background:var(--primary);box-shadow:0 0 8px var(--primary);animation:of6 11s ease-in-out infinite; }
+.p7 { width:2px;height:2px;bottom:30%;left:8%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:of1 8.5s ease-in-out infinite 1s; }
+.p8 { width:2px;height:2px;top:12%;left:12%;background:var(--blue);box-shadow:0 0 6px var(--blue);animation:of3 7.5s ease-in-out infinite 0.5s; }
+.p9 { width:3px;height:3px;top:80%;left:20%;background:var(--primary);box-shadow:0 0 8px var(--primary);animation:of5 9.5s ease-in-out infinite 2s; }
+.p10 { width:2px;height:2px;top:10%;right:20%;background:var(--secondary);box-shadow:0 0 6px var(--secondary);animation:of2 6.5s ease-in-out infinite 1.5s; }
+.p11 { width:2px;height:2px;bottom:10%;right:25%;background:var(--purple);box-shadow:0 0 6px var(--purple);animation:of6 8s ease-in-out infinite 3s; }
+.p12 { width:3px;height:3px;top:45%;left:92%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:of4 7s ease-in-out infinite 0.8s; }
 
-@keyframes op1 { 0%,100%{transform:translate(0,0);opacity:.3}50%{transform:translate(10px,-18px);opacity:.8} }
-@keyframes op2 { 0%,100%{transform:translate(0,0);opacity:.4}50%{transform:translate(-15px,12px);opacity:.9} }
-@keyframes op3 { 0%,100%{transform:translate(0,0);opacity:.35}50%{transform:translate(12px,-10px);opacity:.7} }
-@keyframes op4 { 0%,100%{transform:translate(0,0);opacity:.3}50%{transform:translate(-8px,-15px);opacity:.75} }
-@keyframes op5 { 0%,100%{transform:translate(0,0);opacity:.25}50%{transform:translate(15px,8px);opacity:.85} }
-@keyframes op6 { 0%,100%{transform:translate(0,0);opacity:.4}50%{transform:translate(-12px,-8px);opacity:.7} }
+@keyframes of1 { 0%,100%{transform:translate(0,0);opacity:.25}30%{transform:translate(12px,-20px);opacity:.85}60%{transform:translate(-8px,-28px);opacity:.4} }
+@keyframes of2 { 0%,100%{transform:translate(0,0);opacity:.3}40%{transform:translate(-18px,14px);opacity:.9}70%{transform:translate(8px,22px);opacity:.2} }
+@keyframes of3 { 0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(14px,-12px);opacity:.8} }
+@keyframes of4 { 0%,100%{transform:translate(0,0);opacity:.25}35%{transform:translate(-10px,-18px);opacity:.7}65%{transform:translate(16px,8px);opacity:.45} }
+@keyframes of5 { 0%,100%{transform:translate(0,0);opacity:.2}45%{transform:translate(18px,10px);opacity:.9} }
+@keyframes of6 { 0%,100%{transform:translate(0,0);opacity:.3}55%{transform:translate(-14px,-10px);opacity:.75} }
+
+/* Orb Floating Badges */
+.orb-badge {
+    position: absolute;
+    background: rgba(10,10,16,0.88);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 18px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    white-space: nowrap;
+}
+
+.ob-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,71,87,0.08));
+    border: 1px solid rgba(255,107,107,0.15);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.ob-icon-blue {
+    background: linear-gradient(135deg, rgba(52,152,219,0.2), rgba(52,152,219,0.08));
+    border-color: rgba(52,152,219,0.15);
+    color: var(--blue);
+}
+
+.ob-icon-green {
+    background: linear-gradient(135deg, rgba(46,213,115,0.2), rgba(46,213,115,0.08));
+    border-color: rgba(46,213,115,0.15);
+    color: var(--secondary);
+}
+
+.ob-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ob-text strong {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.ob-text span {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+}
+
+.ob-1 {
+    top: 8%;
+    left: 0;
+    animation: obFloat1 6s ease-in-out infinite;
+}
+
+.ob-2 {
+    bottom: 32%;
+    left: -10px;
+    animation: obFloat2 7s ease-in-out infinite;
+}
+
+.ob-3 {
+    bottom: 5%;
+    right: 0;
+    animation: obFloat3 6.5s ease-in-out infinite;
+}
+
+@keyframes obFloat1 { 0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)} }
+@keyframes obFloat2 { 0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)} }
+@keyframes obFloat3 { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
 
 /* Section Headers */
 .section-header {
