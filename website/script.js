@@ -212,13 +212,20 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     window.addEventListener('resize', updateBounds);
 })();
 
-// Starfield canvas
+// Starfield canvas — enhanced
 (function() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const stars = [];
-    const STAR_COUNT = 80;
+    const meteors = [];
+    const STAR_COUNT = 120;
+
+    const starColors = [
+        [255,255,255], [255,255,255], [255,255,255],
+        [200,220,255], [255,220,180], [180,200,255],
+        [255,200,150], [220,220,255]
+    ];
 
     function resize() {
         const scene = canvas.parentElement;
@@ -226,23 +233,40 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         canvas.height = scene.offsetHeight;
     }
 
+    function spawnMeteor() {
+        meteors.push({
+            x: Math.random() * canvas.width * 0.6,
+            y: Math.random() * canvas.height * 0.3,
+            vx: 3 + Math.random() * 4,
+            vy: 1 + Math.random() * 2,
+            life: 1,
+            decay: 0.015 + Math.random() * 0.01,
+            len: 40 + Math.random() * 50
+        });
+    }
+
     function init() {
         resize();
         for (let i = 0; i < STAR_COUNT; i++) {
+            const c = starColors[Math.floor(Math.random() * starColors.length)];
             stars.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                r: Math.random() * 1.2 + 0.2,
+                r: Math.random() * 1.4 + 0.15,
                 a: Math.random(),
-                da: (Math.random() - 0.5) * 0.01,
-                dx: (Math.random() - 0.5) * 0.15,
-                dy: (Math.random() - 0.5) * 0.1
+                da: (Math.random() - 0.5) * 0.008,
+                dx: (Math.random() - 0.5) * 0.08,
+                dy: (Math.random() - 0.5) * 0.05,
+                cr: c[0], cg: c[1], cb: c[2],
+                twinkleSpeed: 0.002 + Math.random() * 0.006
             });
         }
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Stars
         stars.forEach(s => {
             s.a += s.da;
             s.x += s.dx;
@@ -252,11 +276,52 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
             if (s.x > canvas.width) s.x = 0;
             if (s.y < 0) s.y = canvas.height;
             if (s.y > canvas.height) s.y = 0;
+
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${s.a * 0.6})`;
+            ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${s.a * 0.7})`;
             ctx.fill();
+
+            // Glow on brighter stars
+            if (s.r > 0.9 && s.a > 0.6) {
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${(s.a - 0.6) * 0.15})`;
+                ctx.fill();
+            }
         });
+
+        // Meteors
+        if (Math.random() < 0.003) spawnMeteor();
+        for (let i = meteors.length - 1; i >= 0; i--) {
+            const m = meteors[i];
+            m.x += m.vx;
+            m.y += m.vy;
+            m.life -= m.decay;
+            if (m.life <= 0) { meteors.splice(i, 1); continue; }
+
+            const grad = ctx.createLinearGradient(
+                m.x, m.y,
+                m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3
+            );
+            grad.addColorStop(0, `rgba(255,255,255,${m.life * 0.8})`);
+            grad.addColorStop(0.3, `rgba(200,220,255,${m.life * 0.4})`);
+            grad.addColorStop(1, 'rgba(200,220,255,0)');
+
+            ctx.beginPath();
+            ctx.moveTo(m.x, m.y);
+            ctx.lineTo(m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Head glow
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${m.life * 0.9})`;
+            ctx.fill();
+        }
+
         requestAnimationFrame(draw);
     }
 

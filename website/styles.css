@@ -875,6 +875,140 @@ body {
 @keyframes obf2{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 @keyframes obf3{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
+/* Lens Flare */
+.lens-flare {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(255,220,160,0.5), rgba(255,180,80,0.15) 40%, transparent 70%);
+    border-radius: 50%;
+    z-index: 5;
+    pointer-events: none;
+    animation: flarePulse 3s ease-in-out infinite;
+}
+.lens-flare::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 2px;
+    margin-top: -1px;
+    margin-left: -60px;
+    background: linear-gradient(90deg, transparent, rgba(255,220,160,0.15), transparent);
+    transform: rotate(35deg);
+}
+.lens-flare::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 1px;
+    margin-top: -0.5px;
+    margin-left: -40px;
+    background: linear-gradient(90deg, transparent, rgba(255,220,160,0.1), transparent);
+    transform: rotate(-25deg);
+}
+@keyframes flarePulse { 0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)} }
+
+/* Extra sun ray */
+.sun-ray-4 { width: 0.8px; height: 180px; transform: rotate(18deg); animation: rayPulse 7s ease-in-out infinite 1.5s; }
+
+/* Third nebula */
+.nebula-3 {
+    width: 120px; height: 120px;
+    top: 40%; left: -40px;
+    background: radial-gradient(circle, rgba(255,107,107,0.08), transparent 70%);
+    animation: nebulaDrift3 18s ease-in-out infinite;
+}
+@keyframes nebulaDrift3 { 0%,100%{transform:translate(0,0)}50%{transform:translate(10px,-15px)} }
+
+/* Second atmosphere ring */
+.orb-atmosphere-2 {
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    border: 1px solid rgba(100,180,255,0.03);
+    pointer-events: none;
+    animation: atmoPulse2 6s ease-in-out infinite;
+}
+@keyframes atmoPulse2 { 0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.7;transform:scale(1.02)} }
+
+/* Planet bands (Jupiter-like) */
+.orb-band {
+    position: absolute;
+    left: -2%;
+    right: -2%;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.04;
+    z-index: 1;
+}
+.orb-band-1 {
+    top: 30%;
+    background: linear-gradient(90deg, transparent 5%, rgba(180,140,100,0.5) 20%, rgba(160,120,80,0.3) 50%, rgba(180,140,100,0.5) 80%, transparent 95%);
+    animation: bandDrift 40s linear infinite;
+}
+.orb-band-2 {
+    top: 48%;
+    height: 12px;
+    background: linear-gradient(90deg, transparent 10%, rgba(200,160,120,0.4) 30%, rgba(180,140,100,0.2) 60%, rgba(200,160,120,0.4) 75%, transparent 90%);
+    animation: bandDrift 55s linear infinite reverse;
+}
+.orb-band-3 {
+    top: 65%;
+    height: 6px;
+    background: linear-gradient(90deg, transparent 15%, rgba(160,120,80,0.3) 35%, rgba(140,100,60,0.2) 65%, transparent 85%);
+    animation: bandDrift 35s linear infinite;
+}
+@keyframes bandDrift { from{transform:translateX(-20%)}to{transform:translateX(20%)} }
+
+/* Specular highlight */
+.orb-specular {
+    position: absolute;
+    top: 12%;
+    left: 22%;
+    width: 18%;
+    height: 12%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.1), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    transform: rotate(-25deg);
+    animation: specPulse 6s ease-in-out infinite;
+}
+@keyframes specPulse { 0%,100%{opacity:.6}50%{opacity:1} }
+
+/* More particles */
+.op21{width:2px;height:2px;top:3%;left:25%;background:rgba(255,200,120,0.7);box-shadow:0 0 6px rgba(255,200,120,0.4);animation:osp2 10s ease-in-out infinite 1s}
+.op22{width:1px;height:1px;bottom:3%;left:70%;background:#fff;box-shadow:0 0 4px rgba(255,255,255,0.3);animation:osp5 13s ease-in-out infinite 2s}
+.op23{width:1.5px;height:1.5px;top:60%;left:90%;background:var(--purple);box-shadow:0 0 5px var(--purple);animation:osp1 9s ease-in-out infinite 0.7s}
+.op24{width:2px;height:2px;top:90%;right:30%;background:var(--blue);box-shadow:0 0 6px var(--blue);animation:osp4 11s ease-in-out infinite 3s}
+
+/* Third comet */
+.comet-3 {
+    top: 50%;
+    left: 5%;
+    width: 2px; height: 2px;
+    animation: cometFly3 15s linear infinite 7s;
+    opacity: 0;
+}
+.comet-3::after {
+    width: 45px;
+    background: linear-gradient(90deg, transparent, rgba(100,180,255,0.3));
+}
+@keyframes cometFly3 {
+    0%{transform:translate(0,0);opacity:0}
+    4%{opacity:.6}
+    10%{opacity:.6}
+    16%{transform:translate(200px,-60px);opacity:0}
+    100%{opacity:0}
+}
+
 /* Section Headers */
 .section-header {
     text-align: center;
