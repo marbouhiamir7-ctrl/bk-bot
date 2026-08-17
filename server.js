@@ -102,7 +102,10 @@ const restoreLimiter = rateLimit({
     legacyHeaders: false
 });
 
-app.use(generalLimiter);
+app.use((req, res, next) => {
+    if (req.path.startsWith('/admin/')) return next();
+    generalLimiter(req, res, next);
+});
 
 // ====== Body Parser (restrict size) ======
 
@@ -1183,12 +1186,12 @@ setInterval(() => {
 
 // ====== Admin Auth Routes ======
 
-app.post('/admin/api/login', adminLimiter, (req, res) => {
+app.post('/admin/api/login', (req, res) => {
     const ip = getAdminIp(req);
-    const { password } = req.body;
-
-    const inputErr = validateInput({ password }, { password: { required: true, type: 'string', maxLen: 128 } });
-    if (inputErr) return res.status(400).json({ error: 'Invalid input' });
+    const { password } = req.body || {};
+    if (!password || typeof password !== 'string') return res.status(400).json({ error: 'Password required' });
+    const pw = password.trim();
+    if (pw.length === 0) return res.status(400).json({ error: 'Password required' });
 
     const attempts = adminLoginAttempts.get(ip) || { count: 0, resetAt: Date.now() };
     if (attempts.count >= ADMIN_MAX_ATTEMPTS && Date.now() - attempts.resetAt < ADMIN_LOCKOUT_MS) {
@@ -1197,7 +1200,7 @@ app.post('/admin/api/login', adminLimiter, (req, res) => {
         return res.status(429).json({ error: `Account locked. Try again in ${remaining} minutes.`, retryAfter: remaining * 60 });
     }
 
-    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    const passwordHash = crypto.createHash('sha256').update(pw).digest('hex');
     if (passwordHash !== ADMIN_PASSWORD_HASH) {
         attempts.count++;
         if (attempts.count >= ADMIN_MAX_ATTEMPTS) attempts.resetAt = Date.now();
@@ -1220,6 +1223,14 @@ app.post('/admin/api/login', adminLimiter, (req, res) => {
     });
 
     adminAudit('LOGIN_SUCCESS', {}, ip);
+    const csrfToken = crypto.randomBytes(32).toString('hex');
+    res.cookie('bk_csrf', csrfToken, {
+        httpOnly: false,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: ADMIN_SESSION_DURATION,
+        path: '/'
+    });
     res.json({ ok: true });
 });
 

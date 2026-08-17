@@ -451,10 +451,31 @@ function getCsrf(){const m=document.cookie.match(/bk_csrf=([^;]+)/);return m?m[1
 async function api(path,o={}){const h={'Content-Type':'application/json',...(o.headers||{})};if(o.method&&o.method!=='GET')h['X-CSRF-Token']=getCsrf();const r=await fetch(`${API}${path}`,{credentials:'include',...o,headers:h});if(r.status===401){doLogout();throw new Error('Session expired')}if(r.status===429){const d=await r.json();throw new Error(d.error||'Rate limited')}return r.json()}
 
 // ====== AUTH ======
-async function checkAuth(){const r=await fetch(`${API}/admin/api/check`,{credentials:'include'});const d=await r.json();if(d.logged_in){document.getElementById('login-screen').style.display='none';document.getElementById('admin-app').style.display='block';initApp()}}
+async function checkAuth(){try{const r=await fetch(`${API}/admin/api/check`,{credentials:'include'});const d=await r.json();if(d.logged_in){document.getElementById('login-screen').style.display='none';document.getElementById('admin-app').style.display='block';initApp()}}catch(e){console.error('Auth check failed',e)}}
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-async function doLogin(){const pw=document.getElementById('login-pw').value;const err=document.getElementById('login-error');const btn=document.getElementById('login-btn');if(!pw){err.style.display='flex';err.querySelector('span').textContent='Please enter a password';return}btn.disabled=true;btn.textContent='Signing in...';try{const r=await fetch(`${API}/admin/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({password:pw})});const d=await r.json();if(r.ok){document.getElementById('login-screen').style.display='none';document.getElementById('admin-app').style.display='block';initApp()}else if(r.status===429){err.style.display='flex';err.querySelector('span').textContent=d.error||'Too many attempts'}else{err.style.display='flex';err.querySelector('span').textContent=(d.error||'Wrong password')+(d.attemptsLeft!==undefined?` (${d.attemptsLeft} left)`:'')}}catch{err.style.display='flex';err.querySelector('span').textContent='Connection error'}btn.disabled=false;btn.textContent='Login';document.getElementById('login-pw').value=''}
-async function doLogout(){await fetch(`${API}/admin/api/logout`,{method:'POST',credentials:'include'});document.getElementById('admin-app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pw').value='';document.getElementById('login-error').style.display='none'}
+function showError(msg){const el=document.getElementById('login-error');el.style.display='flex';el.querySelector('span').textContent=msg}
+function hideError(){document.getElementById('login-error').style.display='none'}
+async function doLogin(){
+    const pw=document.getElementById('login-pw').value.trim();
+    const err=document.getElementById('login-error');
+    const btn=document.getElementById('login-btn');
+    if(!pw){showError('Please enter a password');return}
+    hideError();btn.disabled=true;btn.textContent='Signing in...';
+    try{
+        const r=await fetch(`${API}/admin/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({password:pw})});
+        let d;try{d=await r.json()}catch(e){showError('Server returned invalid response');btn.disabled=false;btn.textContent='Login';return}
+        if(r.ok&&d.ok){
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('admin-app').style.display='block';
+            try{await initApp()}catch(e){console.error('initApp failed:',e);showError('Failed to load dashboard data');document.getElementById('login-screen').style.display='flex';document.getElementById('admin-app').style.display='none'}
+        }else if(r.status===429){showError(d.error||'Too many attempts. Try again later.')}
+        else if(r.status===403){showError((d.error||'Wrong password')+(d.attemptsLeft!==undefined?' ('+d.attemptsLeft+' attempts left)':''))}
+        else if(r.status===400){showError(d.error||'Invalid input')}
+        else{showError(d.error||'Login failed ('+r.status+')')}
+    }catch(e){console.error('Login fetch error:',e);showError('Connection error. Is the bot online?')}
+    btn.disabled=false;btn.textContent='Login';
+}
+async function doLogout(){try{await fetch(`${API}/admin/api/logout`,{method:'POST',credentials:'include'})}catch{}document.getElementById('admin-app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pw').value='';hideError()}
 
 // ====== NAV ======
 document.querySelectorAll('.nav-item[data-page]').forEach(n=>n.addEventListener('click',()=>{
@@ -467,7 +488,7 @@ function showPage(pg){currentPage=pg;document.querySelectorAll('.page').forEach(
 function refreshCurrent(){showPage(currentPage);toast('Refreshed','info')}
 
 // ====== INIT ======
-async function initApp(){await Promise.all([loadOverview(),loadServers()])}
+async function initApp(){try{await Promise.all([loadOverview(),loadServers()])}catch(e){console.error('initApp error:',e)}}
 
 // ====== OVERVIEW ======
 async function loadOverview(){try{const d=await api('/admin/api/overview');const s=d.stats;
