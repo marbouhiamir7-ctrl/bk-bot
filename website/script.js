@@ -410,10 +410,10 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
                 const dot = (nx * lightX + ny * lightY + nz * lightZ) / lightLen;
                 const lighting = Math.max(0, Math.min(1, dot * 0.7 + 0.3));
 
-                // Color: dark surface with subtle variation
-                const baseR = 18 + combined * 25;
-                const baseG = 16 + combined * 20;
-                const baseB = 22 + combined * 18;
+                // Color: match site bg #07070a with subtle terrain variation
+                const baseR = 7 + combined * 18;
+                const baseG = 7 + combined * 15;
+                const baseB = 10 + combined * 16;
 
                 // Atmosphere rim
                 const rim = 1 - Math.pow(nz, 3);

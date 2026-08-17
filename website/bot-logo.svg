@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g transform="translate(256,256)" filter="url(#glow)">
+    <!-- Ghost body -->
+    <path d="M0,-160 C-50,-160 -90,-140 -110,-100 C-130,-60 -140,-10 -140,30 C-140,70 -130,100 -115,120 C-105,133 -95,145 -85,155 C-75,145 -68,130 -58,125 C-48,135 -35,145 -20,140 C-8,150 8,150 20,140 C35,145 48,135 58,125 C68,130 75,145 85,155 C95,145 105,133 115,120 C130,100 140,70 140,30 C140,-10 130,-60 110,-100 C90,-140 50,-160 0,-160Z" fill="white"/>
+    <!-- Left ear -->
+    <path d="M-45,-140 C-55,-185 -35,-210 -18,-195 C-8,-185 -12,-160 0,-140Z" fill="white"/>
+    <!-- Right ear -->
+    <path d="M45,-140 C55,-185 35,-210 18,-195 C8,-185 12,-160 0,-140Z" fill="white"/>
+    <!-- Left eye socket -->
+    <ellipse cx="-42" cy="-30" rx="28" ry="32" fill="#07070a"/>
+    <!-- Left eye -->
+    <ellipse cx="-38" cy="-28" rx="18" ry="22" fill="#ff2020"/>
+    <ellipse cx="-35" cy="-32" rx="8" ry="10" fill="#ff4444"/>
+    <!-- Right eye socket -->
+    <ellipse cx="42" cy="-30" rx="28" ry="32" fill="#07070a"/>
+    <!-- Right eye -->
+    <ellipse cx="46" cy="-28" rx="18" ry="22" fill="#ff2020"/>
+    <ellipse cx="49" cy="-32" rx="8" ry="10" fill="#ff4444"/>
+    <!-- Mouth opening -->
+    <path d="M-40,20 C-35,45 -20,55 0,58 C20,55 35,45 40,20 C30,30 15,38 0,40 C-15,38 -30,30 -40,20Z" fill="#07070a"/>
+    <!-- Teeth -->
+    <rect x="-18" y="18" width="10" height="14" rx="3" fill="white"/>
+    <rect x="8" y="18" width="10" height="14" rx="3" fill="white"/>
+    <!-- Subtle shadow -->
+    <ellipse cx="0" cy="165" rx="80" ry="12" fill="rgba(0,0,0,0.3)"/>
+  </g>
+</svg>
