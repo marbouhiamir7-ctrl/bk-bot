@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Collection, EmbedBuilder, PermissionFlagsBits
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
+const db = require('./db');
 
 const client = new Client({
     intents: [
@@ -23,6 +24,7 @@ client.warnings = new Map();
 client.tickets = new Map();
 client.reminders = new Map();
 client.afkUsers = new Map();
+client.commandUsage = new Map();
 
 client.antiNuke = {
     enabled: true,
@@ -65,6 +67,97 @@ client.honeypot = {
     violations: new Map(),
     log: []
 };
+
+// ====== Live Stats Sync (bot -> admin panel) ======
+const LIVE_FILE = path.join(__dirname, 'data', 'live.json');
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const LIVE_START = Date.now();
+let msgCount = 0, cmdCount = 0;
+const activityBuffer = [];
+
+function pushActivity(type, message, guildId) {
+    activityBuffer.push({ type, message, guildId: guildId || null, time: Date.now() });
+    if (activityBuffer.length > 50) activityBuffer.length = 50;
+}
+
+function flushActivity() {
+    if (!activityBuffer.length) return;
+    try {
+        const feed = db.botStats.get('activity_feed', []);
+        feed.unshift(...activityBuffer);
+        if (feed.length > 200) feed.length = 200;
+        db.botStats.set('activity_feed', feed);
+    } catch (e) {}
+    activityBuffer.length = 0;
+}
+
+function trackCommand(name, userTag, guildName) {
+    cmdCount++;
+    client.commandUsage.set(name, (client.commandUsage.get(name) || 0) + 1);
+    pushActivity('command', `**/${name}** used by **${userTag}** in ${guildName || 'DMs'}`);
+}
+
+function syncLiveStats() {
+    try {
+        flushActivity();
+        const stats = db.botStats.get('global', {});
+        stats.commands_run = (stats.commands_run || 0) + cmdCount;
+        stats.messages_seen = (stats.messages_seen || 0) + msgCount;
+        stats.uptime = Math.floor((Date.now() - LIVE_START) / 1000);
+        db.botStats.set('global', stats);
+        msgCount = 0; cmdCount = 0;
+
+        const guilds = client.guilds.cache.map(g => ({
+            id: g.id, name: g.name, icon: g.icon,
+            members: g.memberCount || 0,
+            channels: g.channels.cache.size,
+            roles: g.roles.cache.size,
+            boosts: g.premiumSubscriptionCount || 0,
+            owner: g.ownerId || null,
+            createdAt: g.createdAt ? g.createdAt.toISOString() : null
+        }));
+
+        const live = {
+            status: client.ws.status === 0 ? 'online' : client.ws.status,
+            tag: client.user ? client.user.tag : null,
+            id: client.user ? client.user.id : null,
+            avatar: client.user ? client.user.displayAvatarURL({ size: 128 }) : null,
+            ping: client.ws.ping || 0,
+            uptime: Math.floor((Date.now() - LIVE_START) / 1000),
+            startedAt: new Date(LIVE_START).toISOString(),
+            memoryMB: Math.round(process.memoryUsage().rss / 1048576),
+            nodeVersion: process.version,
+            processUptime: Math.floor(process.uptime()),
+            guilds,
+            totals: {
+                guilds: guilds.length,
+                members: guilds.reduce((a, g) => a + g.members, 0),
+                channels: guilds.reduce((a, g) => a + g.channels, 0),
+                roles: guilds.reduce((a, g) => a + g.roles, 0),
+                boosts: guilds.reduce((a, g) => a + g.boosts, 0)
+            },
+            commands: {
+                count: client.commands.size,
+                usage: Object.fromEntries(client.commandUsage || [])
+            },
+            security: {
+                nuke: { enabled: client.antiNuke.enabled, maxChannelDelete: client.antiNuke.maxChannelDelete, maxBans: client.antiNuke.maxBans, maxChannelCreate: client.antiNuke.maxChannelCreate, maxWebhookCreate: client.antiNuke.maxWebhookCreate, violations: client.antiNuke.violations.size },
+                raid: { enabled: client.antiRaid.enabled, joinLimit: client.antiRaid.joinLimit, timeWindow: client.antiRaid.timeWindow, action: client.antiRaid.action },
+                spam: { enabled: client.antiSpam.enabled, messageLimit: client.antiSpam.messageLimit, timeWindow: client.antiSpam.timeWindow, action: client.antiSpam.action },
+                link: { enabled: client.antiLink.enabled, action: client.antiLink.action, whitelistedDomains: client.antiLink.whitelistedDomains },
+                honeypot: { enabled: client.honeypot.enabled, violations: client.honeypot.violations.size, logCount: client.honeypot.log.length }
+            },
+            honeypotLog: client.honeypot.log.slice(0, 100),
+            afk: client.afkUsers.size,
+            tickets: client.tickets.size,
+            reminders: client.reminders.size,
+            customCommands: client.customCommands.size
+        };
+        fs.writeFileSync(LIVE_FILE, JSON.stringify(live));
+    } catch (e) { console.error('syncLiveStats error:', e.message); }
+}
+setInterval(syncLiveStats, 10000);
 
 function isHoneypotTrigger(message) {
     const lower = message.content.toLowerCase().trim();
@@ -111,6 +204,14 @@ async function handleHoneypot(message, result) {
     });
     
     if (client.honeypot.log.length > 100) client.honeypot.log.shift();
+    
+    try {
+        const hplog = db.botStats.get('honeypot_log', []);
+        hplog.unshift({ user: message.author.tag, userId, type: result.type, value: result.value, channel: message.channel.name, time: Date.now(), strikes });
+        if (hplog.length > 100) hplog.length = 100;
+        db.botStats.set('honeypot_log', hplog);
+        pushActivity('honeypot', `**${message.author.tag}** triggered honeypot (${result.type}) in **${message.guild.name}**`, message.guild.id);
+    } catch (e) {}
     
     try { await message.delete(); } catch(e) {}
     
@@ -177,6 +278,17 @@ client.once('ready', () => {
     console.log(`✅ ${client.user.tag} is online!`);
     console.log(`📋 ${client.commands.size} commands loaded`);
     client.user.setActivity('Baktiriya Team | /help', { type: 'Watching' });
+    syncLiveStats();
+});
+
+client.on(Events.GuildMemberAdd, member => {
+    pushActivity('join', `**${member.user.tag}** joined **${member.guild.name}**`, member.guild.id);
+    syncLiveStats();
+});
+
+client.on(Events.GuildMemberRemove, member => {
+    pushActivity('leave', `**${member.user.tag}** left **${member.guild.name}**`, member.guild.id);
+    syncLiveStats();
 });
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -200,6 +312,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         await command.execute(interaction);
+        trackCommand(command.data.name, interaction.user.tag, interaction.guild?.name);
     } catch (error) {
         console.error(`Error in ${interaction.commandName}:`, error);
         const reply = { content: 'Error executing command!', ephemeral: true };
@@ -237,6 +350,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot || !message.guild) return;
+    msgCount++;
 
     if (client.honeypot.enabled) {
         const hpResult = isHoneypotTrigger(message);

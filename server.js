@@ -1250,6 +1250,78 @@ app.get('/admin/api/check', (req, res) => {
 
 // ====== Admin API (All Protected) ======
 
+function readLiveStats() {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'live.json'), 'utf8'));
+    } catch { return null; }
+}
+
+app.get('/admin/api/bot', adminAuth, adminApiLimiter, (req, res) => {
+    const live = readLiveStats() || {};
+    adminAudit('VIEW_BOT_STATUS', {}, req.adminIp);
+    res.json({
+        online: !!live.status && live.status === 'online',
+        status: live.status || 'offline',
+        tag: live.tag || 'Offline',
+        id: live.id || null,
+        avatar: live.avatar || null,
+        ping: live.ping || 0,
+        uptime: live.uptime || 0,
+        startedAt: live.startedAt || null,
+        memoryMB: live.memoryMB || 0,
+        nodeVersion: live.nodeVersion || 'unknown',
+        processUptime: live.processUptime || 0,
+        totals: live.totals || { guilds: 0, members: 0, channels: 0, roles: 0, boosts: 0 },
+        commands: live.commands || { count: 0, usage: {} },
+        security: live.security || {},
+        afk: live.afk || 0,
+        tickets: live.tickets || 0,
+        reminders: live.reminders || 0,
+        customCommands: live.customCommands || 0
+    });
+});
+
+app.get('/admin/api/global-data', adminAuth, adminApiLimiter, (req, res) => {
+    const allWarnings = db.warnings.getAll();
+    const allLevels = db.levelData.getAll();
+    const allCommands = db.customCommands.getAll();
+    const guildSettingsAll = db.guildSettings.getAll();
+
+    const warnings = [];
+    for (const [gid, g] of Object.entries(allWarnings)) {
+        if (!validateGuildId(gid)) continue;
+        for (const [uid, arr] of Object.entries(g)) {
+            if (!validateUserId(uid)) continue;
+            for (const w of arr) warnings.push({ userId: uid, reason: sanitize(w.reason), moderator: sanitize(w.moderator), date: w.date, guildId: gid });
+        }
+    }
+    warnings.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const levels = [];
+    for (const [gid, g] of Object.entries(allLevels)) {
+        if (!validateGuildId(gid)) continue;
+        for (const [uid, d] of Object.entries(g)) {
+            if (!validateUserId(uid)) continue;
+            levels.push({ userId: uid, level: d.level || 1, xp: d.xp || 0, guildId: gid });
+        }
+    }
+    levels.sort((a, b) => b.xp - a.xp);
+
+    const commands = [];
+    for (const [gid, g] of Object.entries(allCommands)) {
+        if (!validateGuildId(gid)) continue;
+        for (const [name, c] of Object.entries(g)) commands.push({ name, response: sanitize(c.response), enabled: c.enabled !== false, guildId: gid });
+    }
+
+    adminAudit('VIEW_GLOBAL_DATA', {}, req.adminIp);
+    res.json({
+        warnings: warnings.slice(0, 500),
+        levels: levels.slice(0, 200),
+        commands: commands.slice(0, 500),
+        guildCount: Object.keys(guildSettingsAll).length
+    });
+});
+
 app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
     try {
         const stats = db.botStats.get('global', {});
@@ -1277,6 +1349,7 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
         }
 
         adminAudit('VIEW_OVERVIEW', {}, req.adminIp);
+        const live = readLiveStats() || {};
         res.json({
             stats: {
                 servers: guildIds.length, totalMembers, totalChannels, totalBoosts,
@@ -1289,7 +1362,22 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
             levelsCount: Object.values(allLevels).reduce((sum, g) => sum + Object.keys(g).length, 0),
             commandsCount: Object.values(allCommands).reduce((sum, g) => sum + Object.keys(g).length, 0),
             backupsCount: Object.keys(allBackups).length,
-            recentActivity: activity.slice(0, 20)
+            recentActivity: activity.slice(0, 20),
+            bot: {
+                online: !!(live.status && live.status === 'online'),
+                tag: live.tag || 'Offline',
+                ping: live.ping || 0,
+                uptime: live.uptime || 0,
+                startedAt: live.startedAt || null,
+                memoryMB: live.memoryMB || 0,
+                totals: live.totals || { guilds: 0, members: 0, channels: 0, roles: 0, boosts: 0 },
+                commandUsage: live.commands?.usage || {},
+                commandsCount: live.commands?.count || 0,
+                security: live.security || {},
+                afk: live.afk || 0,
+                tickets: live.tickets || 0,
+                reminders: live.reminders || 0
+            }
         });
     } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -1297,6 +1385,9 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
 app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
     try {
         const allGuildSettings = db.guildSettings.getAll();
+        const live = readLiveStats() || {};
+        const liveGuilds = {};
+        for (const g of live.guilds || []) liveGuilds[g.id] = g;
         const servers = [];
 
         for (const gid of Object.keys(allGuildSettings)) {
@@ -1308,12 +1399,14 @@ app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
                     const settings = db.guildSettings.get(gid, {});
                     const warnings = db.warnings.get(gid, {});
                     const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
+                    const lg = liveGuilds[gid] || {};
                     servers.push({
                         id: g.id, name: sanitize(g.name), icon: g.icon,
-                        members: g.approximate_member_count || 0, online: g.approximate_presence_count || 0,
-                        channels: g.channels?.length || 0, roles: g.roles?.length || 0,
-                        boosts: g.premium_subscription_count || 0, boostTier: g.premium_tier || 0,
+                        members: lg.members || g.approximate_member_count || 0, online: g.approximate_presence_count || 0,
+                        channels: lg.channels || g.channels?.length || 0, roles: lg.roles || g.roles?.length || 0,
+                        boosts: lg.boosts || g.premium_subscription_count || 0, boostTier: g.premium_tier || 0,
                         owner: g.owner_id, features: g.features || [],
+                        live: !!lg.id,
                         security: { antiNuke: settings.anti_nuke !== false, antiRaid: settings.anti_raid !== false, antiSpam: settings.anti_spam !== false, antiLink: settings.anti_link !== false },
                         warnings: warnCount
                     });
@@ -1436,9 +1529,13 @@ app.get('/admin/api/activity', adminAuth, adminApiLimiter, (req, res) => {
 });
 
 app.get('/admin/api/honeypot', adminAuth, adminApiLimiter, (req, res) => {
-    const log = db.botStats.get('honeypot_log', []);
+    const dbLog = db.botStats.get('honeypot_log', []);
+    const live = readLiveStats() || {};
+    const liveLog = live.honeypotLog || [];
+    const merged = [...liveLog, ...dbLog].filter((e, i, arr) => arr.findIndex(x => x.time === e.time && x.userId === e.userId) === i);
+    merged.sort((a, b) => (b.time || 0) - (a.time || 0));
     adminAudit('VIEW_HONEYPOT', {}, req.adminIp);
-    res.json(log.slice(0, 100));
+    res.json(merged.slice(0, 100));
 });
 
 app.get('/admin/api/audit', adminAuth, adminApiLimiter, (req, res) => {
