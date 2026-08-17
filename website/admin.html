@@ -333,6 +333,18 @@ body.light .global-search-results{background:linear-gradient(160deg,rgba(255,255
 .gsr-item span{color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kbd-hint{display:inline-block;font-size:.58rem;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text3);margin-left:4px;vertical-align:middle}
 .export-btn{font-size:.68rem;padding:5px 10px;border-radius:8px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);gap:20px}
+.set-row:last-child{border-bottom:none}
+.set-row:hover{background:rgba(255,255,255,0.015);margin:0 -20px;padding-left:20px;padding-right:20px}
+.set-info{flex:1;min-width:0}
+.set-label{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.set-desc{font-size:.68rem;color:var(--text3);line-height:1.4}
+.set-ctrl{flex-shrink:0;min-width:200px;display:flex;justify-content:flex-end}
+.set-input{width:100%;max-width:280px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:.78rem;font-family:var(--mono);outline:none;transition:all .2s;text-align:right}
+.set-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,107,0.1)}
+.set-input::placeholder{color:var(--text3);font-family:var(--mono);font-size:.7rem}
+.set-num{max-width:100px}
+body.light .set-input{background:rgba(0,0,0,0.03);border-color:rgba(0,0,0,0.1)}
 </style>
 </head>
 <body>
@@ -846,51 +858,71 @@ async function openServer(id){
         </div>`;
         document.getElementById('tp-members').innerHTML=`<div style="display:flex;gap:8px;margin-bottom:16px"><div class="search-box" style="flex:1;margin:0"><input id="mem-search" placeholder="Search by username, nickname or ID..." onkeydown="if(event.key==='Enter')searchMembers()"><i class="fas fa-search"></i></div><button class="btn btn-primary" onclick="searchMembers()"><i class="fas fa-search"></i> Search</button></div><div class="card"><div class="card-body no-pad"><div class="table-wrap" id="mem-table"><div class="empty"><i class="fas fa-users"></i><p>Search to browse members</p></div></div></div></div>`;
         renderDetailWarnings(d.warnings);
-        const secGroups=[
-            {title:'Welcome System',icon:'fa-hand-wave',keys:['welcome_enabled','welcome_channel','welcome_message','custom_welcome_embed','greet_role','auto_role']},
-            {title:'Moderation',icon:'fa-shield-halved',keys:['auto_mod_enabled','muted_role']},
-            {title:'Anti-Abuse',icon:'fa-bomb',keys:['anti_spam','anti_link','anti_raid','anti_nuke','spam_threshold','raid_threshold','raid_timeframe','link_whitelist']},
-            {title:'Logging',icon:'fa-clipboard-list',keys:['log_channel','log_messages','log_moderation','log_joinleave','log_edits']},
-            {title:'Levels & XP',icon:'fa-trophy',keys:['level_enabled','level_channel','level_multiplier']},
-            {title:'Tickets & Stats',icon:'fa-ticket',keys:['ticket_channel','ticket_category','stats_category']}
+        const S=d.settings;
+        SET_DEFS=[
+            {sec:'Welcome System',icon:'fa-hand-wave',items:[
+                {k:'welcome_enabled',t:'bool',l:'Enable Welcome Messages',d:'Send a message when new members join'},
+                {k:'welcome_channel',t:'text',l:'Welcome Channel ID',d:'Channel where welcome messages are sent',ph:'e.g. 123456789012345678'},
+                {k:'welcome_message',t:'text',l:'Welcome Message',d:'Use {user} to mention, {server} for server name',ph:'Welcome to the server, {user}!'},
+                {k:'custom_welcome_embed',t:'bool',l:'Custom Welcome Embed',d:'Use a rich embed for welcome messages'},
+                {k:'greet_role',t:'text',l:'Greet Role ID',d:'Auto-assign this role on join',ph:'Role ID'},
+                {k:'auto_role',t:'text',l:'Auto Role ID',d:'Automatically assign this role to new members',ph:'Role ID'}
+            ]},
+            {sec:'Moderation',icon:'fa-shield-halved',items:[
+                {k:'auto_mod_enabled',t:'bool',l:'Auto-Moderation',d:'Enable automatic moderation (spam, links, etc.)'},
+                {k:'muted_role',t:'text',l:'Muted Role ID',d:'Role given to muted members',ph:'Role ID'}
+            ]},
+            {sec:'Anti-Abuse',icon:'fa-bomb',items:[
+                {k:'anti_spam',t:'bool',l:'Anti-Spam',d:'Detect and auto-mute message flooding'},
+                {k:'spam_threshold',t:'num',l:'Spam Threshold',d:'Messages before triggering (1-50)',ph:'5'},
+                {k:'anti_link',t:'bool',l:'Anti-Link',d:'Block unauthorized links in chat'},
+                {k:'link_whitelist',t:'arr',l:'Link Whitelist',d:'Allowed domains (comma-separated)',ph:'youtube.com, github.com'},
+                {k:'anti_raid',t:'bool',l:'Anti-Raid',d:'Detect and auto-kick mass joins'},
+                {k:'raid_threshold',t:'num',l:'Raid Threshold',d:'Joins before triggering (1-100)',ph:'10'},
+                {k:'raid_timeframe',t:'num',l:'Raid Timeframe (sec)',d:'Time window for raid detection',ph:'10'},
+                {k:'anti_nuke',t:'bool',l:'Anti-Nuke',d:'Detect mass channel/ban deletions'}
+            ]},
+            {sec:'Logging',icon:'fa-clipboard-list',items:[
+                {k:'log_channel',t:'text',l:'Log Channel ID',d:'Channel for all moderation logs',ph:'Channel ID'},
+                {k:'log_messages',t:'bool',l:'Log Messages',d:'Track message edits and deletes'},
+                {k:'log_moderation',t:'bool',l:'Log Moderation',d:'Track bans, kicks, warns'},
+                {k:'log_joinleave',t:'bool',l:'Log Join/Leave',d:'Track member joins and leaves'},
+                {k:'log_edits',t:'bool',l:'Log Edits',d:'Track edited messages'}
+            ]},
+            {sec:'Levels & XP',icon:'fa-trophy',items:[
+                {k:'level_enabled',t:'bool',l:'Leveling System',d:'Enable XP and levels in chat'},
+                {k:'level_channel',t:'text',l:'Level-Up Channel',d:'Channel for level-up announcements',ph:'Channel ID (empty = current)'},
+                {k:'level_multiplier',t:'num',l:'XP Multiplier',d:'XP rate multiplier (1 = normal)',ph:'1'}
+            ]},
+            {sec:'Tickets & Stats',icon:'fa-ticket',items:[
+                {k:'ticket_channel',t:'text',l:'Ticket Channel ID',d:'Channel where tickets are created',ph:'Channel ID'},
+                {k:'ticket_category',t:'text',l:'Ticket Category ID',d:'Category for ticket channels',ph:'Category ID'},
+                {k:'stats_category',t:'text',l:'Stats Category ID',d:'Category for voice stats channels',ph:'Category ID'}
+            ]}
         ];
-        const settingsKeys=Object.keys(d.settings);
-        const usedKeys=new Set();
-        secGroups.forEach(g=>g.keys.forEach(k=>usedKeys.add(k)));
-        const otherKeys=settingsKeys.filter(k=>!usedKeys.has(k));
-        let html='';
-        secGroups.forEach(g=>{
-            const items=g.keys.filter(k=>settingsKeys.includes(k));
-            if(!items.length)return;
-            html+=`<div class="section" style="margin-bottom:14px"><div class="section-header"><div class="section-title"><i class="fas ${g.icon}"></i> ${g.title}</div></div><div class="section-body" style="padding:0 20px">`;
-            items.forEach(k=>{
-                const v=d.settings[k];
-                const isBool=typeof v==='boolean';
-                const isArr=Array.isArray(v);
-                let display='';
-                if(isBool)display=`<span class="badge-sm ${v?'on':'off'}">${v?'ON':'OFF'}</span>`;
-                else if(isArr)display=`<span class="setting-val ${v.length?'':'empty'}">${v.length?v.join(', '):'None'}</span>`;
-                else if(v===null||v===undefined||v==='')display=`<span class="setting-val empty">—</span>`;
-                else display=`<span class="setting-val">${ESC(String(v))}</span>`;
-                html+=`<div class="setting-row"><span class="setting-key">${ESC(k.replace(/_/g,' '))}</span>${display}</div>`;
+        function renderSettingInput(def,v){
+            if(def.t==='bool')return`<div class="toggle ${v?'on':''}" data-key="${def.k}" onclick="this.classList.toggle('on');markSettingsDirty()"><span class="toggle-dot"></span></div>`;
+            if(def.t==='num')return`<input type="number" class="set-input set-num" data-key="${def.k}" value="${ESC(String(v||0))}" placeholder="${def.ph||''}" oninput="markSettingsDirty()">`;
+            if(def.t==='arr')return`<input type="text" class="set-input set-text" data-key="${def.k}" value="${ESC(Array.isArray(v)?v.join(', '):'')}" placeholder="${def.ph||''}" oninput="markSettingsDirty()">`;
+            return`<input type="text" class="set-input set-text" data-key="${def.k}" value="${ESC(String(v||''))}" placeholder="${def.ph||''}" oninput="markSettingsDirty()">`;
+        }
+        let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+            <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-cog" style="color:var(--primary);font-size:1rem"></i><div><div style="font-size:.88rem;font-weight:700">Server Settings</div><div style="font-size:.68rem;color:var(--text3)">Configure bot behavior for this server</div></div></div>
+            <div style="display:flex;gap:8px;align-items:center"><span id="settings-dirty" style="font-size:.68rem;color:var(--yellow);display:none"><i class="fas fa-circle" style="font-size:.4rem"></i> Unsaved changes</span>
+            <button class="btn btn-ghost btn-sm" onclick="resetSettings()"><i class="fas fa-undo"></i> Reset</button>
+            <button class="btn btn-primary btn-sm" id="settings-save-btn" onclick="saveServerSettings()"><i class="fas fa-save"></i> Save Settings</button></div>
+        </div>`;
+        SET_DEFS.forEach(sec=>{
+            html+=`<div class="section" style="margin-bottom:14px"><div class="section-header"><div class="section-title"><i class="fas ${sec.icon}"></i> ${sec.sec}</div></div><div class="section-body" style="padding:6px 20px">`;
+            sec.items.forEach(def=>{
+                const v=S[def.k];
+                const isBool=def.t==='bool';
+                html+=`<div class="set-row"><div class="set-info"><div class="set-label">${def.l}</div><div class="set-desc">${def.d}</div></div><div class="set-ctrl">${renderSettingInput(def,v)}</div></div>`;
             });
             html+=`</div></div>`;
         });
-        if(otherKeys.length){
-            html+=`<div class="section"><div class="section-header"><div class="section-title"><i class="fas fa-ellipsis"></i> Other Settings</div></div><div class="section-body" style="padding:0 20px">`;
-            otherKeys.forEach(k=>{
-                const v=d.settings[k];
-                const isArr=Array.isArray(v);
-                let display='';
-                if(typeof v==='boolean')display=`<span class="badge-sm ${v?'on':'off'}">${v?'ON':'OFF'}</span>`;
-                else if(isArr)display=`<span class="setting-val">${v.length?v.join(', '):'None'}</span>`;
-                else if(v===null||v===undefined||v==='')display=`<span class="setting-val empty">—</span>`;
-                else display=`<span class="setting-val">${ESC(String(v))}</span>`;
-                html+=`<div class="setting-row"><span class="setting-key">${ESC(k.replace(/_/g,' '))}</span>${display}</div>`;
-            });
-            html+=`</div></div>`;
-        }
         document.getElementById('tp-settings').innerHTML=html;
+        settingsOriginal={...d.settings};
         document.getElementById('tp-commands').innerHTML=d.commands.length?`<div class="card"><div class="card-body no-pad"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Response</th><th>Status</th></tr></thead><tbody>${d.commands.map(c=>`<tr><td style="font-weight:700;color:var(--text)">!${ESC(c.name)}</td><td style="max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ESC(c.response)}</td><td><span class="badge-sm ${c.enabled!==false?'on':'off'}">${c.enabled!==false?'Active':'Disabled'}</span></td></tr>`).join('')}</tbody></table></div></div></div>`:'<div class="empty"><i class="fas fa-terminal"></i><p>No custom commands</p></div>';
         document.getElementById('tp-backups').innerHTML=d.backups.length?`<div class="card"><div class="card-body no-pad"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Created</th><th>Contents</th></tr></thead><tbody>${d.backups.map(b=>`<tr><td style="font-family:var(--mono);font-size:.7rem;color:var(--text)">${ESC((b.id||'').slice(-16))}</td><td>${TIME(b.created)}</td><td>${b.channels?.length||0} channels, ${b.roles?.length||0} roles, ${b.members?.length||0} members</td></tr>`).join('')}</tbody></table></div></div></div>`:'<div class="empty"><i class="fas fa-cloud"></i><p>No backups yet</p></div>';
     }catch(e){document.getElementById('det-head').innerHTML=`<div class="empty"><i class="fas fa-exclamation-circle"></i><p>${ESC(e.message)}</p></div>`}
@@ -1192,6 +1224,49 @@ function renderAudit(list){
 function filterAudit(){
     const q=(document.getElementById('audit-search').value||'').toLowerCase();
     renderAudit(allAudit.filter(a=>(a.action||'').toLowerCase().includes(q)||(a.ip||'').includes(q)));
+}
+
+// ====== SERVER SETTINGS ======
+let settingsOriginal=null;
+function markSettingsDirty(){const el=document.getElementById('settings-dirty');if(el)el.style.display='flex'}
+function resetSettings(){
+    if(!settingsOriginal)return;
+    document.querySelectorAll('#tp-settings .toggle').forEach(t=>{
+        const k=t.dataset.key;if(!k||!(k in settingsOriginal))return;
+        t.classList.toggle('on',!!settingsOriginal[k]);
+    });
+    document.querySelectorAll('#tp-settings .set-input').forEach(inp=>{
+        const k=inp.dataset.key;if(!k||!(k in settingsOriginal))return;
+        const v=settingsOriginal[k];
+        inp.value=Array.isArray(v)?v.join(', '):String(v||'');
+    });
+    document.getElementById('settings-dirty').style.display='none';
+    toast('Settings reset to saved values','info');
+}
+function collectSettings(){
+    const s={};
+    document.querySelectorAll('#tp-settings .toggle').forEach(t=>{s[t.dataset.key]=t.classList.contains('on')});
+    document.querySelectorAll('#tp-settings .set-input').forEach(inp=>{
+        const k=inp.dataset.key;if(!k)return;
+        const def=SET_DEFS.flatMap(g=>g.items).find(d=>d.k===k);
+        if(def&&def.t==='num')s[k]=parseInt(inp.value)||0;
+        else if(def&&def.t==='arr')s[k]=inp.value.split(',').map(x=>x.trim()).filter(Boolean);
+        else s[k]=inp.value;
+    });
+    return s;
+}
+let SET_DEFS=[];
+async function saveServerSettings(){
+    const btn=document.getElementById('settings-save-btn');
+    const updates=collectSettings();
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
+    try{
+        const r=await api(`/admin/api/server/${curServer}/action`,{method:'POST',body:JSON.stringify({action:'saveSettings',settings:updates})});
+        settingsOriginal=r.settings;
+        document.getElementById('settings-dirty').style.display='none';
+        toast(r.message||'Settings saved','success');
+    }catch(e){toast(e.message,'error')}
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Save Settings';
 }
 
 // ====== THEME ======

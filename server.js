@@ -1530,6 +1530,23 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
         return res.json({ ok: true, message: `Setting ${key} updated` });
     }
 
+    if (action === 'saveSettings') {
+        const current = db.getGuildSettings(gid);
+        const updates = req.body.settings || {};
+        const allowedBools = ['welcome_enabled','custom_welcome_embed','auto_mod_enabled','anti_spam','anti_link','anti_raid','anti_nuke','level_enabled','log_messages','log_moderation','log_joinleave','log_edits'];
+        const allowedStrings = ['welcome_channel','welcome_message','log_channel','ticket_channel','ticket_category','stats_category','muted_role','auto_role','greet_role','level_channel'];
+        const allowedNums = ['level_multiplier','spam_threshold','raid_threshold','raid_timeframe'];
+        const allowedArrs = ['link_whitelist'];
+        const saved = {};
+        for (const k of allowedBools) { if (updates[k] !== undefined) { current[k] = !!updates[k]; saved[k] = current[k]; } }
+        for (const k of allowedStrings) { if (typeof updates[k] === 'string') { current[k] = sanitize(updates[k].slice(0, 200)); saved[k] = current[k]; } }
+        for (const k of allowedNums) { if (updates[k] !== undefined) { current[k] = Math.max(0, Math.min(1000, parseInt(updates[k]) || 0)); saved[k] = current[k]; } }
+        for (const k of allowedArrs) { if (Array.isArray(updates[k])) { current[k] = updates[k].slice(0, 50).map(s => sanitize(String(s).slice(0, 100))); saved[k] = current[k]; } }
+        db.saveGuildSettings(gid, current);
+        adminAudit('SAVE_SETTINGS', { guild: gid, keys: Object.keys(saved) }, req.adminIp);
+        return res.json({ ok: true, settings: current, message: 'Settings saved' });
+    }
+
     if (!userId || !validateUserId(userId)) return res.status(400).json({ error: 'Invalid user ID' });
 
     const validActions = ['ban', 'kick', 'unban', 'warn', 'deleteWarn'];
