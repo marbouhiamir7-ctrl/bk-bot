@@ -60,8 +60,12 @@
             <div class="hero-3d-scene" id="scene">
                 <canvas id="starfield" class="starfield-canvas"></canvas>
 
+                <div class="deep-space"></div>
+                <div class="galaxy-band"></div>
+
                 <div class="lens-flare"></div>
                 <div class="sun-glow"></div>
+                <div class="sun-corona"></div>
                 <div class="sun-ray sun-ray-1"></div>
                 <div class="sun-ray sun-ray-2"></div>
                 <div class="sun-ray sun-ray-3"></div>
@@ -74,15 +78,21 @@
                 <div class="shield-orb" id="card3d">
                     <div class="orb-atmosphere"></div>
                     <div class="orb-atmosphere-2"></div>
+                    <div class="orb-atmosphere-scatter"></div>
                     <div class="orb-glow-outer"></div>
                     <div class="orb-glow-mid"></div>
 
-                    <div class="orb-ring ring-1"></div>
-                    <div class="orb-ring ring-2"></div>
-                    <div class="orb-ring ring-3"></div>
-                    <div class="orb-ring ring-4"></div>
+                    <div class="orb-ring-system">
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                        <div class="orb-ring ring-3"></div>
+                        <div class="orb-ring ring-4"></div>
+                        <div class="orb-saturn-ring"></div>
+                        <div class="orb-saturn-ring-2"></div>
+                    </div>
 
                     <div class="orb-core">
+                        <canvas id="planetCanvas" class="planet-canvas"></canvas>
                         <div class="orb-surface"></div>
                         <div class="orb-band orb-band-1"></div>
                         <div class="orb-band orb-band-2"></div>
@@ -90,6 +100,7 @@
                         <div class="orb-terminator"></div>
                         <div class="orb-shine"></div>
                         <div class="orb-specular"></div>
+                        <div class="orb-crest"></div>
                         <i class="fas fa-shield-halved orb-icon"></i>
                         <span class="orb-label">BK BOT</span>
                         <span class="orb-status"><span class="orb-dot"></span> All Systems Online</span>
@@ -123,6 +134,8 @@
                     <div class="comet comet-1"></div>
                     <div class="comet comet-2"></div>
                     <div class="comet comet-3"></div>
+
+                    <div class="asteroid-belt"></div>
                 </div>
 
                 <div class="orb-badge ob-1">

@@ -330,6 +330,127 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     window.addEventListener('resize', resize);
 })();
 
+// Planet surface canvas renderer
+(function() {
+    const canvas = document.getElementById('planetCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, cx, cy, radius;
+    let rotation = 0;
+
+    function resize() {
+        const parent = canvas.parentElement;
+        w = canvas.width = parent.offsetWidth;
+        h = canvas.height = parent.offsetHeight;
+        cx = w / 2;
+        cy = h / 2;
+        radius = Math.min(w, h) / 2 - 2;
+    }
+
+    function noise(x, y) {
+        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        return n - Math.floor(n);
+    }
+
+    function fbm(x, y) {
+        let v = 0, a = 0.5;
+        for (let i = 0; i < 5; i++) {
+            v += a * noise(x, y);
+            x *= 2.03;
+            y *= 2.01;
+            a *= 0.5;
+        }
+        return v;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, w, h);
+
+        // Clip to circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Base dark surface
+        const imgData = ctx.createImageData(w, h);
+        const d = imgData.data;
+        const t = rotation;
+
+        for (let py = 0; py < h; py++) {
+            for (let px = 0; px < w; px++) {
+                const dx = px - cx;
+                const dy = py - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > radius) continue;
+
+                const idx = (py * w + px) * 4;
+
+                // Spherical mapping
+                const nx = dx / radius;
+                const ny = dy / radius;
+                const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+
+                // Latitude/longitude
+                const lat = Math.asin(ny);
+                const lon = Math.atan2(nx, nz) + t;
+
+                // Terrain
+                const terrain = fbm(lon * 3, lat * 4);
+                const detail = fbm(lon * 8 + 10, lat * 8 + 10) * 0.3;
+                const combined = terrain * 0.7 + detail * 0.3;
+
+                // Lighting from top-right
+                const lightX = 0.4, lightY = -0.3, lightZ = 0.8;
+                const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
+                const dot = (nx * lightX + ny * lightY + nz * lightZ) / lightLen;
+                const lighting = Math.max(0, Math.min(1, dot * 0.7 + 0.3));
+
+                // Color: dark surface with subtle variation
+                const baseR = 18 + combined * 25;
+                const baseG = 16 + combined * 20;
+                const baseB = 22 + combined * 18;
+
+                // Atmosphere rim
+                const rim = 1 - Math.pow(nz, 3);
+                const rimR = rim * 40;
+                const rimG = rim * 50;
+                const rimB = rim * 80;
+
+                d[idx]     = Math.min(255, (baseR + rimR) * lighting);
+                d[idx + 1] = Math.min(255, (baseG + rimG) * lighting);
+                d[idx + 2] = Math.min(255, (baseB + rimB) * lighting);
+                d[idx + 3] = 255;
+            }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+
+        // Clouds layer
+        ctx.globalAlpha = 0.04;
+        for (let i = 0; i < 8; i++) {
+            const cloudX = cx + Math.cos(t * 0.5 + i * 0.8) * radius * 0.3;
+            const cloudY = cy + Math.sin(t * 0.3 + i * 1.2) * radius * 0.2;
+            const cloudR = radius * (0.3 + noise(i, t) * 0.3);
+            const grad = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudR);
+            grad.addColorStop(0, 'rgba(180,170,200,1)');
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+
+        rotation += 0.002;
+        requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+})();
+
 // FAQ accordion
 document.querySelectorAll('.faq-question').forEach(q => {
     q.addEventListener('click', () => {
