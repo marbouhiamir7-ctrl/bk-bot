@@ -68,34 +68,45 @@ if (heroStats) {
     statsObserver.observe(heroStats);
 }
 
-// Navbar scroll effect + active link tracking
-window.addEventListener('scroll', () => {
+// Navbar scroll effect + active link tracking + parallax (merged, throttled)
+(function() {
     const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
-});
+    const hero = document.querySelector('.hero-visual');
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+    const linkMap = {};
+    navLinks.forEach(link => { linkMap[link.getAttribute('href').slice(1)] = link; });
+    let ticking = false;
 
-// Active nav link based on scroll position
-const sections = document.querySelectorAll('section[id]');
-window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY + 200;
-    sections.forEach(section => {
-        const top = section.offsetTop;
-        const height = section.offsetHeight;
-        const id = section.getAttribute('id');
-        const link = document.querySelector(`.nav-links a[href="#${id}"]`);
-        if (link) {
-            if (scrollY >= top && scrollY < top + height) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            const scrollY = window.scrollY;
+            if (navbar) {
+                if (scrollY > 50) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
             }
-        }
-    });
-});
+            const viewTop = scrollY + 200;
+            sections.forEach(section => {
+                const link = linkMap[section.getAttribute('id')];
+                if (link) {
+                    if (viewTop >= section.offsetTop && viewTop < section.offsetTop + section.offsetHeight) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                }
+            });
+            if (hero && scrollY < 800) {
+                hero.style.transform = `translateY(${scrollY * 0.15}px)`;
+            }
+            ticking = false;
+        });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+})();
 
 // Scroll Reveal Animation
 const revealObserver = new IntersectionObserver((entries) => {
@@ -113,46 +124,39 @@ document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, 
     revealObserver.observe(el);
 });
 
-// Parallax scroll for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.scrollY;
-    const hero = document.querySelector('.hero-visual');
-    if (hero && scrolled < 800) {
-        hero.style.transform = `translateY(${scrolled * 0.15}px)`;
-    }
-});
-
 // Console message
 console.log('%c BK BOT ', 'background: linear-gradient(135deg, #FF6B6B, #FFA502); color: white; font-size: 20px; padding: 10px 20px; border-radius: 5px;');
 console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size: 12px;');
 
-// 3D Shield Orb Mouse Tracking
+// 3D Shield Orb Mouse Tracking (optimized)
 (function() {
     const orb = document.getElementById('card3d');
     const scene = document.getElementById('scene');
-    
     if (!orb || !scene) return;
 
     let bounds;
-    let currentRotateX = 0;
-    let currentRotateY = 0;
-    let targetRotateX = 0;
-    let targetRotateY = 0;
+    let currentRotateX = 0, currentRotateY = 0;
+    let targetRotateX = 0, targetRotateY = 0;
     let isHovering = false;
+    let rafId = null;
+    const badges = document.querySelectorAll('.orb-badge');
 
-    function updateBounds() {
-        bounds = orb.getBoundingClientRect();
-    }
-
-    function lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
-
-    function clamp(val, min, max) {
-        return Math.max(min, Math.min(max, val));
-    }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function updateBounds() { bounds = orb.getBoundingClientRect(); }
 
     function animate() {
+        const dx = Math.abs(currentRotateX - targetRotateX);
+        const dy = Math.abs(currentRotateY - targetRotateY);
+        if (!isHovering && dx < 0.001 && dy < 0.001) {
+            currentRotateX = targetRotateX;
+            currentRotateY = targetRotateY;
+            orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)`;
+            badges.forEach(b => { b.style.transform = ''; });
+            rafId = null;
+            return;
+        }
+
         currentRotateX = lerp(currentRotateX, targetRotateX, 0.08);
         currentRotateY = lerp(currentRotateY, targetRotateY, 0.08);
 
@@ -162,40 +166,25 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
 
         orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(${-rx}deg) rotateY(${ry}deg) scale(${scaleVal})`;
 
-        // Parallax floating badges
-        const badges = document.querySelectorAll('.orb-badge');
         badges.forEach((badge, i) => {
             const depth = 0.5 + i * 0.3;
-            const bx = currentRotateY * 15 * depth;
-            const by = currentRotateX * 15 * depth;
-            badge.style.transform = `translateX(${bx}px) translateY(${by}px)`;
+            badge.style.transform = `translateX(${currentRotateY * 15 * depth}px) translateY(${currentRotateX * 15 * depth}px)`;
         });
 
-        requestAnimationFrame(animate);
+        rafId = requestAnimationFrame(animate);
     }
 
-    scene.addEventListener('mouseenter', () => {
-        isHovering = true;
-        updateBounds();
-    });
+    function startAnim() { if (!rafId) rafId = requestAnimationFrame(animate); }
 
-    scene.addEventListener('mouseleave', () => {
-        isHovering = false;
-        targetRotateX = 0;
-        targetRotateY = 0;
-    });
-
+    scene.addEventListener('mouseenter', () => { isHovering = true; updateBounds(); startAnim(); });
+    scene.addEventListener('mouseleave', () => { isHovering = false; targetRotateX = 0; targetRotateY = 0; startAnim(); });
     scene.addEventListener('mousemove', (e) => {
         if (!bounds) updateBounds();
-        
         const cx = bounds.left + bounds.width / 2;
         const cy = bounds.top + bounds.height / 2;
-        
         targetRotateX = clamp((e.clientY - cy) / (bounds.height / 2), -1, 1);
         targetRotateY = clamp((e.clientX - cx) / (bounds.width / 2), -1, 1);
     });
-
-    // Touch support
     scene.addEventListener('touchmove', (e) => {
         e.preventDefault();
         const touch = e.touches[0];
@@ -205,25 +194,21 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         targetRotateX = clamp((touch.clientY - cy) / (bounds.height / 2), -1, 1);
         targetRotateY = clamp((touch.clientX - cx) / (bounds.width / 2), -1, 1);
     }, { passive: false });
+    scene.addEventListener('touchend', () => { isHovering = false; targetRotateX = 0; targetRotateY = 0; startAnim(); });
 
-    scene.addEventListener('touchend', () => {
-        isHovering = false;
-        targetRotateX = 0;
-        targetRotateY = 0;
-    });
-
-    animate();
     window.addEventListener('resize', updateBounds);
 })();
 
-// Starfield canvas — enhanced
+// Starfield canvas (optimized)
 (function() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const stars = [];
     const meteors = [];
-    const STAR_COUNT = 120;
+    const STAR_COUNT = 60;
+    const MAX_METEORS = 5;
+    let lastFrame = 0;
 
     const starColors = [
         [255,255,255], [255,255,255], [255,255,255],
@@ -238,6 +223,7 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     }
 
     function spawnMeteor() {
+        if (meteors.length >= MAX_METEORS) return;
         meteors.push({
             x: Math.random() * canvas.width * 0.6,
             y: Math.random() * canvas.height * 0.3,
@@ -261,17 +247,20 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
                 da: (Math.random() - 0.5) * 0.008,
                 dx: (Math.random() - 0.5) * 0.08,
                 dy: (Math.random() - 0.5) * 0.05,
-                cr: c[0], cg: c[1], cb: c[2],
-                twinkleSpeed: 0.002 + Math.random() * 0.006
+                cr: c[0], cg: c[1], cb: c[2]
             });
         }
     }
 
-    function draw() {
+    function draw(now) {
+        requestAnimationFrame(draw);
+        if (now - lastFrame < 32) return;
+        lastFrame = now;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Stars
-        stars.forEach(s => {
+        for (let i = 0; i < stars.length; i++) {
+            const s = stars[i];
             s.a += s.da;
             s.x += s.dx;
             s.y += s.dy;
@@ -286,17 +275,15 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
             ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${s.a * 0.7})`;
             ctx.fill();
 
-            // Glow on brighter stars
-            if (s.r > 0.9 && s.a > 0.6) {
+            if (s.r > 1.0 && s.a > 0.6) {
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${(s.a - 0.6) * 0.15})`;
+                ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${(s.a - 0.6) * 0.12})`;
                 ctx.fill();
             }
-        });
+        }
 
-        // Meteors
-        if (Math.random() < 0.003) spawnMeteor();
+        if (Math.random() < 0.002) spawnMeteor();
         for (let i = meteors.length - 1; i >= 0; i--) {
             const m = meteors[i];
             m.x += m.vx;
@@ -304,43 +291,41 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
             m.life -= m.decay;
             if (m.life <= 0) { meteors.splice(i, 1); continue; }
 
-            const grad = ctx.createLinearGradient(
-                m.x, m.y,
-                m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3
-            );
-            grad.addColorStop(0, `rgba(255,255,255,${m.life * 0.8})`);
-            grad.addColorStop(0.3, `rgba(200,220,255,${m.life * 0.4})`);
-            grad.addColorStop(1, 'rgba(200,220,255,0)');
-
             ctx.beginPath();
             ctx.moveTo(m.x, m.y);
             ctx.lineTo(m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3);
+            const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3);
+            grad.addColorStop(0, `rgba(255,255,255,${m.life * 0.8})`);
+            grad.addColorStop(0.3, `rgba(200,220,255,${m.life * 0.4})`);
+            grad.addColorStop(1, 'rgba(200,220,255,0)');
             ctx.strokeStyle = grad;
             ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Head glow
             ctx.beginPath();
             ctx.arc(m.x, m.y, 2, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(255,255,255,${m.life * 0.9})`;
             ctx.fill();
         }
-
-        requestAnimationFrame(draw);
     }
 
     init();
-    draw();
+    requestAnimationFrame(draw);
     window.addEventListener('resize', resize);
 })();
 
-// Planet surface canvas renderer
+// Planet surface canvas renderer (cached texture)
 (function() {
     const canvas = document.getElementById('planetCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let w, h, cx, cy, radius;
     let rotation = 0;
+    let cachedTexture = null;
+    let cachedW = 0, cachedH = 0;
+    let lastFrame = 0;
+    const FPS_LIMIT = 30;
+    const FRAME_INTERVAL = 1000 / FPS_LIMIT;
 
     function resize() {
         const parent = canvas.parentElement;
@@ -349,6 +334,7 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         cx = w / 2;
         cy = h / 2;
         radius = Math.min(w, h) / 2 - 2;
+        cachedTexture = null;
     }
 
     function noise(x, y) {
@@ -358,7 +344,7 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
 
     function fbm(x, y) {
         let v = 0, a = 0.5;
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 3; i++) {
             v += a * noise(x, y);
             x *= 2.03;
             y *= 2.01;
@@ -367,19 +353,21 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         return v;
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, w, h);
+    function buildTexture() {
+        if (cachedTexture && cachedW === w && cachedH === h) return cachedTexture;
 
-        // Clip to circle
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.clip();
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = w;
+        offCanvas.height = h;
+        const offCtx = offCanvas.getContext('2d');
 
-        // Base dark surface
-        const imgData = ctx.createImageData(w, h);
+        offCtx.save();
+        offCtx.beginPath();
+        offCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+        offCtx.clip();
+
+        const imgData = offCtx.createImageData(w, h);
         const d = imgData.data;
-        const t = rotation;
 
         for (let py = 0; py < h; py++) {
             for (let px = 0; px < w; px++) {
@@ -389,33 +377,26 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
                 if (dist > radius) continue;
 
                 const idx = (py * w + px) * 4;
-
-                // Spherical mapping
                 const nx = dx / radius;
                 const ny = dy / radius;
                 const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
 
-                // Latitude/longitude
                 const lat = Math.asin(ny);
-                const lon = Math.atan2(nx, nz) + t;
+                const lon = Math.atan2(nx, nz);
 
-                // Terrain
                 const terrain = fbm(lon * 3, lat * 4);
                 const detail = fbm(lon * 8 + 10, lat * 8 + 10) * 0.3;
                 const combined = terrain * 0.7 + detail * 0.3;
 
-                // Lighting from top-right
                 const lightX = 0.4, lightY = -0.3, lightZ = 0.8;
                 const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
                 const dot = (nx * lightX + ny * lightY + nz * lightZ) / lightLen;
                 const lighting = Math.max(0, Math.min(1, dot * 0.7 + 0.3));
 
-                // Color: match site bg #07070a with subtle terrain variation
                 const baseR = 7 + combined * 18;
                 const baseG = 7 + combined * 15;
                 const baseB = 10 + combined * 16;
 
-                // Atmosphere rim
                 const rim = 1 - Math.pow(nz, 3);
                 const rimR = rim * 40;
                 const rimG = rim * 50;
@@ -428,30 +409,50 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
             }
         }
 
-        ctx.putImageData(imgData, 0, 0);
+        offCtx.putImageData(imgData, 0, 0);
 
-        // Clouds layer
-        ctx.globalAlpha = 0.04;
-        for (let i = 0; i < 8; i++) {
-            const cloudX = cx + Math.cos(t * 0.5 + i * 0.8) * radius * 0.3;
-            const cloudY = cy + Math.sin(t * 0.3 + i * 1.2) * radius * 0.2;
-            const cloudR = radius * (0.3 + noise(i, t) * 0.3);
-            const grad = ctx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudR);
+        offCtx.globalAlpha = 0.04;
+        for (let i = 0; i < 5; i++) {
+            const cloudX = cx + Math.cos(i * 0.8) * radius * 0.3;
+            const cloudY = cy + Math.sin(i * 1.2) * radius * 0.2;
+            const cloudR = radius * (0.3 + noise(i, 0) * 0.3);
+            const grad = offCtx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudR);
             grad.addColorStop(0, 'rgba(180,170,200,1)');
             grad.addColorStop(1, 'transparent');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, w, h);
+            offCtx.fillStyle = grad;
+            offCtx.fillRect(0, 0, w, h);
         }
-        ctx.globalAlpha = 1;
+        offCtx.globalAlpha = 1;
+        offCtx.restore();
 
+        cachedTexture = offCanvas;
+        cachedW = w;
+        cachedH = h;
+        return cachedTexture;
+    }
+
+    function draw(now) {
+        requestAnimationFrame(draw);
+        if (now - lastFrame < FRAME_INTERVAL) return;
+        lastFrame = now;
+
+        ctx.clearRect(0, 0, w, h);
+        const tex = buildTexture();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotation);
+        ctx.drawImage(tex, -cx, -cy);
         ctx.restore();
 
-        rotation += 0.002;
-        requestAnimationFrame(draw);
+        rotation += 0.003;
     }
 
     resize();
-    draw();
+    requestAnimationFrame(draw);
     window.addEventListener('resize', resize);
 })();
 
@@ -491,6 +492,9 @@ function simAppend(html) {
     div.innerHTML = html;
     const node = div.firstChild;
     simLog.appendChild(node);
+    while (simLog.children.length > 20) {
+        simLog.removeChild(simLog.firstChild);
+    }
     simLog.scrollTop = simLog.scrollHeight;
     return node;
 }

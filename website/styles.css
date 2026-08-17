@@ -86,8 +86,8 @@ body {
     left: 0;
     right: 0;
     background: rgba(7, 7, 10, 0.5);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     z-index: 1000;
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -289,7 +289,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
 }
@@ -397,7 +397,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.05);
     padding: 20px 28px;
     border-radius: 16px;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(10px);
 }
 
 .stat {
@@ -474,6 +474,7 @@ body {
     width: 100%;
     height: 100%;
     z-index: 0;
+    will-change: contents;
 }
 
 .sun-glow {
@@ -487,6 +488,7 @@ body {
     z-index: 1;
     animation: sunPulse 6s ease-in-out infinite;
     pointer-events: none;
+    will-change: transform;
 }
 
 .sun-ray {
@@ -511,6 +513,7 @@ body {
     pointer-events: none;
     filter: blur(60px);
     z-index: 0;
+    will-change: transform;
 }
 .nebula-1 {
     width: 200px; height: 200px;
@@ -536,6 +539,7 @@ body {
     height: 200px;
     transform-style: preserve-3d;
     z-index: 2;
+    will-change: transform;
 }
 
 .orb-atmosphere {
@@ -684,6 +688,7 @@ body {
     left: 50%;
     border-radius: 50%;
     pointer-events: none;
+    will-change: transform;
 }
 
 .ring-1 {
@@ -757,6 +762,7 @@ body {
     border-radius: 50%;
     pointer-events: none;
     z-index: 1;
+    will-change: transform;
 }
 
 .op1{width:3px;height:3px;top:4%;left:48%;background:#fff;box-shadow:0 0 8px rgba(255,255,255,0.6);animation:osp1 7s ease-in-out infinite}
@@ -795,6 +801,7 @@ body {
     border-radius: 50%;
     pointer-events: none;
     z-index: 1;
+    will-change: transform;
 }
 .comet::after {
     content: '';
@@ -844,9 +851,10 @@ body {
     align-items: center;
     gap: 12px;
     z-index: 10;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(10px);
     box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
     white-space: nowrap;
+    will-change: transform;
 }
 
 .ob-icon {
@@ -890,6 +898,7 @@ body {
     z-index: 5;
     pointer-events: none;
     animation: flarePulse 3s ease-in-out infinite;
+    will-change: transform;
 }
 .lens-flare::before {
     content: '';
@@ -916,29 +925,6 @@ body {
     transform: rotate(-25deg);
 }
 @keyframes flarePulse { 0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)} }
-
-/* Extra sun ray */
-.sun-ray-4 { width: 0.8px; height: 180px; transform: rotate(18deg); animation: rayPulse 7s ease-in-out infinite 1.5s; }
-
-/* Third nebula */
-.nebula-3 {
-    width: 120px; height: 120px;
-    top: 40%; left: -40px;
-    background: radial-gradient(circle, rgba(255,107,107,0.08), transparent 70%);
-    animation: nebulaDrift3 18s ease-in-out infinite;
-}
-@keyframes nebulaDrift3 { 0%,100%{transform:translate(0,0)}50%{transform:translate(10px,-15px)} }
-
-/* Second atmosphere ring */
-.orb-atmosphere-2 {
-    position: absolute;
-    inset: -30px;
-    border-radius: 50%;
-    border: 1px solid rgba(100,180,255,0.03);
-    pointer-events: none;
-    animation: atmoPulse2 6s ease-in-out infinite;
-}
-@keyframes atmoPulse2 { 0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.7;transform:scale(1.02)} }
 
 /* Planet bands (Jupiter-like) */
 .orb-band {
@@ -1068,6 +1054,7 @@ body {
     animation: orbSpin1 14s linear infinite;
     pointer-events: none;
     opacity: 0.6;
+    will-change: transform;
 }
 
 .orb-saturn-ring-2 {
@@ -1221,6 +1208,7 @@ body {
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
+    contain: layout style paint;
 }
 
 .feature-card::before {

@@ -1055,6 +1055,234 @@ app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, guildAuth, (req, re
     res.json(sorted.map(([id, data]) => ({ userId: id, level: data.level || 1, xp: data.xp || 0 })));
 });
 
+// ====== Admin Panel ======
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'bk-admin-2026';
+const adminSessions = new Map();
+
+function adminAuth(req, res, next) {
+    const token = req.cookies.bk_admin;
+    if (!token || !adminSessions.has(token)) return res.status(401).json({ error: 'Unauthorized' });
+    const sess = adminSessions.get(token);
+    if (Date.now() - sess.created > 24 * 60 * 60 * 1000) { adminSessions.delete(token); return res.status(401).json({ error: 'Session expired' }); }
+    next();
+}
+
+app.post('/admin/api/login', (req, res) => {
+    const { password } = req.body;
+    if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Wrong password' });
+    const token = crypto.randomBytes(32).toString('hex');
+    adminSessions.set(token, { created: Date.now() });
+    res.cookie('bk_admin', token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 });
+    res.json({ ok: true });
+});
+
+app.post('/admin/api/logout', (req, res) => {
+    const token = req.cookies.bk_admin;
+    if (token) adminSessions.delete(token);
+    res.clearCookie('bk_admin');
+    res.json({ ok: true });
+});
+
+app.get('/admin/api/check', (req, res) => {
+    const token = req.cookies.bk_admin;
+    res.json({ logged_in: !!(token && adminSessions.has(token)) });
+});
+
+app.get('/admin/api/overview', adminAuth, async (req, res) => {
+    try {
+        const stats = db.botStats.get('global', {});
+        const activity = db.botStats.get('activity_feed', []);
+        const allGuildSettings = db.guildSettings.getAll();
+        const allWarnings = db.warnings.getAll();
+        const allLevels = db.levelData.getAll();
+        const allCommands = db.customCommands.getAll();
+        const allBackups = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'backups.json'), 'utf8')); } catch { return {}; } })();
+
+        let totalMembers = 0, totalChannels = 0, totalBoosts = 0;
+        const guildIds = Object.keys(allGuildSettings);
+
+        for (const gid of guildIds) {
+            try {
+                const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+                if (gRes.ok) {
+                    const g = gRes.data;
+                    totalMembers += g.approximate_member_count || 0;
+                    totalChannels += g.channels?.length || 0;
+                    totalBoosts += g.premium_subscription_count || 0;
+                }
+            } catch {}
+        }
+
+        res.json({
+            stats: {
+                servers: guildIds.length,
+                totalMembers,
+                totalChannels,
+                totalBoosts,
+                commandsRun: stats.commands_run || 0,
+                messagesSeen: stats.messages_seen || 0,
+                warningsIssued: stats.warnings_issued || 0,
+                bans: stats.bans || 0,
+                kicks: stats.kicks || 0,
+                mutes: stats.mutes || 0,
+                uptime: stats.uptime || 0
+            },
+            guildIds,
+            warningsCount: Object.values(allWarnings).reduce((sum, g) => sum + Object.values(g).reduce((s, arr) => s + arr.length, 0), 0),
+            levelsCount: Object.values(allLevels).reduce((sum, g) => sum + Object.keys(g).length, 0),
+            commandsCount: Object.values(allCommands).reduce((sum, g) => sum + Object.keys(g).length, 0),
+            backupsCount: Object.keys(allBackups).length,
+            recentActivity: activity.slice(0, 20)
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/admin/api/servers', adminAuth, async (req, res) => {
+    try {
+        const allGuildSettings = db.guildSettings.getAll();
+        const servers = [];
+
+        for (const gid of Object.keys(allGuildSettings)) {
+            try {
+                const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+                if (gRes.ok) {
+                    const g = gRes.data;
+                    const settings = db.guildSettings.get(gid, {});
+                    const warnings = db.warnings.get(gid, {});
+                    const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
+                    servers.push({
+                        id: g.id, name: g.name, icon: g.icon,
+                        members: g.approximate_member_count || 0,
+                        online: g.approximate_presence_count || 0,
+                        channels: g.channels?.length || 0,
+                        roles: g.roles?.length || 0,
+                        boosts: g.premium_subscription_count || 0,
+                        boostTier: g.premium_tier || 0,
+                        owner: g.owner_id,
+                        features: g.features || [],
+                        security: {
+                            antiNuke: settings.anti_nuke !== false,
+                            antiRaid: settings.anti_raid !== false,
+                            antiSpam: settings.anti_spam !== false,
+                            antiLink: settings.anti_link !== false
+                        },
+                        warnings: warnCount,
+                        created: g.id ? String(BigInt(g.id) >> 22n + 1420070400000n) : null
+                    });
+                }
+            } catch { servers.push({ id: gid, name: 'Unknown Server', error: true }); }
+        }
+        res.json(servers);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/admin/api/server/:id', adminAuth, async (req, res) => {
+    const gid = req.params.id.replace(/[^0-9]/g, '');
+    try {
+        const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+        if (!gRes.ok) return res.status(404).json({ error: 'Guild not found on Discord' });
+        const g = gRes.data;
+
+        const chRes = await discordAPI(`/guilds/${gid}/channels`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+        const channels = chRes.ok ? chRes.data : [];
+
+        const rolesRes = await discordAPI(`/guilds/${gid}/roles`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+        const roles = rolesRes.ok ? rolesRes.data : [];
+
+        const settings = db.guildSettings.get(gid, {});
+        const warnings = db.warnings.get(gid, {});
+        const levels = db.levelData.get(gid, {});
+        const commands = db.customCommands.get(gid, {});
+        const backups = (() => { try { const all = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'backups.json'), 'utf8')); return Object.entries(all).filter(([k]) => k.startsWith(gid)).map(([id, b]) => ({ id, ...b })); } catch { return []; } })();
+        const honeypotLog = (() => { try { const all = db.botStats.get('honeypot_log', []); return all.filter(e => e.guildId === gid).slice(0, 50); } catch { return []; } })();
+
+        const warningsFlat = [];
+        for (const [uid, arr] of Object.entries(warnings)) {
+            for (const w of arr) warningsFlat.push({ userId: uid, ...w });
+        }
+        warningsFlat.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const levelsSorted = Object.entries(levels).map(([id, d]) => ({ userId: id, level: d.level || 1, xp: d.xp || 0 })).sort((a, b) => b.xp - a.xp).slice(0, 50);
+
+        res.json({
+            guild: g, channels, roles, settings,
+            warnings: warningsFlat.slice(0, 100),
+            levels: levelsSorted,
+            commands: Object.values(commands),
+            backups,
+            honeypotLog
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/admin/api/server/:id/members', adminAuth, async (req, res) => {
+    const gid = req.params.id.replace(/[^0-9]/g, '');
+    const search = (req.query.search || '').toLowerCase();
+    try {
+        let members = [];
+        let after = '0';
+        for (let i = 0; i < 10; i++) {
+            const mRes = await discordAPI(`/guilds/${gid}/members?limit=1000&after=${after}`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            if (!mRes.ok || !mRes.data?.length) break;
+            members.push(...mRes.data);
+            after = mRes.data[mRes.data.length - 1].user.id;
+            if (mRes.data.length < 1000) break;
+        }
+        if (search) members = members.filter(m => m.user.username.toLowerCase().includes(search) || m.user.id.includes(search) || (m.nick && m.nick.toLowerCase().includes(search)));
+        members.sort((a, b) => (b.joined_at > a.joined_at ? 1 : -1));
+        res.json(members.slice(0, 200).map(m => ({
+            id: m.user.id, username: m.user.username, avatar: m.user.avatar, discriminator: m.user.discriminator,
+            nick: m.nick, roles: m.roles, joined: m.joined_at, boosted: m.premium_since, banned: false
+        })));
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/admin/api/server/:id/action', adminAuth, async (req, res) => {
+    const gid = req.params.id.replace(/[^0-9]/g, '');
+    const { action, userId, reason, duration } = req.body;
+    try {
+        if (action === 'ban') {
+            await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { delete_message_days: 1, reason: reason || 'Admin panel action' } });
+            res.json({ ok: true, message: `Banned ${userId}` });
+        } else if (action === 'kick') {
+            await discordAPI(`/guilds/${gid}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            res.json({ ok: true, message: `Kicked ${userId}` });
+        } else if (action === 'unban') {
+            await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            res.json({ ok: true, message: `Unbanned ${userId}` });
+        } else if (action === 'warn') {
+            const warns = db.warnings.get(gid, {});
+            if (!warns[userId]) warns[userId] = [];
+            warns[userId].push({ reason: reason || 'Admin panel warning', moderator: 'Admin Panel', date: new Date().toISOString() });
+            db.warnings.set(gid, warns);
+            const stats = db.botStats.get('global', {});
+            stats.warnings_issued = (stats.warnings_issued || 0) + 1;
+            db.botStats.set('global', stats);
+            res.json({ ok: true, message: `Warned ${userId}` });
+        } else if (action === 'deleteWarn') {
+            const warns = db.warnings.get(gid, {});
+            if (warns[userId] && warns[userId][req.body.index]) {
+                warns[userId].splice(req.body.index, 1);
+                db.warnings.set(gid, warns);
+            }
+            res.json({ ok: true });
+        } else {
+            res.status(400).json({ error: 'Unknown action' });
+        }
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/admin/api/activity', adminAuth, (req, res) => {
+    const activity = db.botStats.get('activity_feed', []);
+    res.json(activity.slice(0, 100));
+});
+
+app.get('/admin/api/honeypot', adminAuth, (req, res) => {
+    const log = db.botStats.get('honeypot_log', []);
+    res.json(log.slice(0, 100));
+});
+
 // ====== 404 Handler ======
 
 app.use((req, res) => {
