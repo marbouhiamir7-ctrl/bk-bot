@@ -78,7 +78,7 @@ function destroySession(token) {
 }
 
 function getGuildSettings(guildId) {
-    return guildSettings.get(guildId, {
+    const defaults = {
         welcome_channel: '',
         welcome_message: 'Welcome to the server, {user}!',
         welcome_enabled: true,
@@ -106,7 +106,9 @@ function getGuildSettings(guildId) {
         log_moderation: true,
         log_joinleave: true,
         log_edits: true
-    });
+    };
+    const stored = guildSettings.get(guildId, null);
+    return stored ? { ...defaults, ...stored } : { ...defaults };
 }
 
 function saveGuildSettings(guildId, settings) {

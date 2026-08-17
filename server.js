@@ -1431,7 +1431,7 @@ app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
                     const r = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
                     if (isOk(r)) gRes = r;
                 }
-                const settings = db.guildSettings.get(gid, {});
+                const settings = db.getGuildSettings(gid);
                 const warnings = db.warnings.get(gid, {});
                 const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
                 servers.push({
@@ -1516,9 +1516,9 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
     if (action === 'setSetting') {
         const allowed = ['anti_nuke', 'anti_raid', 'anti_spam', 'anti_link', 'honeypot_enabled', 'auto_mute_spam', 'auto_delete_links', 'auto_kick_unverified', 'lockdown_on_raid'];
         if (!allowed.includes(key)) return res.status(400).json({ error: 'Invalid setting key' });
-        const settings = db.guildSettings.get(gid, {});
+        const settings = db.getGuildSettings(gid);
         settings[key] = !!value;
-        db.guildSettings.set(gid, settings);
+        db.saveGuildSettings(gid, settings);
         adminAudit('SET_SETTING', { guild: gid, key, value: !!value }, req.adminIp);
         return res.json({ ok: true, message: `Setting ${key} updated` });
     }
