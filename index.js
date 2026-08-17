@@ -68,13 +68,29 @@ client.honeypot = {
     log: []
 };
 
+const SECURITY_CFG_FILE = path.join(__dirname, 'data', 'security-config.json');
+
+function applySecurityConfig() {
+    try {
+        if (!fs.existsSync(SECURITY_CFG_FILE)) return;
+        const cfg = JSON.parse(fs.readFileSync(SECURITY_CFG_FILE, 'utf8'));
+        if (typeof cfg.anti_nuke === 'boolean') client.antiNuke.enabled = cfg.anti_nuke;
+        if (typeof cfg.anti_raid === 'boolean') client.antiRaid.enabled = cfg.anti_raid;
+        if (typeof cfg.anti_spam === 'boolean') client.antiSpam.enabled = cfg.anti_spam;
+        if (typeof cfg.anti_link === 'boolean') client.antiLink.enabled = cfg.anti_link;
+        if (typeof cfg.honeypot === 'boolean') client.honeypot.enabled = cfg.honeypot;
+    } catch (e) {}
+}
+
 // ====== Live Stats Sync (bot -> admin panel) ======
 const LIVE_FILE = path.join(__dirname, 'data', 'live.json');
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 const LIVE_START = Date.now();
 let msgCount = 0, cmdCount = 0;
+let pendingHourlyCmds = 0;
 const activityBuffer = [];
+client.hourlyUsage = new Map();
 
 function pushActivity(type, message, guildId) {
     activityBuffer.push({ type, message, guildId: guildId || null, time: Date.now() });
@@ -94,12 +110,14 @@ function flushActivity() {
 
 function trackCommand(name, userTag, guildName) {
     cmdCount++;
+    pendingHourlyCmds++;
     client.commandUsage.set(name, (client.commandUsage.get(name) || 0) + 1);
     pushActivity('command', `**/${name}** used by **${userTag}** in ${guildName || 'DMs'}`);
 }
 
 function syncLiveStats() {
     try {
+        applySecurityConfig();
         flushActivity();
         const stats = db.botStats.get('global', {});
         stats.commands_run = (stats.commands_run || 0) + cmdCount;
@@ -107,6 +125,20 @@ function syncLiveStats() {
         stats.uptime = Math.floor((Date.now() - LIVE_START) / 1000);
         db.botStats.set('global', stats);
         msgCount = 0; cmdCount = 0;
+
+        const hourly = Array(24).fill(0);
+        const now = new Date();
+        const hourKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}`;
+        client.hourlyUsage.set(hourKey, (client.hourlyUsage.get(hourKey) || 0) + pendingHourlyCmds);
+        pendingHourlyCmds = 0;
+        const today = new Date();
+        for (const [key, count] of client.hourlyUsage) {
+            const parts = key.split('-');
+            const h = parseInt(parts[3]);
+            const sameDay = parseInt(parts[0]) === today.getFullYear() && parseInt(parts[1]) === today.getMonth() && parseInt(parts[2]) === today.getDate();
+            if (sameDay) hourly[h] += count;
+            else if (hourly[h] === 0 && count > 0) hourly[h] += count;
+        }
 
         const guilds = client.guilds.cache.map(g => ({
             id: g.id, name: g.name, icon: g.icon,
@@ -119,7 +151,7 @@ function syncLiveStats() {
         }));
 
         const live = {
-            status: client.ws.status === 0 ? 'online' : client.ws.status,
+            status: client.isReady() ? 'online' : 'connecting',
             tag: client.user ? client.user.tag : null,
             id: client.user ? client.user.id : null,
             avatar: client.user ? client.user.displayAvatarURL({ size: 128 }) : null,
@@ -139,8 +171,10 @@ function syncLiveStats() {
             },
             commands: {
                 count: client.commands.size,
-                usage: Object.fromEntries(client.commandUsage || [])
+                usage: Object.fromEntries(client.commandUsage || []),
+                names: [...client.commands.keys()].sort()
             },
+            hourly,
             security: {
                 nuke: { enabled: client.antiNuke.enabled, maxChannelDelete: client.antiNuke.maxChannelDelete, maxBans: client.antiNuke.maxBans, maxChannelCreate: client.antiNuke.maxChannelCreate, maxWebhookCreate: client.antiNuke.maxWebhookCreate, violations: client.antiNuke.violations.size },
                 raid: { enabled: client.antiRaid.enabled, joinLimit: client.antiRaid.joinLimit, timeWindow: client.antiRaid.timeWindow, action: client.antiRaid.action },
@@ -152,7 +186,8 @@ function syncLiveStats() {
             afk: client.afkUsers.size,
             tickets: client.tickets.size,
             reminders: client.reminders.size,
-            customCommands: client.customCommands.size
+            customCommands: client.customCommands.size,
+            syncedAt: Date.now()
         };
         fs.writeFileSync(LIVE_FILE, JSON.stringify(live));
     } catch (e) { console.error('syncLiveStats error:', e.message); }

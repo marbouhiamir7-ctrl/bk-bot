@@ -171,7 +171,7 @@ app.use((req, res, next) => {
     if (blocked.some(b => req.path.includes(b))) {
         return res.status(404).json({ error: 'Not found' });
     }
-    if (req.path.startsWith('/admin/api/') && !req.path.match(/^\/admin\/api\/(login|check|logout|overview|servers|server\/|activity|honeypot|audit)/)) {
+    if (req.path.startsWith('/admin/api/') && !req.path.match(/^\/admin\/api\/(login|check|logout|overview|servers|server\/|activity|honeypot|audit|security|bot|global-data)/)) {
         return res.status(404).json({ error: 'Not found' });
     }
     next();
@@ -193,6 +193,10 @@ async function discordAPI(apiPath, options = {}) {
         console.error('[Fetch Error]', apiPath, e.message);
         return { _error: e.message };
     }
+}
+
+function isOk(res) {
+    return res && !res._error && !res._status && !res.code && !res.message;
 }
 
 function botAPI(apiPath) {
@@ -1273,7 +1277,11 @@ app.get('/admin/api/bot', adminAuth, adminApiLimiter, (req, res) => {
         processUptime: live.processUptime || 0,
         totals: live.totals || { guilds: 0, members: 0, channels: 0, roles: 0, boosts: 0 },
         commands: live.commands || { count: 0, usage: {} },
+        commandNames: live.commands?.names || [],
+        hourly: live.hourly || [],
+        lastSync: live.syncedAt || null,
         security: live.security || {},
+        securityCfg: (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'security-config.json'), 'utf8')); } catch { return {}; } })(),
         afk: live.afk || 0,
         tickets: live.tickets || 0,
         reminders: live.reminders || 0,
@@ -1324,6 +1332,7 @@ app.get('/admin/api/global-data', adminAuth, adminApiLimiter, (req, res) => {
 
 app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
     try {
+        db.botStats.load();
         const stats = db.botStats.get('global', {});
         const activity = db.botStats.get('activity_feed', []);
         const allGuildSettings = db.guildSettings.getAll();
@@ -1335,27 +1344,37 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
         let totalMembers = 0, totalChannels = 0, totalBoosts = 0;
         const guildIds = Object.keys(allGuildSettings);
 
+        const live = readLiveStats() || {};
+
+        const liveGuildMembers = live.totals?.members || 0;
+        const liveGuildCount = live.totals?.guilds || 0;
+
         for (const gid of guildIds) {
             if (!validateGuildId(gid)) continue;
             try {
                 const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-                if (gRes.ok) {
-                    const g = gRes.data;
-                    totalMembers += g.approximate_member_count || 0;
-                    totalChannels += g.channels?.length || 0;
-                    totalBoosts += g.premium_subscription_count || 0;
+                if (isOk(gRes)) {
+                    totalMembers += gRes.approximate_member_count || 0;
+                    totalChannels += gRes.channels?.length || 0;
+                    totalBoosts += gRes.premium_subscription_count || 0;
                 }
             } catch {}
         }
 
         adminAudit('VIEW_OVERVIEW', {}, req.adminIp);
-        const live = readLiveStats() || {};
         res.json({
             stats: {
-                servers: guildIds.length, totalMembers, totalChannels, totalBoosts,
-                commandsRun: stats.commands_run || 0, messagesSeen: stats.messages_seen || 0,
-                warningsIssued: stats.warnings_issued || 0, bans: stats.bans || 0,
-                kicks: stats.kicks || 0, mutes: stats.mutes || 0, uptime: stats.uptime || 0
+                servers: liveGuildCount || guildIds.length,
+                totalMembers: liveGuildMembers || totalMembers,
+                totalChannels: live.totals?.channels || totalChannels,
+                totalBoosts: live.totals?.boosts || totalBoosts,
+                commandsRun: stats.commands_run || 0,
+                messagesSeen: stats.messages_seen || 0,
+                warningsIssued: stats.warnings_issued || 0,
+                bans: stats.bans || 0,
+                kicks: stats.kicks || 0,
+                mutes: stats.mutes || 0,
+                uptime: live.uptime || stats.uptime || 0
             },
             guildIds,
             warningsCount: Object.values(allWarnings).reduce((sum, g) => sum + Object.values(g).reduce((s, arr) => s + arr.length, 0), 0),
@@ -1364,12 +1383,15 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
             backupsCount: Object.keys(allBackups).length,
             recentActivity: activity.slice(0, 20),
             bot: {
-                online: !!(live.status && live.status === 'online'),
+                online: !!(live.status === 'online'),
                 tag: live.tag || 'Offline',
+                id: live.id || null,
+                avatar: live.avatar || null,
                 ping: live.ping || 0,
                 uptime: live.uptime || 0,
                 startedAt: live.startedAt || null,
                 memoryMB: live.memoryMB || 0,
+                nodeVersion: live.nodeVersion || null,
                 totals: live.totals || { guilds: 0, members: 0, channels: 0, roles: 0, boosts: 0 },
                 commandUsage: live.commands?.usage || {},
                 commandsCount: live.commands?.count || 0,
@@ -1379,7 +1401,7 @@ app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
                 reminders: live.reminders || 0
             }
         });
-    } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
+    } catch (e) { console.error('[Overview Error]', e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
@@ -1390,29 +1412,41 @@ app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
         for (const g of live.guilds || []) liveGuilds[g.id] = g;
         const servers = [];
 
-        for (const gid of Object.keys(allGuildSettings)) {
+        const guildIds = new Set(Object.keys(allGuildSettings));
+        for (const g of live.guilds || []) if (g && g.id) guildIds.add(g.id);
+
+        try {
+            const guildsRes = await discordAPI('/users/@me/guilds?with_counts=true', { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            if (isOk(guildsRes) && Array.isArray(guildsRes)) {
+                for (const g of guildsRes) if (g && g.id) guildIds.add(g.id);
+            }
+        } catch {}
+
+        for (const gid of guildIds) {
             if (!validateGuildId(gid)) continue;
             try {
-                const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-                if (gRes.ok) {
-                    const g = gRes.data;
-                    const settings = db.guildSettings.get(gid, {});
-                    const warnings = db.warnings.get(gid, {});
-                    const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
-                    const lg = liveGuilds[gid] || {};
-                    servers.push({
-                        id: g.id, name: sanitize(g.name), icon: g.icon,
-                        members: lg.members || g.approximate_member_count || 0, online: g.approximate_presence_count || 0,
-                        channels: lg.channels || g.channels?.length || 0, roles: lg.roles || g.roles?.length || 0,
-                        boosts: lg.boosts || g.premium_subscription_count || 0, boostTier: g.premium_tier || 0,
-                        owner: g.owner_id, features: g.features || [],
-                        live: !!lg.id,
-                        security: { antiNuke: settings.anti_nuke !== false, antiRaid: settings.anti_raid !== false, antiSpam: settings.anti_spam !== false, antiLink: settings.anti_link !== false },
-                        warnings: warnCount
-                    });
+                const lg = liveGuilds[gid] || {};
+                let gRes = null;
+                if (!lg.id) {
+                    const r = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+                    if (isOk(r)) gRes = r;
                 }
+                const settings = db.guildSettings.get(gid, {});
+                const warnings = db.warnings.get(gid, {});
+                const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
+                servers.push({
+                    id: gid, name: sanitize(gRes?.name || lg.name || 'Unknown Server'), icon: gRes?.icon ?? lg.icon ?? null,
+                    members: lg.members || gRes?.approximate_member_count || 0, online: gRes?.approximate_presence_count || 0,
+                    channels: lg.channels || gRes?.channels?.length || 0, roles: lg.roles || gRes?.roles?.length || 0,
+                    boosts: lg.boosts || gRes?.premium_subscription_count || 0, boostTier: gRes?.premium_tier || 0,
+                    owner: gRes?.owner_id || lg.owner || null, features: gRes?.features || lg.features || [],
+                    live: !!lg.id,
+                    security: { antiNuke: settings.anti_nuke !== false, antiRaid: settings.anti_raid !== false, antiSpam: settings.anti_spam !== false, antiLink: settings.anti_link !== false },
+                    warnings: warnCount
+                });
             } catch { servers.push({ id: gid, name: 'Unknown Server', error: true }); }
         }
+        servers.sort((a, b) => (b.members || 0) - (a.members || 0));
         adminAudit('VIEW_SERVERS', { count: servers.length }, req.adminIp);
         res.json(servers);
     } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
@@ -1423,12 +1457,12 @@ app.get('/admin/api/server/:id', adminAuth, adminApiLimiter, async (req, res) =>
     if (!validateGuildId(gid)) return res.status(400).json({ error: 'Invalid guild ID' });
     try {
         const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-        if (!gRes.ok) return res.status(404).json({ error: 'Guild not found' });
-        const g = gRes.data;
+        if (!isOk(gRes)) return res.status(404).json({ error: 'Guild not found' });
+        const g = gRes;
         const chRes = await discordAPI(`/guilds/${gid}/channels`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-        const channels = chRes.ok ? chRes.data : [];
+        const channels = isOk(chRes) ? chRes : [];
         const rolesRes = await discordAPI(`/guilds/${gid}/roles`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-        const roles = rolesRes.ok ? rolesRes.data : [];
+        const roles = isOk(rolesRes) ? rolesRes : [];
         const settings = db.guildSettings.get(gid, {});
         const warnings = db.warnings.get(gid, {});
         const levels = db.levelData.get(gid, {});
@@ -1458,10 +1492,10 @@ app.get('/admin/api/server/:id/members', adminAuth, adminApiLimiter, async (req,
         let after = '0';
         for (let i = 0; i < 5; i++) {
             const mRes = await discordAPI(`/guilds/${gid}/members?limit=1000&after=${after}`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-            if (!mRes.ok || !mRes.data?.length) break;
-            members.push(...mRes.data);
-            after = mRes.data[mRes.data.length - 1].user.id;
-            if (mRes.data.length < 1000) break;
+            if (!isOk(mRes) || !mRes.length) break;
+            members.push(...mRes);
+            after = mRes[mRes.length - 1].user.id;
+            if (mRes.length < 1000) break;
         }
         if (search) members = members.filter(m => m.user.username.toLowerCase().includes(search) || m.user.id.includes(search) || (m.nick && m.nick.toLowerCase().includes(search)));
         members.sort((a, b) => (b.joined_at > a.joined_at ? 1 : -1));
@@ -1477,7 +1511,18 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
     const gid = req.params.id.replace(/[^0-9]/g, '');
     if (!validateGuildId(gid)) return res.status(400).json({ error: 'Invalid guild ID' });
 
-    const { action, userId, reason, index } = req.body;
+    const { action, userId, reason, index, key, value } = req.body;
+
+    if (action === 'setSetting') {
+        const allowed = ['anti_nuke', 'anti_raid', 'anti_spam', 'anti_link', 'honeypot_enabled', 'auto_mute_spam', 'auto_delete_links', 'auto_kick_unverified', 'lockdown_on_raid'];
+        if (!allowed.includes(key)) return res.status(400).json({ error: 'Invalid setting key' });
+        const settings = db.guildSettings.get(gid, {});
+        settings[key] = !!value;
+        db.guildSettings.set(gid, settings);
+        adminAudit('SET_SETTING', { guild: gid, key, value: !!value }, req.adminIp);
+        return res.json({ ok: true, message: `Setting ${key} updated` });
+    }
+
     if (!userId || !validateUserId(userId)) return res.status(400).json({ error: 'Invalid user ID' });
 
     const validActions = ['ban', 'kick', 'unban', 'warn', 'deleteWarn'];
@@ -1523,12 +1568,14 @@ app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsr
 });
 
 app.get('/admin/api/activity', adminAuth, adminApiLimiter, (req, res) => {
+    db.botStats.load();
     const activity = db.botStats.get('activity_feed', []);
     adminAudit('VIEW_ACTIVITY', {}, req.adminIp);
     res.json(activity.slice(0, 100));
 });
 
 app.get('/admin/api/honeypot', adminAuth, adminApiLimiter, (req, res) => {
+    db.botStats.load();
     const dbLog = db.botStats.get('honeypot_log', []);
     const live = readLiveStats() || {};
     const liveLog = live.honeypotLog || [];
@@ -1540,6 +1587,24 @@ app.get('/admin/api/honeypot', adminAuth, adminApiLimiter, (req, res) => {
 
 app.get('/admin/api/audit', adminAuth, adminApiLimiter, (req, res) => {
     res.json(adminAuditLog.slice(0, 200));
+});
+
+app.get('/admin/api/security', adminAuth, adminApiLimiter, (req, res) => {
+    try {
+        const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'security-config.json'), 'utf8'));
+        res.json(cfg);
+    } catch { res.json({}); }
+});
+
+app.post('/admin/api/security', adminAuth, adminActionLimiter, adminCsrfCheck, (req, res) => {
+    const allowed = ['anti_nuke', 'anti_raid', 'anti_spam', 'anti_link', 'honeypot', 'auto_mute_spam', 'auto_delete_links', 'auto_kick_unverified', 'lockdown_on_raid'];
+    const cfg = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'security-config.json'), 'utf8')); } catch { return {}; } })();
+    for (const [key, val] of Object.entries(req.body || {})) {
+        if (allowed.includes(key)) cfg[key] = !!val;
+    }
+    fs.writeFileSync(path.join(__dirname, 'data', 'security-config.json'), JSON.stringify(cfg, null, 2));
+    adminAudit('SECURITY_TOGGLE', { ...req.body }, req.adminIp);
+    res.json({ ok: true, config: cfg });
 });
 
 // ====== 404 Handler ======

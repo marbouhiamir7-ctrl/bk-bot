@@ -227,6 +227,21 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
 .setting-row:last-child{border-bottom:none}
 .setting-key{color:var(--text2);font-weight:600}
 .setting-val{color:var(--text);font-family:var(--mono);font-size:.72rem}
+.toggle{width:42px;height:22px;background:rgba(255,255,255,.1);border-radius:11px;position:relative;cursor:pointer;transition:.25s;flex-shrink:0;border:1px solid var(--border2)}
+.toggle.on{background:linear-gradient(135deg,var(--green),#22c55e)}
+.toggle-dot{position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .25s cubic-bezier(.68,-.55,.27,1.55);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.toggle.on .toggle-dot{transform:translateX(20px)}
+.hourly-chart{padding:4px 0}
+.hourly-bars{display:flex;align-items:flex-end;gap:4px;height:120px}
+.hourly-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.hourly-track{width:100%;max-width:26px;height:100%;display:flex;align-items:flex-end;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+.hourly-fill{width:100%;background:linear-gradient(180deg,var(--primary),rgba(255,107,107,.25));border-radius:4px;min-height:2px;transition:height .6s ease}
+.hourly-fill.now{background:linear-gradient(180deg,var(--green),rgba(52,211,153,.25))}
+.hourly-label{font-size:.52rem;color:var(--text3);font-family:var(--mono)}
+.hourly-total{margin-top:10px;text-align:center;font-size:.7rem;color:var(--text3)}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.cmd-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--glass2);border:1px solid var(--border2);border-radius:20px;font-family:var(--mono);font-size:.7rem;color:var(--text2);transition:.2s;cursor:default}
+.cmd-chip:hover{color:var(--text);border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08)}
 .setting-val.on{color:var(--green)}
 .setting-val.off{color:var(--red)}
 .setting-val.empty{color:var(--text3)}
@@ -408,13 +423,23 @@ tbody tr:hover{background:rgba(255,255,255,0.025)}
                     <div class="section-body"><div class="chart-wrap" id="bot-top-cmds"></div></div>
                 </div>
                 <div class="section">
-                    <div class="section-header"><div class="section-title"><i class="fas fa-shield-halved"></i> Security Configuration</div></div>
+                    <div class="section-header"><div class="section-title"><i class="fas fa-shield-halved"></i> Security Configuration</div><div class="section-actions"><button class="btn btn-ghost btn-sm" onclick="toggleAllSecurity(true)">Enable all</button> <button class="btn btn-ghost btn-sm" onclick="toggleAllSecurity(false)">Disable all</button></div></div>
                     <div class="section-body" id="bot-security"></div>
                 </div>
             </div>
             <div class="section" style="margin-top:16px">
-                <div class="section-header"><div class="section-title"><i class="fas fa-cog"></i> Bot Configuration</div></div>
-                <div class="section-body" id="bot-config"></div>
+                <div class="section-header"><div class="section-title"><i class="fas fa-chart-column"></i> Command Activity — Last 24h</div></div>
+                <div class="section-body"><div class="hourly-chart" id="hourly-chart"></div></div>
+            </div>
+            <div class="grid-2" style="margin-top:16px">
+                <div class="section">
+                    <div class="section-header"><div class="section-title"><i class="fas fa-terminal"></i> Loaded Commands <span class="badge-sm info" id="cmd-count-badge">0</span></div></div>
+                    <div class="section-body"><div class="chip-wrap" id="cmd-chips"></div></div>
+                </div>
+                <div class="section">
+                    <div class="section-header"><div class="section-title"><i class="fas fa-cog"></i> Bot Configuration</div></div>
+                    <div class="section-body" id="bot-config"></div>
+                </div>
             </div>
         </div>
 
@@ -572,9 +597,21 @@ async function initApp(){
     setInterval(async()=>{
         try{
             const ov=await api('/admin/api/overview');
-            renderOverview(ov);
-            setLiveDot(ov.bot?.online);
-            if(ov.bot?.ping)pushPing(ov.bot.ping);
+            const s=ov.stats||{},b=ov.bot||{};
+            const vals={ov-srv:s.servers||0,ov-mem:b.totals?.members||s.totalMembers||0,ov-cmd:s.commandsRun||0,ov-msg:s.messagesSeen||0,ov-warn:s.warningsIssued||0,ov-ban:s.bans||0,ov-kick:s.kicks||0,ov-mute:s.mutes||0};
+            for(const [id,v] of Object.entries(vals)){
+                const el=document.getElementById(id);
+                if(el&&el.dataset.val!==String(v)){el.dataset.val=String(v);el.textContent=FMT(v)}
+            }
+            const cu=document.getElementById('ov-cmd-total');
+            if(cu)cu.innerHTML=`<i class="fas fa-terminal"></i> ${Object.values(b.commandUsage||{}).reduce((a,c)=>a+c,0)} runs`;
+            const cc=document.getElementById('sec-active-count');
+            if(cc&&ov.security){
+                const items=[ov.security.nuke,ov.security.raid,ov.security.spam,ov.security.link,ov.security.honeypot];
+                cc.textContent=`${items.filter(v=>v?.enabled!==false).length}/${items.length} active`;
+            }
+            setLiveDot(b.online);
+            if(b.ping)pushPing(b.ping);
         }catch(e){}
     },15000);
 }
@@ -781,14 +818,18 @@ function doMemberAction(action,uid,name){
 }
 
 // ====== BOT STATUS ======
+let lastBotData=null;
 async function loadBot(){
     try{
         const b=await api('/admin/api/bot');
+        lastBotData=b;
         renderBotHero(b);
         renderBotHealth(b);
         renderBotTopCmds(b.commands?.usage||{});
         renderBotSecurity(b.security||{});
         renderBotConfig(b);
+        renderHourly(b.hourly||[]);
+        renderCmdChips(b.commandNames||[]);
         setLiveDot(b.online);
         if(b.ping)pushPing(b.ping);
     }catch(e){toast(e.message,'error')}
@@ -798,7 +839,7 @@ function renderBotHero(b){
         <div class="bot-avatar">${b.avatar?`<img src="${ESC(b.avatar)}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">`:'<i class="fas fa-robot"></i>'}</div>
         <div class="bot-hero-info">
             <div class="bot-hero-name">${ESC(b.tag||'Offline')} <span class="badge-sm ${b.online?'on':'off'}"><i class="fas fa-circle" style="font-size:.4rem"></i> ${b.online?'ONLINE':'OFFLINE'}</span></div>
-            <div class="bot-hero-tag">${b.id||'—'} · Node ${b.nodeVersion}</div>
+            <div class="bot-hero-tag">${b.id||'—'} · Node ${b.nodeVersion} · sync ${b.lastSync?TIME(b.lastSync):'—'}</div>
             <div class="bot-hero-stats">
                 <div class="bot-hero-stat"><b id="hero-uptime">${DUR(b.uptime)}</b><span>Uptime</span></div>
                 <div class="bot-hero-stat"><b>${b.ping||0}ms</b><span>Latency</span></div>
@@ -806,6 +847,10 @@ function renderBotHero(b){
                 <div class="bot-hero-stat"><b>${FMT(b.totals?.members||0)}</b><span>Members</span></div>
                 <div class="bot-hero-stat"><b>${b.commands?.count||0}</b><span>Commands</span></div>
                 <div class="bot-hero-stat"><b>${b.memoryMB||0}MB</b><span>Memory</span></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://discord.com/api/oauth2/authorize?client_id=${b.id||'1537980470782988439'}&permissions=8&scope=bot%20applications.commands"><i class="fas fa-plus"></i> Invite Bot</a>
+                <button class="btn btn-ghost btn-sm" onclick="loadBot()"><i class="fas fa-rotate"></i> Force Refresh</button>
             </div>
         </div>`;
     if(b.startedAt){
@@ -861,16 +906,57 @@ function renderBotTopCmds(usage){
     el.innerHTML=entries.map(([name,count],i)=>`<div class="chart-row"><div class="chart-label">${ESC(name)}</div><div class="chart-bar-track"><div class="chart-bar-fill ${i%2?'alt':''}" data-w="${Math.max(4,count/max*100)}"></div></div><div class="chart-val">${FMT(count)}</div></div>`).join('');
     requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('#bot-top-cmds .chart-bar-fill').forEach(b=>b.style.width=b.dataset.w+'%')));
 }
+const SEC_KEYS=[['anti_nuke','Anti-Nuke','Mass deletion protection — auto-bans attackers'],['anti_raid','Anti-Raid','Mass join protection — auto-kicks raiders'],['anti_spam','Anti-Spam','Message flood protection — auto-mutes spammers'],['anti_link','Anti-Link','Blocks unauthorized links from being posted'],['honeypot','Honeypot','Trap commands & social-engineering bait system'],['auto_mute_spam','Auto-Mute Spammers','Automatically mute users who spam'],['auto_delete_links','Auto-Delete Links','Delete messages with unauthorized links'],['auto_kick_unverified','Auto-Kick Unverified','Kick members who never verify'],['lockdown_on_raid','Lockdown on Raid','Auto-lock all channels during a raid']];
 function renderBotSecurity(sec){
     const el=document.getElementById('bot-security');
-    const rows=[
-        ['Anti-Nuke',sec.nuke?.enabled!==false,`Max channel deletions: ${sec.nuke?.maxChannelDelete||3} · Max bans: ${sec.nuke?.maxBans||5} · Max channels created: ${sec.nuke?.maxChannelCreate||5} · Max webhooks: ${sec.nuke?.maxWebhookCreate||2} · Live violations: ${sec.nuke?.violations||0}`],
-        ['Anti-Raid',sec.raid?.enabled!==false,`${sec.raid?.joinLimit||5} joins in ${((sec.raid?.timeWindow||10000)/1000)}s → action: ${sec.raid?.action||'kick'}`],
-        ['Anti-Spam',sec.spam?.enabled!==false,`${sec.spam?.messageLimit||5} messages in ${((sec.spam?.timeWindow||5000)/1000)}s → action: ${sec.spam?.action||'mute'}`],
-        ['Anti-Link',sec.link?.enabled!==false,`Action: ${sec.link?.action||'delete'} · Whitelisted: ${(sec.link?.whitelistedDomains||[]).join(', ')||'none'}`],
-        ['Honeypot',sec.honeypot?.enabled!==false,`${sec.honeypot?.logCount||0} recorded events · ${sec.honeypot?.violations||0} active strikes`]
-    ];
-    el.innerHTML=rows.map(([n,v,d])=>`<div class="setting-row"><span class="setting-key">${n}</span><span class="setting-val" style="font-size:.66rem;color:var(--text3);max-width:60%;text-align:right">${ESC(d)}</span><span class="badge-sm ${v?'on':'off'}">${v?'ON':'OFF'}</span></div>`).join('');
+    const cur=lastBotData?.securityCfg||{};
+    el.innerHTML=SEC_KEYS.map(([k,n,d])=>{
+        const v=cur[k]!==undefined?cur[k]:(k==='anti_nuke'?sec.nuke?.enabled!==false:k==='anti_raid'?sec.raid?.enabled!==false:k==='anti_spam'?sec.spam?.enabled!==false:k==='anti_link'?sec.link?.enabled!==false:sec.honeypot?.enabled!==false);
+        return `<div class="setting-row"><span class="setting-key" style="max-width:40%">${n}</span><span class="setting-val" style="font-size:.66rem;color:var(--text3);max-width:42%;text-align:right">${d}</span><div class="toggle ${v?'on':''}" data-sec-key="${k}" onclick="setSecurityToggle(this)"><span class="toggle-dot"></span></div></div>`;
+    }).join('');
+}
+async function setSecurityToggle(el){
+    const key=el.dataset.secKey;
+    const now=!el.classList.contains('on');
+    const body={};
+    for(const [k] of SEC_KEYS){
+        const t=document.querySelector(`[data-sec-key="${k}"]`);
+        if(t)body[k]=t.classList.contains('on');
+    }
+    body[key]=now;
+    try{
+        await api('/admin/api/security',{method:'POST',body:JSON.stringify(body)});
+        el.classList.toggle('on',now);
+        toast(`${key.replace(/_/g,' ')} ${now?'enabled':'disabled'}`);
+        setTimeout(loadBot,1200);
+    }catch(e){toast(e.message,'error')}
+}
+async function toggleAllSecurity(on){
+    const body={};
+    for(const [k] of SEC_KEYS)body[k]=on;
+    try{
+        await api('/admin/api/security',{method:'POST',body:JSON.stringify(body)});
+        document.querySelectorAll('#bot-security .toggle').forEach(t=>t.classList.toggle('on',on));
+        toast(on?'All security systems enabled':'All security systems disabled');
+        setTimeout(loadBot,1200);
+    }catch(e){toast(e.message,'error')}
+}
+function renderHourly(hourly){
+    const el=document.getElementById('hourly-chart');
+    const data=(hourly&&hourly.length===24)?hourly:Array(24).fill(0);
+    const max=Math.max(...data,1);
+    const now=new Date();
+    const labels=Array.from({length:24},(_,i)=>{
+        const h=(now.getHours()-23+i+48)%24;
+        return `${String(h).padStart(2,'0')}:00`;
+    });
+    el.innerHTML=`<div class="hourly-bars">${data.map((v,i)=>`<div class="hourly-col"><div class="hourly-track"><div class="hourly-fill ${i===23?'now':''}" style="height:${Math.max(2,v/max*100)}%"></div></div><div class="hourly-label">${labels[i]}</div></div>`).join('')}</div><div class="hourly-total">${data.reduce((a,b)=>a+b,0)} commands in the last 24h</div>`;
+}
+function renderCmdChips(names){
+    const el=document.getElementById('cmd-chips');
+    document.getElementById('cmd-count-badge').textContent=names.length;
+    if(!names.length){el.innerHTML='<div class="empty"><i class="fas fa-terminal"></i><p>No commands loaded</p></div>';return}
+    el.innerHTML=`<div class="chip-wrap">${names.map(n=>`<span class="cmd-chip">/${ESC(n)}</span>`).join('')}</div>`;
 }
 function renderBotConfig(b){
     document.getElementById('bot-config').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 30px">${[
@@ -879,7 +965,7 @@ function renderBotConfig(b){
         ['Guilds',b.totals?.guilds||0],['Members',FMT(b.totals?.members||0)],['Channels',b.totals?.channels||0],
         ['Roles',b.totals?.roles||0],['Boosts',b.totals?.boosts||0],['Commands Loaded',b.commands?.count||0],
         ['AFK Users',b.afk||0],['Tickets',b.tickets||0],['Reminders',b.reminders||0],
-        ['Started',b.startedAt?new Date(b.startedAt).toLocaleString():'—']
+        ['Last Sync',b.lastSync?TIME(b.lastSync):'—'],['Started',b.startedAt?new Date(b.startedAt).toLocaleString():'—']
     ].map(([k,v])=>`<div class="setting-row"><span class="setting-key">${k}</span><span class="setting-val" style="font-family:var(--mono);font-size:.7rem">${ESC(v)}</span></div>`).join('')}</div>`;
 }
 
