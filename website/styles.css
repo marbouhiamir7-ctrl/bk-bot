@@ -322,6 +322,7 @@ body {
     padding: 18px 38px;
     font-size: 1.05rem;
     border-radius: 16px;
+    white-space: nowrap;
 }
 
 .glow {
@@ -445,36 +446,27 @@ body {
 }
 
 .hero-visual {
-    flex: 0 0 420px;
+    flex: 1;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 520px;
+    overflow: visible;
 }
 
 .hero-3d-scene {
     position: relative;
-    width: 420px;
+    width: 100%;
+    max-width: 580px;
     height: 520px;
     display: flex;
     align-items: center;
     justify-content: center;
-    perspective: 1200px;
-}
-
-.perspective-container {
-    perspective: 1200px;
-    transform-style: preserve-3d;
+    overflow: visible;
 }
 
 /* Space Scene */
-.hero-3d-scene {
-    position: relative;
-    width: 580px;
-    height: 520px;
-    overflow: visible;
-}
 
 .starfield-canvas {
     position: absolute;
@@ -1014,9 +1006,11 @@ body {
 .deep-space {
     position: absolute;
     inset: -50px;
-    background: radial-gradient(ellipse at 60% 30%, rgba(20,15,35,1) 0%, rgba(8,6,18,1) 40%, rgba(4,3,10,1) 100%);
+    background: radial-gradient(ellipse at 60% 30%, rgba(20,15,35,1) 0%, rgba(8,6,18,1) 40%, rgba(4,3,10,1) 60%, transparent 100%);
     z-index: -1;
     pointer-events: none;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 50%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 50%, transparent 100%);
 }
 
 /* Galaxy band */
