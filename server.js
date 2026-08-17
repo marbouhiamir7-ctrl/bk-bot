@@ -20,9 +20,24 @@ const BOT_TOKEN = process.env.BOT_TOKEN || process.env.TOKEN;
 // ====== Security Headers ======
 
 app.use(helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            connectSrc: ["'self'"],
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    },
     crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
 }));
 
 app.use((req, res, next) => {
@@ -31,12 +46,16 @@ app.use((req, res, next) => {
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    res.setHeader('X-Request-ID', crypto.randomBytes(8).toString('hex'));
     res.removeHeader('X-Powered-By');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     if (req.path.endsWith('.html') || !req.path.includes('.')) {
         res.setHeader('Surrogate-Control', 'no-store');
+    }
+    if (req.path.includes('..') || req.path.includes('%2e%2e') || req.path.includes('%252e')) {
+        return res.status(400).json({ error: 'Invalid path' });
     }
     next();
 });
@@ -144,8 +163,11 @@ app.use(express.static(path.join(__dirname, 'website'), {
 
 // Block access to sensitive files
 app.use((req, res, next) => {
-    const blocked = ['.env', 'db.js', 'index.js', 'server.js', 'check.js', 'package.json', 'config.json', 'node_modules'];
+    const blocked = ['.env', 'db.js', 'index.js', 'server.js', 'check.js', 'package.json', 'config.json', 'node_modules', '.git'];
     if (blocked.some(b => req.path.includes(b))) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    if (req.path.startsWith('/admin/api/') && !req.path.match(/^\/admin\/api\/(login|check|logout|overview|servers|server\/|activity|honeypot|audit)/)) {
         return res.status(404).json({ error: 'Not found' });
     }
     next();
@@ -1055,41 +1077,168 @@ app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, guildAuth, (req, re
     res.json(sorted.map(([id, data]) => ({ userId: id, level: data.level || 1, xp: data.xp || 0 })));
 });
 
-// ====== Admin Panel ======
+// ====== Admin Panel (Hardened) ======
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'bk-admin-2026';
+const ADMIN_PASSWORD_HASH = crypto.createHash('sha256').update(process.env.ADMIN_PASSWORD || 'bk-admin-2026').digest('hex');
 const adminSessions = new Map();
+const adminLoginAttempts = new Map();
+const adminAuditLog = [];
+const ADMIN_MAX_ATTEMPTS = 5;
+const ADMIN_LOCKOUT_MS = 15 * 60 * 1000;
+const ADMIN_SESSION_DURATION = 12 * 60 * 60 * 1000;
+
+const adminLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { error: 'Too many login attempts. Try again in 15 minutes.', retryAfter: 900 },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] || 'unknown'
+});
+
+const adminApiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 60,
+    message: { error: 'Admin API rate limit exceeded.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const adminActionLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 10,
+    message: { error: 'Too many admin actions. Slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+function adminAudit(action, details, ip) {
+    const entry = { action, details, ip, timestamp: new Date().toISOString() };
+    adminAuditLog.unshift(entry);
+    if (adminAuditLog.length > 500) adminAuditLog.length = 500;
+    console.log(`[Admin Audit] ${action} from ${ip} - ${JSON.stringify(details)}`);
+}
+
+function getAdminIp(req) {
+    return req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
+}
 
 function adminAuth(req, res, next) {
     const token = req.cookies.bk_admin;
-    if (!token || !adminSessions.has(token)) return res.status(401).json({ error: 'Unauthorized' });
+    if (!token || !/^[a-f0-9]{64}$/.test(token)) return res.status(401).json({ error: 'Unauthorized' });
     const sess = adminSessions.get(token);
-    if (Date.now() - sess.created > 24 * 60 * 60 * 1000) { adminSessions.delete(token); return res.status(401).json({ error: 'Session expired' }); }
+    if (!sess) return res.status(401).json({ error: 'Invalid session' });
+    if (Date.now() - sess.created > ADMIN_SESSION_DURATION) { adminSessions.delete(token); res.clearCookie('bk_admin'); return res.status(401).json({ error: 'Session expired' }); }
+    sess.lastActivity = Date.now();
+    req.adminIp = getAdminIp(req);
     next();
 }
 
-app.post('/admin/api/login', (req, res) => {
+function adminCsrfCheck(req, res, next) {
+    if (req.method === 'GET') return next();
+    const cookieToken = req.cookies.bk_csrf;
+    const headerToken = req.headers['x-csrf-token'];
+    if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+        adminAudit('CSRF_FAIL', { path: req.path }, getAdminIp(req));
+        return res.status(403).json({ error: 'CSRF validation failed' });
+    }
+    next();
+}
+
+function validateUserId(id) {
+    return typeof id === 'string' && /^\d{17,20}$/.test(id);
+}
+
+function validateGuildId(id) {
+    return typeof id === 'string' && /^\d{17,20}$/.test(id);
+}
+
+function validateInput(obj, rules) {
+    for (const [key, rule] of Object.entries(rules)) {
+        const val = obj[key];
+        if (rule.required && (val === undefined || val === null || val === '')) return `${key} is required`;
+        if (val !== undefined && val !== null && val !== '') {
+            if (rule.type === 'string' && typeof val !== 'string') return `${key} must be a string`;
+            if (rule.type === 'number' && typeof val !== 'number') return `${key} must be a number`;
+            if (rule.maxLen && typeof val === 'string' && val.length > rule.maxLen) return `${key} too long (max ${rule.maxLen})`;
+            if (rule.pattern && !rule.pattern.test(val)) return `${key} has invalid format`;
+            if (rule.enum && !rule.enum.includes(val)) return `${key} must be one of: ${rule.enum.join(', ')}`;
+        }
+    }
+    return null;
+}
+
+// Purge expired admin sessions every 30 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [token, sess] of adminSessions) {
+        if (now - sess.created > ADMIN_SESSION_DURATION || (now - sess.lastActivity > 4 * 60 * 60 * 1000)) {
+            adminSessions.delete(token);
+        }
+    }
+    for (const [ip, data] of adminLoginAttempts) {
+        if (now - data.resetAt > ADMIN_LOCKOUT_MS) adminLoginAttempts.delete(ip);
+    }
+}, 30 * 60 * 1000);
+
+// ====== Admin Auth Routes ======
+
+app.post('/admin/api/login', adminLimiter, (req, res) => {
+    const ip = getAdminIp(req);
     const { password } = req.body;
-    if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Wrong password' });
+
+    const inputErr = validateInput({ password }, { password: { required: true, type: 'string', maxLen: 128 } });
+    if (inputErr) return res.status(400).json({ error: 'Invalid input' });
+
+    const attempts = adminLoginAttempts.get(ip) || { count: 0, resetAt: Date.now() };
+    if (attempts.count >= ADMIN_MAX_ATTEMPTS && Date.now() - attempts.resetAt < ADMIN_LOCKOUT_MS) {
+        const remaining = Math.ceil((ADMIN_LOCKOUT_MS - (Date.now() - attempts.resetAt)) / 60000);
+        adminAudit('LOGIN_LOCKOUT', { remaining }, ip);
+        return res.status(429).json({ error: `Account locked. Try again in ${remaining} minutes.`, retryAfter: remaining * 60 });
+    }
+
+    const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+    if (passwordHash !== ADMIN_PASSWORD_HASH) {
+        attempts.count++;
+        if (attempts.count >= ADMIN_MAX_ATTEMPTS) attempts.resetAt = Date.now();
+        adminLoginAttempts.set(ip, attempts);
+        adminAudit('LOGIN_FAIL', { attempts: attempts.count }, ip);
+        const remaining = attempts.count >= ADMIN_MAX_ATTEMPTS ? Math.ceil(ADMIN_LOCKOUT_MS / 60000) : ADMIN_MAX_ATTEMPTS - attempts.count;
+        return res.status(403).json({ error: 'Wrong password', attemptsLeft: Math.max(0, ADMIN_MAX_ATTEMPTS - attempts.count) });
+    }
+
+    adminLoginAttempts.delete(ip);
+
     const token = crypto.randomBytes(32).toString('hex');
-    adminSessions.set(token, { created: Date.now() });
-    res.cookie('bk_admin', token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 24 * 60 * 60 * 1000 });
+    adminSessions.set(token, { created: Date.now(), lastActivity: Date.now(), ip });
+    res.cookie('bk_admin', token, {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: ADMIN_SESSION_DURATION,
+        path: '/'
+    });
+
+    adminAudit('LOGIN_SUCCESS', {}, ip);
     res.json({ ok: true });
 });
 
-app.post('/admin/api/logout', (req, res) => {
+app.post('/admin/api/logout', adminAuth, (req, res) => {
     const token = req.cookies.bk_admin;
     if (token) adminSessions.delete(token);
-    res.clearCookie('bk_admin');
+    res.clearCookie('bk_admin', { path: '/' });
+    adminAudit('LOGOUT', {}, req.adminIp);
     res.json({ ok: true });
 });
 
 app.get('/admin/api/check', (req, res) => {
     const token = req.cookies.bk_admin;
-    res.json({ logged_in: !!(token && adminSessions.has(token)) });
+    res.json({ logged_in: !!(token && adminSessions.has(token) && /^[a-f0-9]{64}$/.test(token)) });
 });
 
-app.get('/admin/api/overview', adminAuth, async (req, res) => {
+// ====== Admin API (All Protected) ======
+
+app.get('/admin/api/overview', adminAuth, adminApiLimiter, async (req, res) => {
     try {
         const stats = db.botStats.get('global', {});
         const activity = db.botStats.get('activity_feed', []);
@@ -1103,6 +1252,7 @@ app.get('/admin/api/overview', adminAuth, async (req, res) => {
         const guildIds = Object.keys(allGuildSettings);
 
         for (const gid of guildIds) {
+            if (!validateGuildId(gid)) continue;
             try {
                 const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
                 if (gRes.ok) {
@@ -1114,19 +1264,13 @@ app.get('/admin/api/overview', adminAuth, async (req, res) => {
             } catch {}
         }
 
+        adminAudit('VIEW_OVERVIEW', {}, req.adminIp);
         res.json({
             stats: {
-                servers: guildIds.length,
-                totalMembers,
-                totalChannels,
-                totalBoosts,
-                commandsRun: stats.commands_run || 0,
-                messagesSeen: stats.messages_seen || 0,
-                warningsIssued: stats.warnings_issued || 0,
-                bans: stats.bans || 0,
-                kicks: stats.kicks || 0,
-                mutes: stats.mutes || 0,
-                uptime: stats.uptime || 0
+                servers: guildIds.length, totalMembers, totalChannels, totalBoosts,
+                commandsRun: stats.commands_run || 0, messagesSeen: stats.messages_seen || 0,
+                warningsIssued: stats.warnings_issued || 0, bans: stats.bans || 0,
+                kicks: stats.kicks || 0, mutes: stats.mutes || 0, uptime: stats.uptime || 0
             },
             guildIds,
             warningsCount: Object.values(allWarnings).reduce((sum, g) => sum + Object.values(g).reduce((s, arr) => s + arr.length, 0), 0),
@@ -1135,15 +1279,16 @@ app.get('/admin/api/overview', adminAuth, async (req, res) => {
             backupsCount: Object.keys(allBackups).length,
             recentActivity: activity.slice(0, 20)
         });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
 
-app.get('/admin/api/servers', adminAuth, async (req, res) => {
+app.get('/admin/api/servers', adminAuth, adminApiLimiter, async (req, res) => {
     try {
         const allGuildSettings = db.guildSettings.getAll();
         const servers = [];
 
         for (const gid of Object.keys(allGuildSettings)) {
+            if (!validateGuildId(gid)) continue;
             try {
                 const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
                 if (gRes.ok) {
@@ -1152,77 +1297,61 @@ app.get('/admin/api/servers', adminAuth, async (req, res) => {
                     const warnings = db.warnings.get(gid, {});
                     const warnCount = Object.values(warnings).reduce((s, arr) => s + arr.length, 0);
                     servers.push({
-                        id: g.id, name: g.name, icon: g.icon,
-                        members: g.approximate_member_count || 0,
-                        online: g.approximate_presence_count || 0,
-                        channels: g.channels?.length || 0,
-                        roles: g.roles?.length || 0,
-                        boosts: g.premium_subscription_count || 0,
-                        boostTier: g.premium_tier || 0,
-                        owner: g.owner_id,
-                        features: g.features || [],
-                        security: {
-                            antiNuke: settings.anti_nuke !== false,
-                            antiRaid: settings.anti_raid !== false,
-                            antiSpam: settings.anti_spam !== false,
-                            antiLink: settings.anti_link !== false
-                        },
-                        warnings: warnCount,
-                        created: g.id ? String(BigInt(g.id) >> 22n + 1420070400000n) : null
+                        id: g.id, name: sanitize(g.name), icon: g.icon,
+                        members: g.approximate_member_count || 0, online: g.approximate_presence_count || 0,
+                        channels: g.channels?.length || 0, roles: g.roles?.length || 0,
+                        boosts: g.premium_subscription_count || 0, boostTier: g.premium_tier || 0,
+                        owner: g.owner_id, features: g.features || [],
+                        security: { antiNuke: settings.anti_nuke !== false, antiRaid: settings.anti_raid !== false, antiSpam: settings.anti_spam !== false, antiLink: settings.anti_link !== false },
+                        warnings: warnCount
                     });
                 }
             } catch { servers.push({ id: gid, name: 'Unknown Server', error: true }); }
         }
+        adminAudit('VIEW_SERVERS', { count: servers.length }, req.adminIp);
         res.json(servers);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
 
-app.get('/admin/api/server/:id', adminAuth, async (req, res) => {
+app.get('/admin/api/server/:id', adminAuth, adminApiLimiter, async (req, res) => {
     const gid = req.params.id.replace(/[^0-9]/g, '');
+    if (!validateGuildId(gid)) return res.status(400).json({ error: 'Invalid guild ID' });
     try {
         const gRes = await discordAPI(`/guilds/${gid}?with_counts=true`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
-        if (!gRes.ok) return res.status(404).json({ error: 'Guild not found on Discord' });
+        if (!gRes.ok) return res.status(404).json({ error: 'Guild not found' });
         const g = gRes.data;
-
         const chRes = await discordAPI(`/guilds/${gid}/channels`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
         const channels = chRes.ok ? chRes.data : [];
-
         const rolesRes = await discordAPI(`/guilds/${gid}/roles`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
         const roles = rolesRes.ok ? rolesRes.data : [];
-
         const settings = db.guildSettings.get(gid, {});
         const warnings = db.warnings.get(gid, {});
         const levels = db.levelData.get(gid, {});
         const commands = db.customCommands.get(gid, {});
         const backups = (() => { try { const all = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'backups.json'), 'utf8')); return Object.entries(all).filter(([k]) => k.startsWith(gid)).map(([id, b]) => ({ id, ...b })); } catch { return []; } })();
-        const honeypotLog = (() => { try { const all = db.botStats.get('honeypot_log', []); return all.filter(e => e.guildId === gid).slice(0, 50); } catch { return []; } })();
 
         const warningsFlat = [];
         for (const [uid, arr] of Object.entries(warnings)) {
-            for (const w of arr) warningsFlat.push({ userId: uid, ...w });
+            if (!validateUserId(uid)) continue;
+            for (const w of arr) warningsFlat.push({ userId: uid, reason: sanitize(w.reason), moderator: sanitize(w.moderator), date: w.date });
         }
         warningsFlat.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const levelsSorted = Object.entries(levels).map(([id, d]) => ({ userId: id, level: d.level || 1, xp: d.xp || 0 })).sort((a, b) => b.xp - a.xp).slice(0, 50);
+        const levelsSorted = Object.entries(levels).filter(([id]) => validateUserId(id)).map(([id, d]) => ({ userId: id, level: d.level || 1, xp: d.xp || 0 })).sort((a, b) => b.xp - a.xp).slice(0, 50);
 
-        res.json({
-            guild: g, channels, roles, settings,
-            warnings: warningsFlat.slice(0, 100),
-            levels: levelsSorted,
-            commands: Object.values(commands),
-            backups,
-            honeypotLog
-        });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        adminAudit('VIEW_SERVER_DETAIL', { guild: gid }, req.adminIp);
+        res.json({ guild: g, channels, roles, settings, warnings: warningsFlat.slice(0, 100), levels: levelsSorted, commands: Object.values(commands), backups });
+    } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
 
-app.get('/admin/api/server/:id/members', adminAuth, async (req, res) => {
+app.get('/admin/api/server/:id/members', adminAuth, adminApiLimiter, async (req, res) => {
     const gid = req.params.id.replace(/[^0-9]/g, '');
-    const search = (req.query.search || '').toLowerCase();
+    if (!validateGuildId(gid)) return res.status(400).json({ error: 'Invalid guild ID' });
+    const search = sanitize((req.query.search || '').toLowerCase().slice(0, 100));
     try {
         let members = [];
         let after = '0';
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             const mRes = await discordAPI(`/guilds/${gid}/members?limit=1000&after=${after}`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
             if (!mRes.ok || !mRes.data?.length) break;
             members.push(...mRes.data);
@@ -1231,56 +1360,77 @@ app.get('/admin/api/server/:id/members', adminAuth, async (req, res) => {
         }
         if (search) members = members.filter(m => m.user.username.toLowerCase().includes(search) || m.user.id.includes(search) || (m.nick && m.nick.toLowerCase().includes(search)));
         members.sort((a, b) => (b.joined_at > a.joined_at ? 1 : -1));
+        adminAudit('SEARCH_MEMBERS', { guild: gid, search }, req.adminIp);
         res.json(members.slice(0, 200).map(m => ({
-            id: m.user.id, username: m.user.username, avatar: m.user.avatar, discriminator: m.user.discriminator,
-            nick: m.nick, roles: m.roles, joined: m.joined_at, boosted: m.premium_since, banned: false
+            id: m.user.id, username: sanitize(m.user.username), avatar: m.user.avatar,
+            nick: sanitize(m.nick), roles: m.roles, joined: m.joined_at, boosted: m.premium_since
         })));
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: 'Internal server error' }); }
 });
 
-app.post('/admin/api/server/:id/action', adminAuth, async (req, res) => {
+app.post('/admin/api/server/:id/action', adminAuth, adminActionLimiter, adminCsrfCheck, async (req, res) => {
     const gid = req.params.id.replace(/[^0-9]/g, '');
-    const { action, userId, reason, duration } = req.body;
+    if (!validateGuildId(gid)) return res.status(400).json({ error: 'Invalid guild ID' });
+
+    const { action, userId, reason, index } = req.body;
+    if (!userId || !validateUserId(userId)) return res.status(400).json({ error: 'Invalid user ID' });
+
+    const validActions = ['ban', 'kick', 'unban', 'warn', 'deleteWarn'];
+    if (!validActions.includes(action)) return res.status(400).json({ error: 'Invalid action' });
+
+    const safeReason = typeof reason === 'string' ? sanitize(reason.slice(0, 500)) : '';
+
     try {
         if (action === 'ban') {
-            await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { delete_message_days: 1, reason: reason || 'Admin panel action' } });
+            await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'PUT', headers: { Authorization: `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' }, body: { delete_message_days: 1, reason: safeReason || 'Admin panel action' } });
+            const stats = db.botStats.get('global', {}); stats.bans = (stats.bans || 0) + 1; db.botStats.set('global', stats);
+            adminAudit('BAN', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Banned ${userId}` });
         } else if (action === 'kick') {
             await discordAPI(`/guilds/${gid}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            const stats = db.botStats.get('global', {}); stats.kicks = (stats.kicks || 0) + 1; db.botStats.set('global', stats);
+            adminAudit('KICK', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Kicked ${userId}` });
         } else if (action === 'unban') {
             await discordAPI(`/guilds/${gid}/bans/${userId}`, { method: 'DELETE', headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+            adminAudit('UNBAN', { guild: gid, user: userId }, req.adminIp);
             res.json({ ok: true, message: `Unbanned ${userId}` });
         } else if (action === 'warn') {
             const warns = db.warnings.get(gid, {});
             if (!warns[userId]) warns[userId] = [];
-            warns[userId].push({ reason: reason || 'Admin panel warning', moderator: 'Admin Panel', date: new Date().toISOString() });
+            warns[userId].push({ reason: safeReason || 'Admin panel warning', moderator: 'Admin Panel', date: new Date().toISOString() });
             db.warnings.set(gid, warns);
-            const stats = db.botStats.get('global', {});
-            stats.warnings_issued = (stats.warnings_issued || 0) + 1;
-            db.botStats.set('global', stats);
+            const stats = db.botStats.get('global', {}); stats.warnings_issued = (stats.warnings_issued || 0) + 1; db.botStats.set('global', stats);
+            adminAudit('WARN', { guild: gid, user: userId, reason: safeReason }, req.adminIp);
             res.json({ ok: true, message: `Warned ${userId}` });
         } else if (action === 'deleteWarn') {
+            const idx = parseInt(index);
+            if (isNaN(idx) || idx < 0) return res.status(400).json({ error: 'Invalid index' });
             const warns = db.warnings.get(gid, {});
-            if (warns[userId] && warns[userId][req.body.index]) {
-                warns[userId].splice(req.body.index, 1);
+            if (warns[userId] && warns[userId][idx]) {
+                warns[userId].splice(idx, 1);
                 db.warnings.set(gid, warns);
             }
+            adminAudit('DELETE_WARN', { guild: gid, user: userId, index: idx }, req.adminIp);
             res.json({ ok: true });
-        } else {
-            res.status(400).json({ error: 'Unknown action' });
         }
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { adminAudit('ACTION_ERROR', { action, error: e.message }, req.adminIp); res.status(500).json({ error: 'Action failed' }); }
 });
 
-app.get('/admin/api/activity', adminAuth, (req, res) => {
+app.get('/admin/api/activity', adminAuth, adminApiLimiter, (req, res) => {
     const activity = db.botStats.get('activity_feed', []);
+    adminAudit('VIEW_ACTIVITY', {}, req.adminIp);
     res.json(activity.slice(0, 100));
 });
 
-app.get('/admin/api/honeypot', adminAuth, (req, res) => {
+app.get('/admin/api/honeypot', adminAuth, adminApiLimiter, (req, res) => {
     const log = db.botStats.get('honeypot_log', []);
+    adminAudit('VIEW_HONEYPOT', {}, req.adminIp);
     res.json(log.slice(0, 100));
+});
+
+app.get('/admin/api/audit', adminAuth, adminApiLimiter, (req, res) => {
+    res.json(adminAuditLog.slice(0, 200));
 });
 
 // ====== 404 Handler ======

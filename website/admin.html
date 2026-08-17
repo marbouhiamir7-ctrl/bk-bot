@@ -12,14 +12,20 @@
         a{color:var(--primary);text-decoration:none}
 
         #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
-        .login-box{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:48px;width:100%;max-width:400px;text-align:center;box-shadow:var(--shadow)}
-        .login-box h1{font-size:1.6rem;margin-bottom:8px;background:linear-gradient(135deg,var(--primary),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .login-box p{color:var(--text2);font-size:.85rem;margin-bottom:28px}
-        .login-box input{width:100%;padding:14px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:.9rem;outline:none;margin-bottom:16px;transition:border .2s}
-        .login-box input:focus{border-color:var(--primary)}
-        .login-box button{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),#ee5a24);border:none;border-radius:10px;color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s}
-        .login-box button:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,107,0.3)}
-        .login-error{color:var(--red);font-size:.8rem;margin-bottom:12px;display:none}
+        .login-box{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;text-align:center;box-shadow:var(--shadow)}
+        .login-logo{width:64px;height:64px;margin:0 auto 20px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--orange));display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;filter:drop-shadow(0 4px 15px rgba(255,107,107,0.3))}
+        .login-box h1{font-size:1.6rem;margin-bottom:12px;color:var(--text);font-weight:800}
+        .login-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:.78rem;color:var(--text2);margin-bottom:24px}
+        .login-secure i{color:var(--green);font-size:.7rem}
+        .login-box input{width:100%;padding:14px 18px;background:var(--bg2);border:2px solid var(--primary);border-radius:10px;color:var(--text);font-size:.9rem;outline:none;margin-bottom:16px;transition:all .2s;box-shadow:0 0 0 0 rgba(255,107,107,0)}
+        .login-box input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,159,67,0.15)}
+        .login-box input::placeholder{color:var(--text3)}
+        .login-box button{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),var(--orange));border:none;border-radius:10px;color:#fff;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 15px rgba(255,107,107,0.25)}
+        .login-box button:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,107,0.35)}
+        .login-box button:active{transform:translateY(0)}
+        .login-error{color:var(--red);font-size:.8rem;margin-bottom:12px;display:none;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.15);padding:8px 12px;border-radius:8px}
+        .login-attempts{display:flex;align-items:center;justify-content:center;gap:6px;font-size:.72rem;color:var(--text3);margin-top:16px}
+        .login-attempts i{color:var(--yellow);font-size:.65rem}
 
         #admin-app{display:none}
         .admin-header{position:sticky;top:0;z-index:100;background:rgba(7,7,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
@@ -147,12 +153,13 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <img src="https://cdn.discordapp.com/icons/1523800606488396049/b733ff3bc01081cee7ff0a95a4a313a1.png?size=128" style="width:64px;height:64px;border-radius:16px;margin-bottom:16px">
-        <h1>BK BOT Admin</h1>
-        <p>Enter your admin password to continue</p>
-        <div class="login-error" id="login-error">Wrong password</div>
-        <input type="password" id="login-pw" placeholder="Admin password" autofocus>
-        <button onclick="doLogin()">Sign In</button>
+        <div class="login-logo"><i class="fas fa-shield-halved"></i></div>
+        <h1>Admin Panel</h1>
+        <div class="login-secure"><i class="fas fa-shield-halved"></i> Secured with rate limiting & CSRF protection</div>
+        <div class="login-error" id="login-error"></div>
+        <input type="password" id="login-pw" placeholder="Enter admin password" autofocus>
+        <button onclick="doLogin()">Login</button>
+        <div class="login-attempts"><i class="fas fa-info-circle"></i> Maximum 5 login attempts per 15 minutes</div>
     </div>
 </div>
 
@@ -167,6 +174,7 @@
             <button data-page="servers">Servers</button>
             <button data-page="activity">Activity</button>
             <button data-page="honeypot">Honeypot</button>
+            <button data-page="audit">Audit Log</button>
         </nav>
         <button class="logout" onclick="doLogout()">Logout</button>
     </header>
@@ -215,6 +223,12 @@
             <div class="section-title"><i class="fas fa-spider"></i> Honeypot Violations</div>
             <div class="table-wrap"><div id="honeypot-log"></div></div>
         </div>
+
+        <!-- AUDIT LOG -->
+        <div class="page" id="page-audit">
+            <div class="section-title"><i class="fas fa-clipboard-list"></i> Admin Audit Log</div>
+            <div class="table-wrap"><div id="audit-log"></div></div>
+        </div>
     </div>
 </div>
 
@@ -248,10 +262,14 @@ document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key
 async function doLogin() {
     const pw = document.getElementById('login-pw').value;
     const errEl = document.getElementById('login-error');
+    if (!pw) { errEl.textContent = 'Please enter a password'; errEl.style.display = 'block'; return; }
     try {
         const r = await fetch(`${API}/admin/api/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ password: pw }) });
+        const d = await r.json();
         if (r.ok) { document.getElementById('login-screen').style.display = 'none'; document.getElementById('admin-app').style.display = 'block'; loadOverview(); }
-        else { errEl.textContent = 'Wrong password'; errEl.style.display = 'block'; }
+        else if (r.status === 429) { errEl.textContent = d.error || 'Too many attempts. Locked out.'; errEl.style.display = 'block'; }
+        else { errEl.textContent = d.error || 'Wrong password' + (d.attemptsLeft !== undefined ? ` (${d.attemptsLeft} attempts left)` : ''); errEl.style.display = 'block'; }
+        document.getElementById('login-pw').value = '';
     } catch { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; }
 }
 
@@ -274,6 +292,7 @@ document.getElementById('nav').addEventListener('click', e => {
     if (page === 'servers') loadServers();
     else if (page === 'activity') loadActivity();
     else if (page === 'honeypot') loadHoneypot();
+    else if (page === 'audit') loadAudit();
 });
 
 // ====== HELPERS ======
@@ -283,9 +302,17 @@ function guildIcon(g) { return g?.icon ? `https://cdn.discordapp.com/icons/${g.i
 function timeAgo(d) { if (!d) return ''; const s = Math.floor((Date.now() - new Date(d)) / 1000); if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s/60) + 'm ago'; if (s < 86400) return Math.floor(s/3600) + 'h ago'; return Math.floor(s/86400) + 'd ago'; }
 function toast(msg, type='success') { const t = document.getElementById('toast'); t.textContent = msg; t.className = `toast ${type} show`; setTimeout(() => t.classList.remove('show'), 3000); }
 
+function getCsrfToken() { const m = document.cookie.match(/bk_csrf=([^;]+)/); return m ? m[1] : ''; }
+
 async function apiFetch(path, opts={}) {
-    const r = await fetch(`${API}${path}`, { credentials: 'include', ...opts });
+    const headers = { ...(opts.headers || {}) };
+    if (opts.method && opts.method !== 'GET') {
+        headers['X-CSRF-Token'] = getCsrfToken();
+    }
+    const r = await fetch(`${API}${path}`, { credentials: 'include', ...opts, headers });
     if (r.status === 401) { doLogout(); throw new Error('Session expired'); }
+    if (r.status === 403) { const d = await r.json(); throw new Error(d.error || 'Forbidden'); }
+    if (r.status === 429) { const d = await r.json(); throw new Error(d.error || 'Rate limited'); }
     return r.json();
 }
 
@@ -545,6 +572,24 @@ async function loadHoneypot() {
                 <span class="msg"><strong>${esc(h.user || h.userId)}</strong> triggered honeypot in <strong>${esc(h.guild || h.guildId)}</strong>: ${esc(h.command || h.reason || '')}</span>
             </div>
         `).join('');
+    } catch(e) { el.innerHTML = '<div class="empty"><i class="fas fa-exclamation-circle"></i> Error</div>'; }
+}
+
+// ====== AUDIT ======
+async function loadAudit() {
+    const el = document.getElementById('audit-log');
+    el.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    try {
+        const data = await apiFetch('/admin/api/audit');
+        if (!data.length) { el.innerHTML = '<div class="empty"><i class="fas fa-clipboard-list"></i> No audit entries</div>'; return; }
+        el.innerHTML = `<table><thead><tr><th>Time</th><th>Action</th><th>IP</th><th>Details</th></tr></thead><tbody>
+            ${data.map(a => `<tr>
+                <td style="font-size:.72rem;color:var(--text3);white-space:nowrap">${timeAgo(a.timestamp)}</td>
+                <td><span class="sec-badge ${a.action.includes('FAIL')||a.action.includes('ERROR')?'off':'on'}">${esc(a.action)}</span></td>
+                <td style="font-family:monospace;font-size:.72rem;color:var(--text3)">${esc(a.ip)}</td>
+                <td style="font-size:.78rem;color:var(--text2);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(JSON.stringify(a.details))}</td>
+            </tr>`).join('')}
+        </tbody></table>`;
     } catch(e) { el.innerHTML = '<div class="empty"><i class="fas fa-exclamation-circle"></i> Error</div>'; }
 }
 
