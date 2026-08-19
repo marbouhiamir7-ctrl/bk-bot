@@ -18,9 +18,6 @@ const client = new Client({
 
 client.commands = new Collection();
 client.cooldowns = new Collection();
-client.customCommands = new Map();
-client.levelData = new Map();
-client.warnings = new Map();
 client.tickets = new Map();
 client.reminders = new Map();
 client.afkUsers = new Map();
@@ -186,7 +183,7 @@ function syncLiveStats() {
             afk: client.afkUsers.size,
             tickets: client.tickets.size,
             reminders: client.reminders.size,
-            customCommands: client.customCommands.size,
+            customCommands: Object.keys(db.customCommands.getAll()).length,
             syncedAt: Date.now()
         };
         fs.writeFileSync(LIVE_FILE, JSON.stringify(live));
@@ -312,7 +309,7 @@ for (const file of eventFiles) {
 client.once('ready', () => {
     console.log(`✅ ${client.user.tag} is online!`);
     console.log(`📋 ${client.commands.size} commands loaded`);
-    client.user.setActivity('Baktiriya Team | /help', { type: 'Watching' });
+    client.user.setActivity('BK BOT Beta | /help', { type: 'Watching' });
     syncLiveStats();
 });
 

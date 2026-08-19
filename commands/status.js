@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 
 const statuses = [
-    { name: 'Baktiriya Team | /help', type: 0 },
+    { name: 'BK BOT Beta | /help', type: 0 },
     { name: 'Protecting servers 24/7', type: 3 },
-    { name: 'BK BOT | /help', type: 2 },
+    { name: 'BK BOT Beta | /help', type: 2 },
     { name: 'Servers: {guilds}', type: 3 },
     { name: 'Members: {members}', type: 3 },
 ];

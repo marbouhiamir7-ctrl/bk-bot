@@ -20,7 +20,7 @@ module.exports = {
                 { name: 'Custom Commands', value: '`/addcommand` `/deletecommand` `/commands`', inline: false },
                 { name: 'Welcome', value: '`/setwelcome` `/testwelcome`', inline: false }
             ],
-            footer: { text: 'Baktiriya Team | All commands use / prefix' },
+            footer: { text: 'BK BOT Beta | All commands use / prefix' },
             timestamp: new Date().toISOString()
         });
 

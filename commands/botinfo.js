@@ -33,7 +33,7 @@ module.exports = {
                     '✅ Anti-Link'
                 ].join('\n'), inline: true }
             )
-            .setFooter({ text: 'Baktiriya Team' })
+            .setFooter({ text: 'BK BOT Beta' })
             .setTimestamp();
 
         interaction.reply({ embeds: [embed] });

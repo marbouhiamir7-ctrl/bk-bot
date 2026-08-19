@@ -13,6 +13,6 @@ function start(name, file) {
     return proc;
 }
 
-console.log('Starting BK BOT...');
+console.log('Starting BK BOT Beta...');
 start('Dashboard', 'server.js');
 start('Bot', 'index.js');

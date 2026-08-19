@@ -184,7 +184,7 @@ async function discordAPI(apiPath, options = {}) {
     try {
         const res = await fetch(`https://discord.com/api${apiPath}`, {
             method,
-            headers: { 'User-Agent': 'BK-BOT-Dashboard/1.0', ...headers },
+            headers: { 'User-Agent': 'BKBOT-Beta/2.0', ...headers },
             body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined
         });
         const text = await res.text();
@@ -515,7 +515,7 @@ app.get('/api/botinfo', apiLimiter, (req, res) => {
             ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=256`
             : `https://cdn.discordapp.com/embed/avatars/0.png`;
         res.json({ id: me.id, username: me.username, avatar: avatarURL, stats: db.getStats() });
-    }).catch(() => res.json({ username: 'BK BOT', avatar: '', stats: db.getStats() }));
+    }).catch(() => res.json({ username: 'BK BOT Beta', avatar: '', stats: db.getStats() }));
 });
 
 // ====== Activity Feed ======
@@ -604,7 +604,7 @@ app.post('/api/guild/:id/webhooks', apiLimiter, csrfCheck, authMiddleware, guild
     botAPI(`/guilds/${guildId}/webhooks`, {
         method: 'POST',
         headers: { 'Authorization': `Bot ${BOT_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name || 'BK BOT Webhook', channel_id })
+        body: JSON.stringify({ name: name || 'BK BOT Beta Webhook', channel_id })
     }).then(wh => {
         if (wh.id) {
             res.json({ ok: true, webhook: { id: wh.id, name: wh.name, channel_id: wh.channel_id } });
@@ -1088,6 +1088,7 @@ app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, guildAuth, (req, re
 // ====== Admin Panel (Hardened) ======
 
 const ADMIN_PASSWORD_HASH = crypto.createHash('sha256').update(process.env.ADMIN_PASSWORD || 'bk-admin-2026').digest('hex');
+if (!process.env.ADMIN_PASSWORD) console.warn('[SECURITY] Using default admin password. Set ADMIN_PASSWORD env var!');
 const adminSessions = new Map();
 const adminLoginAttempts = new Map();
 const adminAuditLog = [];
@@ -1666,7 +1667,7 @@ app.use((err, req, res, next) => {
 // ====== Start ======
 
 app.listen(PORT, () => {
-    console.log(`\n  BK BOT Dashboard Server`);
+    console.log(`\n  BK BOT Beta Dashboard Server`);
     console.log(`  http://localhost:${PORT}`);
     console.log(`  Redirect: ${REDIRECT_URI}`);
     console.log(`  Security: Helmet + Rate Limit + CSRF + Sanitization\n`);
