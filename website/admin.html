@@ -613,23 +613,52 @@ function countUp(el,target,dur=900){
 // ====== AUTH ======
 function showError(msg){const el=document.getElementById('login-error');el.style.display='flex';el.querySelector('span').textContent=msg}
 function hideError(){document.getElementById('login-error').style.display='none'}
-async function checkAuth(){try{const r=await fetch(`${API}/admin/api/check`,{credentials:'include'});const d=await r.json();if(d.logged_in){enterPanel()}}catch(e){console.error('Auth check failed',e)}}
+async function checkAuth(){try{const r=await fetch(`${API}/admin/api/check`,{credentials:'include'});const d=await r.json();if(d.logged_in){enterPanel()}}catch(e){}}
+
+// Verify we're on the right path
+(function(){
+    const path=window.location.pathname;
+    if(path==='/admin.html'||path==='/admin'){
+        fetch(`${API}/admin/api/pow-challenge`,{credentials:'include'}).then(()=>{window.location.replace('/admin.html')}).catch(()=>{});
+    }
+})();
 function enterPanel(){document.getElementById('login-screen').style.display='none';document.getElementById('admin-app').style.display='block';initApp();startClock()}
 async function doLogin(){
     const pw=document.getElementById('login-pw').value.trim();
     const btn=document.getElementById('login-btn');
     if(!pw){showError('Please enter a password');return}
-    hideError();btn.disabled=true;btn.textContent='Signing in...';
+    hideError();btn.disabled=true;btn.textContent='Solving challenge...';
     try{
-        const r=await fetch(`${API}/admin/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({password:pw})});
+        let powSeed='',powSolution='';
+        try{
+            const ch=await fetch(`${API}/admin/api/pow-challenge`,{credentials:'include'}).then(r=>r.json());
+            powSeed=ch.seed;
+            for(let i=0;i<1000000;i++){
+                const h=crypto.subtle?null:null;
+                const test=crypto.createHash?null:null;
+                const sol=i.toString();
+                const hash=await sha256(powSeed+sol);
+                if(hash.startsWith(ch.target)){powSolution=sol;break}
+            }
+        }catch(e){console.log('POW fallback',e)}
+        btn.textContent='Signing in...';
+        const r=await fetch(`${API}/admin/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({password:pw,powSeed,powSolution})});
         let d;try{d=await r.json()}catch(e){showError('Server returned invalid response');btn.disabled=false;btn.textContent='Login';return}
-        if(r.ok&&d.ok){enterPanel()}
+        if(r.ok&&d.ok){
+            if(d.adminPath)window.location.replace(d.adminPath);
+            else enterPanel();
+        }
         else if(r.status===429){showError(d.error||'Too many attempts. Try again later.')}
         else if(r.status===403){showError((d.error||'Wrong password')+(d.attemptsLeft!==undefined?' ('+d.attemptsLeft+' attempts left)':''))}
         else if(r.status===400){showError(d.error||'Invalid input')}
         else{showError(d.error||'Login failed ('+r.status+')')}
     }catch(e){console.error('Login fetch error:',e);showError('Connection error. Is the bot online?')}
     btn.disabled=false;btn.textContent='Login';
+}
+async function sha256(message){
+    const msgBuffer=new TextEncoder().encode(message);
+    const hashBuffer=await crypto.subtle.digest('SHA-256',msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 async function doLogout(){try{await fetch(`${API}/admin/api/logout`,{method:'POST',credentials:'include'})}catch{}document.getElementById('admin-app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('login-pw').value='';hideError()}
 document.getElementById('login-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});

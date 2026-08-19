@@ -1085,6 +1085,42 @@ app.get('/api/guild/:id/levels', apiLimiter, authMiddleware, guildAuth, (req, re
     res.json(sorted.map(([id, data]) => ({ userId: id, level: data.level || 1, xp: data.xp || 0 })));
 });
 
+// ====== Secret Admin Path ======
+const ADMIN_SECRET = process.env.ADMIN_SECRET || crypto.randomBytes(8).toString('hex');
+const ADMIN_PATH = `/admin-${ADMIN_SECRET}`;
+console.log(`[SECURITY] Admin panel: ${ADMIN_PATH}`);
+console.log(`[SECURITY] Honeypot decoy: /admin.html`);
+console.log(`[SECURITY] Admin access logged & rate-limited`);
+
+// ====== Honeypot Decoy ======
+const HONEYPOT_PAGE = `<!DOCTYPE html><html><head><title>BK BOT - Login</title><style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0a12;font-family:system-ui;color:#999}.card{background:#14141e;border:1px solid #222;border-radius:16px;padding:40px;width:380px;text-align:center}.card h2{color:#fff;margin-bottom:8px}.card p{color:#666;font-size:14px;margin-bottom:24px}.field{position:relative;margin-bottom:16px}.field input{width:100%;padding:14px 16px 14px 42px;background:#0c0c16;border:1px solid #333;border-radius:10px;color:#fff;font-size:14px;outline:none;box-sizing:border-box}.field i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#555}.btn{width:100%;padding:14px;background:linear-gradient(135deg,#ff6b6b,#ff9f43);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}.error{color:#ef4444;font-size:13px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);padding:10px;border-radius:8px;margin-bottom:16px;display:none}</style></head><body><div class="card"><h2>BK BOT</h2><p>Admin Panel</p><div class="error" id="err"><i class="fas fa-exclamation-circle"></i> Invalid password</div><form onsubmit="return doLogin(event)"><div class="field"><input type="password" id="pw" placeholder="Enter password" autofocus><i class="fas fa-lock"></i></div><button type="submit" class="btn">Sign In</button></form></div><script>async function doLogin(e){e.preventDefault();const pw=document.getElementById('pw').value;if(!pw)return;try{await fetch('/admin/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})}catch{}document.getElementById('err').style.display='block';document.getElementById('pw').value='';setTimeout(()=>document.getElementById('err').style.display='none',3000)}</script></body></html>`;
+
+app.get('/admin.html', (req, res) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    adminAudit('HONEYPOT_HIT', { path: '/admin.html', ua: (req.headers['user-agent'] || '').slice(0, 200) }, ip);
+    console.log(`[HONEYPOT] Decoy accessed from ${ip}`);
+    res.type('html').send(HONEYPOT_PAGE);
+});
+app.get('/admin', (req, res) => res.redirect(301, '/admin.html'));
+
+// ====== Proof-of-Work Challenge Store ======
+const powChallenges = new Map();
+function generatePowChallenge() {
+    const seed = crypto.randomBytes(16).toString('hex');
+    const target = crypto.randomBytes(4).toString('hex');
+    const challenge = { seed, target, created: Date.now() };
+    powChallenges.set(seed, challenge);
+    setTimeout(() => powChallenges.delete(seed), 120000);
+    return challenge;
+}
+function verifyPow(seed, solution) {
+    const ch = powChallenges.get(seed);
+    if (!ch) return false;
+    if (Date.now() - ch.created > 120000) { powChallenges.delete(seed); return false; }
+    const hash = crypto.createHash('sha256').update(seed + solution).digest('hex');
+    return hash.startsWith(ch.target);
+}
+
 // ====== Admin Panel (Hardened) ======
 
 const ADMIN_PASSWORD_HASH = crypto.createHash('sha256').update(process.env.ADMIN_PASSWORD || 'bk-admin-2026').digest('hex');
@@ -1138,8 +1174,15 @@ function adminAuth(req, res, next) {
     const sess = adminSessions.get(token);
     if (!sess) return res.status(401).json({ error: 'Invalid session' });
     if (Date.now() - sess.created > ADMIN_SESSION_DURATION) { adminSessions.delete(token); res.clearCookie('bk_admin'); return res.status(401).json({ error: 'Session expired' }); }
+    const ip = getAdminIp(req);
+    const fingerprint = crypto.createHash('sha256').update((req.headers['user-agent'] || '') + ip).digest('hex').slice(0, 16);
+    if (sess.fingerprint && sess.fingerprint !== fingerprint) {
+        adminSessions.delete(token);
+        adminAudit('SESSION_HIJACK_ATTEMPT', { expected: sess.fingerprint, got: fingerprint }, ip);
+        return res.status(401).json({ error: 'Session invalid' });
+    }
     sess.lastActivity = Date.now();
-    req.adminIp = getAdminIp(req);
+    req.adminIp = ip;
     next();
 }
 
@@ -1192,9 +1235,24 @@ setInterval(() => {
 
 // ====== Admin Auth Routes ======
 
+app.get('/admin/api/pow-challenge', (req, res) => {
+    const ch = generatePowChallenge();
+    res.json({ seed: ch.seed, target: ch.target });
+});
+
+app.get(ADMIN_PATH, (req, res) => {
+    res.sendFile(path.join(__dirname, 'website', 'admin.html'));
+});
+
 app.post('/admin/api/login', (req, res) => {
     const ip = getAdminIp(req);
-    const { password } = req.body || {};
+    const { password, powSeed, powSolution } = req.body || {};
+
+    if (!powSeed || !powSolution || !verifyPow(powSeed, powSolution)) {
+        adminAudit('LOGIN_POW_FAIL', { ua: (req.headers['user-agent'] || '').slice(0, 200) }, ip);
+        return res.status(403).json({ error: 'Invalid proof-of-work. Refresh and try again.' });
+    }
+
     if (!password || typeof password !== 'string') return res.status(400).json({ error: 'Password required' });
     const pw = password.trim();
     if (pw.length === 0) return res.status(400).json({ error: 'Password required' });
@@ -1212,14 +1270,14 @@ app.post('/admin/api/login', (req, res) => {
         if (attempts.count >= ADMIN_MAX_ATTEMPTS) attempts.resetAt = Date.now();
         adminLoginAttempts.set(ip, attempts);
         adminAudit('LOGIN_FAIL', { attempts: attempts.count }, ip);
-        const remaining = attempts.count >= ADMIN_MAX_ATTEMPTS ? Math.ceil(ADMIN_LOCKOUT_MS / 60000) : ADMIN_MAX_ATTEMPTS - attempts.count;
         return res.status(403).json({ error: 'Wrong password', attemptsLeft: Math.max(0, ADMIN_MAX_ATTEMPTS - attempts.count) });
     }
 
     adminLoginAttempts.delete(ip);
 
     const token = crypto.randomBytes(32).toString('hex');
-    adminSessions.set(token, { created: Date.now(), lastActivity: Date.now(), ip });
+    const fingerprint = crypto.createHash('sha256').update((req.headers['user-agent'] || '') + ip).digest('hex').slice(0, 16);
+    adminSessions.set(token, { created: Date.now(), lastActivity: Date.now(), ip, fingerprint });
     res.cookie('bk_admin', token, {
         httpOnly: true,
         sameSite: 'strict',
@@ -1237,7 +1295,7 @@ app.post('/admin/api/login', (req, res) => {
         maxAge: ADMIN_SESSION_DURATION,
         path: '/'
     });
-    res.json({ ok: true });
+    res.json({ ok: true, adminPath: ADMIN_PATH });
 });
 
 app.post('/admin/api/logout', adminAuth, (req, res) => {
