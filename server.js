@@ -520,6 +520,9 @@ app.get('/api/botinfo', apiLimiter, (req, res) => {
             : `https://cdn.discordapp.com/embed/avatars/0.png`;
         res.json({
             id: me.id, username: me.username, avatar: avatarURL,
+            status: liveStats.status || 'online',
+            ping: liveStats.ping || 0,
+            tag: liveStats.tag || me.username,
             stats: {
                 guilds: totals.guilds || 0,
                 users: totals.members || 0,
@@ -535,6 +538,9 @@ app.get('/api/botinfo', apiLimiter, (req, res) => {
         });
     }).catch(() => res.json({
         username: 'BK BOT Beta', avatar: '',
+        status: liveStats.status || 'online',
+        ping: liveStats.ping || 0,
+        tag: liveStats.tag || 'BK BOT Beta',
         stats: {
             guilds: totals.guilds || 0,
             users: totals.members || 0,

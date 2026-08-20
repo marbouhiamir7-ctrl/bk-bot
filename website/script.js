@@ -184,12 +184,33 @@ async function loadDashboard() {
         if (el('dashUsers')) el('dashUsers').textContent = fmtNum(s.users || 0);
         if (el('dashCommands')) el('dashCommands').textContent = fmtNum(s.commands || 0);
         if (el('dashUptime')) el('dashUptime').textContent = formatUptimeDash(s.uptime || 0);
-        if (el('dashTag')) el('dashTag').textContent = data.username || 'BK BOT Beta';
+        if (el('dashTag')) el('dashTag').textContent = data.tag || data.username || 'BK BOT Beta';
         if (data.avatar && el('dashAvatar')) el('dashAvatar').src = data.avatar;
+        // Status badge
+        const statusBadge = document.getElementById('dashStatusBadge');
+        const statusText = document.getElementById('dashStatusText');
+        if (statusBadge && statusText) {
+            const isOnline = data.status === 'online';
+            statusText.textContent = isOnline ? 'Online' : 'Connecting';
+            statusBadge.style.background = isOnline ? 'rgba(46,213,115,0.1)' : 'rgba(255,165,2,0.1)';
+            statusBadge.style.borderColor = isOnline ? 'rgba(46,213,115,0.2)' : 'rgba(255,165,2,0.2)';
+            statusBadge.style.color = isOnline ? 'var(--secondary)' : 'var(--accent)';
+            const dot = statusBadge.querySelector('.dash-status-dot');
+            if (dot) {
+                dot.style.background = isOnline ? 'var(--secondary)' : 'var(--accent)';
+                dot.style.boxShadow = isOnline ? '0 0 8px var(--secondary)' : '0 0 8px var(--accent)';
+            }
+        }
+        // Float cards
         document.querySelectorAll('.dash-float-val[data-stat]').forEach(e => {
             const k = e.getAttribute('data-stat');
-            if (s[k] !== undefined) e.textContent = k === 'ping' ? fmtMs(s[k]) : fmtNum(s[k]);
+            if (k === 'ping') {
+                e.textContent = fmtMs(data.ping || 0);
+            } else if (s[k] !== undefined) {
+                e.textContent = fmtNum(s[k]);
+            }
         });
+        // Metrics bars
         const bars = document.querySelectorAll('.dash-metric-fill');
         if (bars[0]) bars[0].style.width = Math.min(100, (s.guilds || 0) * 10) + '%';
         if (bars[1]) bars[1].style.width = Math.min(100, (s.users || 0) / 50) + '%';
