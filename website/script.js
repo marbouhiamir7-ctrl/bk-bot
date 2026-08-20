@@ -63,17 +63,11 @@ async function loadLiveStats() {
             if (!key || stats[key] === undefined) return;
             const val = Number(stats[key]) || 0;
             if (key === 'uptime') {
-                el.textContent = formatUptime(val);
-            } else if (key === 'guilds' || key === 'users' || key === 'commands') {
-                countUp(el, val);
+                el.textContent = formatUptimeDash(val);
             } else {
-                el.textContent = formatNumber(val);
+                countUp(el, val);
             }
         });
-        if (data.avatar) {
-            const logo = document.querySelector('.orb-logo');
-            if (logo) logo.src = data.avatar;
-        }
     } catch (e) {
         console.warn('Live stats unavailable:', e);
     }
@@ -93,386 +87,142 @@ if (heroStats) {
     statsObserver.observe(heroStats);
 }
 
-// Navbar scroll effect + active link tracking + parallax (merged, throttled)
+// Navbar scroll + active link tracking + parallax
 (function() {
     const navbar = document.querySelector('.navbar');
-    const hero = document.querySelector('.hero-visual');
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
     const linkMap = {};
     navLinks.forEach(link => { linkMap[link.getAttribute('href').slice(1)] = link; });
     let ticking = false;
-
     function onScroll() {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
             const scrollY = window.scrollY;
-            if (navbar) {
-                if (scrollY > 50) navbar.classList.add('scrolled');
-                else navbar.classList.remove('scrolled');
-            }
+            if (navbar) { navbar.classList.toggle('scrolled', scrollY > 50); }
             const viewTop = scrollY + 200;
             sections.forEach(section => {
                 const link = linkMap[section.getAttribute('id')];
                 if (link) {
-                    if (viewTop >= section.offsetTop && viewTop < section.offsetTop + section.offsetHeight) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
+                    link.classList.toggle('active', viewTop >= section.offsetTop && viewTop < section.offsetTop + section.offsetHeight);
                 }
             });
-            if (hero && scrollY < 800) {
-                hero.style.transform = `translateY(${scrollY * 0.15}px)`;
-            }
             ticking = false;
         });
     }
-
     window.addEventListener('scroll', onScroll, { passive: true });
 })();
 
 // Scroll Reveal Animation
 const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-        }
-    });
-}, {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-});
-
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-rotate, .section-glow').forEach(el => {
     revealObserver.observe(el);
 });
 
-// Console message
+// Console branding
 console.log('%c BK BOT ', 'background: linear-gradient(135deg, #FF6B6B, #FFA502); color: white; font-size: 20px; padding: 10px 20px; border-radius: 5px;');
 console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size: 12px;');
 
-// 3D Shield Orb Mouse Tracking (optimized)
-(function() {
-    const orb = document.getElementById('card3d');
-    const scene = document.getElementById('scene');
-    if (!orb || !scene) return;
-
-    let bounds;
-    let currentRotateX = 0, currentRotateY = 0;
-    let targetRotateX = 0, targetRotateY = 0;
-    let isHovering = false;
-    let rafId = null;
-
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-    function updateBounds() { bounds = orb.getBoundingClientRect(); }
-
-    function animate() {
-        const dx = Math.abs(currentRotateX - targetRotateX);
-        const dy = Math.abs(currentRotateY - targetRotateY);
-        if (!isHovering && dx < 0.001 && dy < 0.001) {
-            currentRotateX = targetRotateX;
-            currentRotateY = targetRotateY;
-            orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)`;
-            rafId = null;
-            return;
-        }
-
-        currentRotateX = lerp(currentRotateX, targetRotateX, 0.08);
-        currentRotateY = lerp(currentRotateY, targetRotateY, 0.08);
-
-        const rx = currentRotateX * 20;
-        const ry = currentRotateY * 20;
-        const scaleVal = isHovering ? 1.05 : 1;
-
-        orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(${-rx}deg) rotateY(${ry}deg) scale(${scaleVal})`;
-
-        rafId = requestAnimationFrame(animate);
-    }
-
-    function startAnim() { if (!rafId) rafId = requestAnimationFrame(animate); }
-
-    scene.addEventListener('mouseenter', () => { isHovering = true; updateBounds(); startAnim(); });
-    scene.addEventListener('mouseleave', () => { isHovering = false; targetRotateX = 0; targetRotateY = 0; startAnim(); });
-    scene.addEventListener('mousemove', (e) => {
-        if (!bounds) updateBounds();
-        const cx = bounds.left + bounds.width / 2;
-        const cy = bounds.top + bounds.height / 2;
-        targetRotateX = clamp((e.clientY - cy) / (bounds.height / 2), -1, 1);
-        targetRotateY = clamp((e.clientX - cx) / (bounds.width / 2), -1, 1);
-    });
-    scene.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        if (!bounds) updateBounds();
-        const cx = bounds.left + bounds.width / 2;
-        const cy = bounds.top + bounds.height / 2;
-        targetRotateX = clamp((touch.clientY - cy) / (bounds.height / 2), -1, 1);
-        targetRotateY = clamp((touch.clientX - cx) / (bounds.width / 2), -1, 1);
-    }, { passive: false });
-    scene.addEventListener('touchend', () => { isHovering = false; targetRotateX = 0; targetRotateY = 0; startAnim(); });
-
-    window.addEventListener('resize', updateBounds);
-})();
-
-// Starfield canvas (optimized)
+// ====== Hero Dashboard Visual ======
+// Particle background
 (function() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const stars = [];
-    const meteors = [];
-    const STAR_COUNT = 60;
-    const MAX_METEORS = 5;
+    const particles = [];
     let lastFrame = 0;
-
-    const starColors = [
-        [255,255,255], [255,255,255], [255,255,255],
-        [200,220,255], [255,220,180], [180,200,255],
-        [255,200,150], [220,220,255]
-    ];
-
-    function resize() {
-        const scene = canvas.parentElement;
-        canvas.width = scene.offsetWidth;
-        canvas.height = scene.offsetHeight;
-    }
-
-    function spawnMeteor() {
-        if (meteors.length >= MAX_METEORS) return;
-        meteors.push({
-            x: Math.random() * canvas.width * 0.6,
-            y: Math.random() * canvas.height * 0.3,
-            vx: 3 + Math.random() * 4,
-            vy: 1 + Math.random() * 2,
-            life: 1,
-            decay: 0.015 + Math.random() * 0.01,
-            len: 40 + Math.random() * 50
-        });
-    }
-
+    function resize() { canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight; }
     function init() {
         resize();
-        for (let i = 0; i < STAR_COUNT; i++) {
-            const c = starColors[Math.floor(Math.random() * starColors.length)];
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                r: Math.random() * 1.4 + 0.15,
-                a: Math.random(),
-                da: (Math.random() - 0.5) * 0.008,
-                dx: (Math.random() - 0.5) * 0.08,
-                dy: (Math.random() - 0.5) * 0.05,
-                cr: c[0], cg: c[1], cb: c[2]
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                r: Math.random() * 1.2 + 0.2, a: Math.random() * 0.5 + 0.1,
+                da: (Math.random() - 0.5) * 0.006, dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.2,
+                hue: Math.random() > 0.7 ? 0 : Math.random() > 0.5 ? 30 : 210
             });
         }
     }
-
     function draw(now) {
         requestAnimationFrame(draw);
         if (now - lastFrame < 32) return;
         lastFrame = now;
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        for (let i = 0; i < stars.length; i++) {
-            const s = stars[i];
-            s.a += s.da;
-            s.x += s.dx;
-            s.y += s.dy;
-            if (s.a <= 0.05 || s.a >= 1) s.da *= -1;
-            if (s.x < 0) s.x = canvas.width;
-            if (s.x > canvas.width) s.x = 0;
-            if (s.y < 0) s.y = canvas.height;
-            if (s.y > canvas.height) s.y = 0;
-
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${s.a * 0.7})`;
-            ctx.fill();
-
-            if (s.r > 1.0 && s.a > 0.6) {
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${s.cr},${s.cg},${s.cb},${(s.a - 0.6) * 0.12})`;
-                ctx.fill();
-            }
-        }
-
-        if (Math.random() < 0.002) spawnMeteor();
-        for (let i = meteors.length - 1; i >= 0; i--) {
-            const m = meteors[i];
-            m.x += m.vx;
-            m.y += m.vy;
-            m.life -= m.decay;
-            if (m.life <= 0) { meteors.splice(i, 1); continue; }
-
-            ctx.beginPath();
-            ctx.moveTo(m.x, m.y);
-            ctx.lineTo(m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3);
-            const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len * 0.3, m.y - m.vy * m.len * 0.3);
-            grad.addColorStop(0, `rgba(255,255,255,${m.life * 0.8})`);
-            grad.addColorStop(0.3, `rgba(200,220,255,${m.life * 0.4})`);
-            grad.addColorStop(1, 'rgba(200,220,255,0)');
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(m.x, m.y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${m.life * 0.9})`;
-            ctx.fill();
+        for (const p of particles) {
+            p.a += p.da; p.x += p.dx; p.y += p.dy;
+            if (p.a <= 0.05 || p.a >= 0.6) p.da *= -1;
+            if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsla(' + p.hue + ',80%,70%,' + p.a + ')'; ctx.fill();
         }
     }
-
-    init();
-    requestAnimationFrame(draw);
-    window.addEventListener('resize', resize);
+    init(); requestAnimationFrame(draw); window.addEventListener('resize', resize);
 })();
 
-// Planet surface canvas renderer (cached texture)
-(function() {
-    const canvas = document.getElementById('planetCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let w, h, cx, cy, radius;
-    let rotation = 0;
-    let cachedTexture = null;
-    let cachedW = 0, cachedH = 0;
-    let lastFrame = 0;
-    const FPS_LIMIT = 30;
-    const FRAME_INTERVAL = 1000 / FPS_LIMIT;
+// Dashboard live data
+function formatUptimeDash(s) {
+    if (!s || s < 1) return '0m';
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    return d > 0 ? d + 'd ' + h + 'h' : h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+}
+function fmtNum(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toLocaleString(); }
+function fmtMs(ms) { return ms <= 0 ? '--' : ms + 'ms'; }
+function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    function resize() {
-        const parent = canvas.parentElement;
-        w = canvas.width = parent.offsetWidth;
-        h = canvas.height = parent.offsetHeight;
-        cx = w / 2;
-        cy = h / 2;
-        radius = Math.min(w, h) / 2 - 2;
-        cachedTexture = null;
-    }
-
-    function noise(x, y) {
-        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
-        return n - Math.floor(n);
-    }
-
-    function fbm(x, y) {
-        let v = 0, a = 0.5;
-        for (let i = 0; i < 3; i++) {
-            v += a * noise(x, y);
-            x *= 2.03;
-            y *= 2.01;
-            a *= 0.5;
-        }
-        return v;
-    }
-
-    function buildTexture() {
-        if (cachedTexture && cachedW === w && cachedH === h) return cachedTexture;
-
-        const offCanvas = document.createElement('canvas');
-        offCanvas.width = w;
-        offCanvas.height = h;
-        const offCtx = offCanvas.getContext('2d');
-
-        offCtx.save();
-        offCtx.beginPath();
-        offCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-        offCtx.clip();
-
-        const imgData = offCtx.createImageData(w, h);
-        const d = imgData.data;
-
-        for (let py = 0; py < h; py++) {
-            for (let px = 0; px < w; px++) {
-                const dx = px - cx;
-                const dy = py - cy;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > radius) continue;
-
-                const idx = (py * w + px) * 4;
-                const nx = dx / radius;
-                const ny = dy / radius;
-                const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
-
-                const lat = Math.asin(ny);
-                const lon = Math.atan2(nx, nz);
-
-                const terrain = fbm(lon * 3, lat * 4);
-                const detail = fbm(lon * 8 + 10, lat * 8 + 10) * 0.3;
-                const combined = terrain * 0.7 + detail * 0.3;
-
-                const lightX = 0.4, lightY = -0.3, lightZ = 0.8;
-                const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
-                const dot = (nx * lightX + ny * lightY + nz * lightZ) / lightLen;
-                const lighting = Math.max(0, Math.min(1, dot * 0.7 + 0.3));
-
-                const baseR = 7 + combined * 18;
-                const baseG = 7 + combined * 15;
-                const baseB = 10 + combined * 16;
-
-                const rim = 1 - Math.pow(nz, 3);
-                const rimR = rim * 40;
-                const rimG = rim * 50;
-                const rimB = rim * 80;
-
-                d[idx]     = Math.min(255, (baseR + rimR) * lighting);
-                d[idx + 1] = Math.min(255, (baseG + rimG) * lighting);
-                d[idx + 2] = Math.min(255, (baseB + rimB) * lighting);
-                d[idx + 3] = 255;
+let prevActivity = [];
+async function loadDashboard() {
+    try {
+        const r = await fetch('/api/botinfo');
+        const data = await r.json();
+        const s = data.stats || {};
+        const el = id => document.getElementById(id);
+        if (el('dashGuilds')) el('dashGuilds').textContent = fmtNum(s.guilds || 0);
+        if (el('dashUsers')) el('dashUsers').textContent = fmtNum(s.users || 0);
+        if (el('dashCommands')) el('dashCommands').textContent = fmtNum(s.commands || 0);
+        if (el('dashUptime')) el('dashUptime').textContent = formatUptimeDash(s.uptime || 0);
+        if (el('dashTag')) el('dashTag').textContent = data.username || 'BK BOT Beta';
+        if (data.avatar && el('dashAvatar')) el('dashAvatar').src = data.avatar;
+        document.querySelectorAll('.dash-float-val[data-stat]').forEach(e => {
+            const k = e.getAttribute('data-stat');
+            if (s[k] !== undefined) e.textContent = k === 'ping' ? fmtMs(s[k]) : fmtNum(s[k]);
+        });
+        const bars = document.querySelectorAll('.dash-metric-fill');
+        if (bars[0]) bars[0].style.width = Math.min(100, (s.guilds || 0) * 10) + '%';
+        if (bars[1]) bars[1].style.width = Math.min(100, (s.users || 0) / 50) + '%';
+        if (bars[2]) bars[2].style.width = Math.min(100, (s.commands || 0) / 10) + '%';
+        if (bars[3]) bars[3].style.width = Math.max(50, Math.min(100, (s.uptime || 0) / 86400 * 100)) + '%';
+    } catch (e) {}
+    try {
+        const r2 = await fetch('/api/activity');
+        const feed = await r2.json();
+        const list = document.getElementById('dashActivity');
+        if (list && Array.isArray(feed) && feed.length > 0) {
+            const items = feed.slice(0, 5);
+            const key = items.map(i => i.message).join('|');
+            if (key !== prevActivity.join('|')) {
+                prevActivity = items.map(i => i.message);
+                list.innerHTML = items.map(i => {
+                    const color = i.type === 'command' ? 'var(--primary)' : i.type === 'security' ? 'var(--secondary)' : 'var(--blue)';
+                    return '<div class="dash-activity-item"><span class="dash-activity-dot" style="background:' + color + '"></span><span class="dash-activity-text">' + escHTML((i.message || '').replace(/\*\*/g, '').substring(0, 60)) + '</span></div>';
+                }).join('');
             }
         }
+    } catch (e) {}
+}
 
-        offCtx.putImageData(imgData, 0, 0);
-
-        offCtx.globalAlpha = 0.04;
-        for (let i = 0; i < 5; i++) {
-            const cloudX = cx + Math.cos(i * 0.8) * radius * 0.3;
-            const cloudY = cy + Math.sin(i * 1.2) * radius * 0.2;
-            const cloudR = radius * (0.3 + noise(i, 0) * 0.3);
-            const grad = offCtx.createRadialGradient(cloudX, cloudY, 0, cloudX, cloudY, cloudR);
-            grad.addColorStop(0, 'rgba(180,170,200,1)');
-            grad.addColorStop(1, 'transparent');
-            offCtx.fillStyle = grad;
-            offCtx.fillRect(0, 0, w, h);
-        }
-        offCtx.globalAlpha = 1;
-        offCtx.restore();
-
-        cachedTexture = offCanvas;
-        cachedW = w;
-        cachedH = h;
-        return cachedTexture;
-    }
-
-    function draw(now) {
-        requestAnimationFrame(draw);
-        if (now - lastFrame < FRAME_INTERVAL) return;
-        lastFrame = now;
-
-        ctx.clearRect(0, 0, w, h);
-        const tex = buildTexture();
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.translate(cx, cy);
-        ctx.rotate(rotation);
-        ctx.drawImage(tex, -cx, -cy);
-        ctx.restore();
-
-        rotation += 0.003;
-    }
-
-    resize();
-    requestAnimationFrame(draw);
-    window.addEventListener('resize', resize);
-})();
+const dashPanel = document.getElementById('dashPanel');
+if (dashPanel) {
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { loadDashboard(); obs.disconnect(); setInterval(loadDashboard, 15000); }
+        });
+    }, { threshold: 0.2 });
+    obs.observe(dashPanel);
+}
 
 // FAQ accordion
 document.querySelectorAll('.faq-question').forEach(q => {

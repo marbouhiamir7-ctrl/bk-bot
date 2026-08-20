@@ -93,80 +93,90 @@
             </div>
         </div>
         <div class="hero-visual reveal-right">
-            <div class="hero-3d-scene" id="scene">
-                <canvas id="starfield" class="starfield-canvas"></canvas>
+            <div class="dash-scene">
+                <canvas id="starfield" class="dash-particles"></canvas>
 
-                <div class="lens-flare"></div>
-                <div class="sun-glow"></div>
-                <div class="sun-corona"></div>
-                <div class="sun-ray sun-ray-1"></div>
-                <div class="sun-ray sun-ray-2"></div>
-                <div class="sun-ray sun-ray-3"></div>
-                <div class="sun-ray sun-ray-4"></div>
+                <div class="dash-glow"></div>
 
-                <div class="nebula nebula-1"></div>
-                <div class="nebula nebula-2"></div>
-
-                <div class="shield-orb" id="card3d">
-                    <div class="orb-atmosphere"></div>
-                    <div class="orb-glow-outer"></div>
-                    <div class="orb-glow-mid"></div>
-
-                    <div class="orb-ring-system">
-                        <div class="orb-ring ring-1"></div>
-                        <div class="orb-ring ring-2"></div>
-                        <div class="orb-ring ring-3"></div>
-                        <div class="orb-ring ring-4"></div>
-                        <div class="orb-saturn-ring"></div>
-                        <div class="orb-saturn-ring-2"></div>
-                    </div>
-
-                    <div class="orb-core">
-                        <canvas id="planetCanvas" class="planet-canvas"></canvas>
-                        <div class="orb-surface"></div>
-                        <div class="orb-band orb-band-1"></div>
-                        <div class="orb-band orb-band-2"></div>
-                        <div class="orb-band orb-band-3"></div>
-                        <div class="orb-terminator"></div>
-                        <div class="orb-shine"></div>
-                        <div class="orb-specular"></div>
-                        <div class="orb-crest"></div>
-                        <img src="bot-logo.svg" alt="BK BOT Beta" class="orb-logo">
-                        <i class="fas fa-shield-halved orb-icon" style="display:none"></i>
-                        <span class="orb-label">BK BOT <span style="font-size:.5rem;color:var(--primary);font-weight:900">BETA</span></span>
-                        <span class="orb-status"><span class="orb-dot"></span> All Systems Online</span>
-                    </div>
-
-                    <div class="orb-particle op1"></div>
-                    <div class="orb-particle op2"></div>
-                    <div class="orb-particle op3"></div>
-                    <div class="orb-particle op4"></div>
-                    <div class="orb-particle op5"></div>
-                    <div class="orb-particle op6"></div>
-                    <div class="orb-particle op7"></div>
-                    <div class="orb-particle op8"></div>
-                    <div class="orb-particle op9"></div>
-                    <div class="orb-particle op10"></div>
-                    <div class="orb-particle op11"></div>
-                    <div class="orb-particle op12"></div>
-                    <div class="orb-particle op13"></div>
-                    <div class="orb-particle op14"></div>
-                    <div class="orb-particle op15"></div>
-                    <div class="orb-particle op16"></div>
-                    <div class="orb-particle op17"></div>
-                    <div class="orb-particle op18"></div>
-                    <div class="orb-particle op19"></div>
-                    <div class="orb-particle op20"></div>
-                    <div class="orb-particle op21"></div>
-                    <div class="orb-particle op22"></div>
-                    <div class="orb-particle op23"></div>
-                    <div class="orb-particle op24"></div>
-
-                    <div class="comet comet-1"></div>
-                    <div class="comet comet-2"></div>
-                    <div class="comet comet-3"></div>
+                <div class="dash-float dash-float-1">
+                    <div class="dash-float-icon"><i class="fas fa-shield-halved"></i></div>
+                    <div class="dash-float-val" data-stat="bans">0</div>
+                    <div class="dash-float-label">Raids Blocked</div>
+                </div>
+                <div class="dash-float dash-float-2">
+                    <div class="dash-float-icon" style="color:var(--blue);background:rgba(52,152,219,0.15)"><i class="fas fa-bolt"></i></div>
+                    <div class="dash-float-val" data-stat="messages">0</div>
+                    <div class="dash-float-label">Messages Scanned</div>
+                </div>
+                <div class="dash-float dash-float-3">
+                    <div class="dash-float-icon" style="color:var(--secondary);background:rgba(46,213,115,0.15)"><i class="fas fa-bolt"></i></div>
+                    <div class="dash-float-val" data-stat="ping">--</div>
+                    <div class="dash-float-label">Latency</div>
                 </div>
 
+                <div class="dash-panel" id="dashPanel">
+                    <div class="dash-header">
+                        <div class="dash-header-left">
+                            <img src="https://cdn.discordapp.com/avatars/1537980470782988439/a497e033ccef82bd577fcc23e3efe985.png?size=128" alt="BK BOT" class="dash-avatar" id="dashAvatar">
+                            <div class="dash-header-info">
+                                <div class="dash-name">BK BOT <span class="dash-beta">BETA</span></div>
+                                <div class="dash-tag" id="dashTag">Loading...</div>
+                            </div>
+                        </div>
+                        <div class="dash-status-badge" id="dashStatusBadge">
+                            <span class="dash-status-dot"></span>
+                            <span id="dashStatusText">Connecting</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-metrics">
+                        <div class="dash-metric">
+                            <div class="dash-metric-icon"><i class="fas fa-server"></i></div>
+                            <div class="dash-metric-val" id="dashGuilds">-</div>
+                            <div class="dash-metric-label">Servers</div>
+                            <div class="dash-metric-bar"><div class="dash-metric-fill" style="width:100%"></div></div>
+                        </div>
+                        <div class="dash-metric">
+                            <div class="dash-metric-icon"><i class="fas fa-users"></i></div>
+                            <div class="dash-metric-val" id="dashUsers">-</div>
+                            <div class="dash-metric-label">Users</div>
+                            <div class="dash-metric-bar"><div class="dash-metric-fill" style="width:85%"></div></div>
+                        </div>
+                        <div class="dash-metric">
+                            <div class="dash-metric-icon"><i class="fas fa-terminal"></i></div>
+                            <div class="dash-metric-val" id="dashCommands">-</div>
+                            <div class="dash-metric-label">Commands Run</div>
+                            <div class="dash-metric-bar"><div class="dash-metric-fill" style="width:70%"></div></div>
+                        </div>
+                        <div class="dash-metric">
+                            <div class="dash-metric-icon"><i class="fas fa-clock"></i></div>
+                            <div class="dash-metric-val" id="dashUptime">-</div>
+                            <div class="dash-metric-label">Uptime</div>
+                            <div class="dash-metric-bar"><div class="dash-metric-fill dash-metric-fill-green" style="width:99%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="dash-activity">
+                        <div class="dash-activity-head">
+                            <i class="fas fa-stream"></i> Live Activity
+                        </div>
+                        <div class="dash-activity-list" id="dashActivity">
+                            <div class="dash-activity-item">
+                                <span class="dash-activity-dot" style="background:var(--secondary)"></span>
+                                <span class="dash-activity-text">Waiting for activity...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dash-footer">
+                        <div class="dash-protection">
+                            <span class="dash-protection-item active"><i class="fas fa-shield-halved"></i> Anti-Nuke</span>
+                            <span class="dash-protection-item active"><i class="fas fa-user-shield"></i> Anti-Raid</span>
+                            <span class="dash-protection-item active"><i class="fas fa-ban"></i> Anti-Spam</span>
+                            <span class="dash-protection-item active"><i class="fas fa-link-slash"></i> Anti-Link</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
