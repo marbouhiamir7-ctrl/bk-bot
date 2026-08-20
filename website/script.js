@@ -201,8 +201,8 @@ async function loadDashboard() {
                 dot.style.boxShadow = isOnline ? '0 0 8px var(--secondary)' : '0 0 8px var(--accent)';
             }
         }
-        // Float cards
-        document.querySelectorAll('.dash-float-val[data-stat]').forEach(e => {
+        // Float cards (now stats row pills)
+        document.querySelectorAll('.dash-stat-pill-val[data-stat]').forEach(e => {
             const k = e.getAttribute('data-stat');
             if (k === 'ping') {
                 e.textContent = fmtMs(data.ping || 0);

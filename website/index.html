@@ -98,22 +98,6 @@
 
                 <div class="dash-glow"></div>
 
-                <div class="dash-float dash-float-1">
-                    <div class="dash-float-icon"><i class="fas fa-shield-halved"></i></div>
-                    <div class="dash-float-val" data-stat="bans">0</div>
-                    <div class="dash-float-label">Raids Blocked</div>
-                </div>
-                <div class="dash-float dash-float-2">
-                    <div class="dash-float-icon" style="color:var(--blue);background:rgba(52,152,219,0.15)"><i class="fas fa-bolt"></i></div>
-                    <div class="dash-float-val" data-stat="messages">0</div>
-                    <div class="dash-float-label">Messages Scanned</div>
-                </div>
-                <div class="dash-float dash-float-3">
-                    <div class="dash-float-icon" style="color:var(--secondary);background:rgba(46,213,115,0.15)"><i class="fas fa-bolt"></i></div>
-                    <div class="dash-float-val" data-stat="ping">--</div>
-                    <div class="dash-float-label">Latency</div>
-                </div>
-
                 <div class="dash-panel" id="dashPanel">
                     <div class="dash-header">
                         <div class="dash-header-left">
@@ -126,6 +110,24 @@
                         <div class="dash-status-badge" id="dashStatusBadge">
                             <span class="dash-status-dot"></span>
                             <span id="dashStatusText">Connecting</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-stats-row">
+                        <div class="dash-stat-pill">
+                            <i class="fas fa-shield-halved"></i>
+                            <span class="dash-stat-pill-val" data-stat="bans">0</span>
+                            <span class="dash-stat-pill-label">Bans</span>
+                        </div>
+                        <div class="dash-stat-pill">
+                            <i class="fas fa-bolt"></i>
+                            <span class="dash-stat-pill-val" data-stat="messages">0</span>
+                            <span class="dash-stat-pill-label">Scanned</span>
+                        </div>
+                        <div class="dash-stat-pill">
+                            <i class="fas fa-clock"></i>
+                            <span class="dash-stat-pill-val" data-stat="ping">--</span>
+                            <span class="dash-stat-pill-label">Ping</span>
                         </div>
                     </div>
 

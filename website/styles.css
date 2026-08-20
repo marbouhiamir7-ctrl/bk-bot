@@ -595,82 +595,47 @@ body {
     50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* Floating stat cards */
-.dash-float {
-    position: absolute;
-    background: rgba(10, 10, 16, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 16px;
-    padding: 16px 20px;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    z-index: 5;
+/* Stats row inside panel */
+.dash-stats-row {
     display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease, box-shadow 0.3s ease;
-    opacity: 0;
-    animation: dashFloatReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.02);
 }
-.dash-float:hover {
-    border-color: rgba(255, 107, 107, 0.25);
-    transform: translateY(-4px) scale(1.03);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 107, 107, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-.dash-float-icon {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 107, 107, 0.12);
-    border-radius: 12px;
+.dash-stat-pill {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
-    font-size: 0.9rem;
-    flex-shrink: 0;
-    border: 1px solid rgba(255, 107, 107, 0.1);
+    gap: 8px;
+    padding: 12px 10px;
+    background: rgba(8, 8, 14, 0.98);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: background 0.3s ease;
 }
-.dash-float-val {
-    font-size: 1.3rem;
-    font-weight: 900;
+.dash-stat-pill:hover {
+    background: rgba(12, 12, 20, 0.98);
+}
+.dash-stat-pill i {
+    font-size: 0.65rem;
+    color: var(--primary);
+    opacity: 0.6;
+}
+.dash-stat-pill-val {
+    font-size: 0.85rem;
+    font-weight: 800;
     background: var(--gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.2;
 }
-.dash-float-label {
-    font-size: 0.7rem;
+.dash-stat-pill-label {
+    font-size: 0.62rem;
     color: var(--text-muted);
-    margin-top: -2px;
-    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.dash-float-1 {
-    top: 15%;
-    left: -8%;
-    animation-delay: 0.4s;
-}
-.dash-float-2 {
-    bottom: 25%;
-    left: -12%;
-    animation-delay: 0.6s;
-}
-.dash-float-3 {
-    bottom: 5%;
-    right: -5%;
-    animation-delay: 0.8s;
-}
-@keyframes dashFloatReveal {
-    from { opacity: 0; transform: translateY(15px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes dashFloatBob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-.dash-float-1 { animation: dashFloatReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards, dashFloatBob 5s ease-in-out 1.2s infinite; }
-.dash-float-2 { animation: dashFloatReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards, dashFloatBob 6s ease-in-out 1.4s infinite; }
-.dash-float-3 { animation: dashFloatReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards, dashFloatBob 5.5s ease-in-out 1.6s infinite; }
 
 /* Main dashboard panel */
 .dash-panel {
