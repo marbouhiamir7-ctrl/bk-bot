@@ -510,12 +510,44 @@ app.get('/api/guild/:id/invite', apiLimiter, authMiddleware, guildAuth, (req, re
 // ====== Bot Info ======
 
 app.get('/api/botinfo', apiLimiter, (req, res) => {
+    const liveStats = readLiveStats() || {};
+    const totals = liveStats.totals || {};
+    const liveUptime = liveStats.uptime || 0;
+    const dbStats = db.getStats();
     botAPI('/users/@me').then(me => {
         const avatarURL = me.avatar
             ? `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=256`
             : `https://cdn.discordapp.com/embed/avatars/0.png`;
-        res.json({ id: me.id, username: me.username, avatar: avatarURL, stats: db.getStats() });
-    }).catch(() => res.json({ username: 'BK BOT Beta', avatar: '', stats: db.getStats() }));
+        res.json({
+            id: me.id, username: me.username, avatar: avatarURL,
+            stats: {
+                guilds: totals.guilds || 0,
+                users: totals.members || 0,
+                commands: dbStats.commands_run || 0,
+                uptime: liveUptime,
+                bans: dbStats.bans || 0,
+                kicks: dbStats.kicks || 0,
+                warnings: dbStats.warnings_issued || 0,
+                messages: dbStats.messages_seen || 0,
+                channels: totals.channels || 0,
+                boosts: totals.boosts || 0
+            }
+        });
+    }).catch(() => res.json({
+        username: 'BK BOT Beta', avatar: '',
+        stats: {
+            guilds: totals.guilds || 0,
+            users: totals.members || 0,
+            commands: dbStats.commands_run || 0,
+            uptime: liveUptime,
+            bans: dbStats.bans || 0,
+            kicks: dbStats.kicks || 0,
+            warnings: dbStats.warnings_issued || 0,
+            messages: dbStats.messages_seen || 0,
+            channels: totals.channels || 0,
+            boosts: totals.boosts || 0
+        }
+    }));
 });
 
 // ====== Activity Feed ======

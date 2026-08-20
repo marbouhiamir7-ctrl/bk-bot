@@ -37,6 +37,22 @@ function countUp(el, target) {
     requestAnimationFrame(frame);
 }
 
+function formatUptime(seconds) {
+    if (!seconds || seconds < 1) return '0m';
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+}
+
+function formatNumber(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return n.toLocaleString();
+}
+
 async function loadLiveStats() {
     try {
         const r = await fetch('/api/botinfo');
@@ -44,7 +60,15 @@ async function loadLiveStats() {
         const stats = (data && data.stats) || {};
         document.querySelectorAll('.stat-number[data-stat]').forEach(el => {
             const key = el.getAttribute('data-stat');
-            if (key && stats[key] !== undefined) countUp(el, Number(stats[key]) || 0);
+            if (!key || stats[key] === undefined) return;
+            const val = Number(stats[key]) || 0;
+            if (key === 'uptime') {
+                el.textContent = formatUptime(val);
+            } else if (key === 'guilds' || key === 'users' || key === 'commands') {
+                countUp(el, val);
+            } else {
+                el.textContent = formatNumber(val);
+            }
         });
         if (data.avatar) {
             const logo = document.querySelector('.orb-logo');
@@ -62,6 +86,7 @@ if (heroStats) {
             if (entry.isIntersecting) {
                 loadLiveStats();
                 statsObserver.disconnect();
+                setInterval(loadLiveStats, 30000);
             }
         });
     }, { threshold: 0.3 });
