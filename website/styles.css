@@ -949,60 +949,6 @@ body {
     100%{opacity:0}
 }
 
-.orb-badge {
-    position: absolute;
-    background: rgba(8,8,14,0.88);
-    border: 1px solid rgba(255,107,107,0.12);
-    padding: 14px 20px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 10;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(255,107,107,0.05);
-    white-space: nowrap;
-    will-change: transform;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.orb-badge:hover {
-    border-color: rgba(255,107,107,0.3);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 60px rgba(255,107,107,0.12);
-}
-
-.ob-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg,rgba(255,107,107,0.22),rgba(255,71,87,0.08));
-    border: 1px solid rgba(255,107,107,0.15);
-    border-radius: 12px;
-    display: flex;align-items:center;justify-content:center;
-    color:var(--primary);font-size:.9rem;flex-shrink:0;
-    box-shadow: 0 0 15px rgba(255,107,107,0.1);
-}
-.ob-icon-blue {
-    background:linear-gradient(135deg,rgba(52,152,219,0.22),rgba(52,152,219,0.08));
-    border-color:rgba(52,152,219,0.15);color:var(--blue);
-    box-shadow: 0 0 15px rgba(52,152,219,0.1);
-}
-.ob-icon-green {
-    background:linear-gradient(135deg,rgba(46,213,115,0.22),rgba(46,213,115,0.08));
-    border-color:rgba(46,213,115,0.15);color:var(--secondary);
-    box-shadow: 0 0 15px rgba(46,213,115,0.1);
-}
-
-.ob-text { display:flex;flex-direction:column;gap:2px; }
-.ob-text strong { font-size:.82rem;font-weight:700;color:var(--text); }
-.ob-text span { font-size:.62rem;color:var(--text-muted); }
-
-.ob-1 { top:8%;left:2%;animation:obf1 6s ease-in-out infinite }
-.ob-2 { bottom:28%;left:0;animation:obf2 7s ease-in-out infinite }
-.ob-3 { bottom:8%;right:2%;animation:obf3 6.5s ease-in-out infinite }
-
-@keyframes obf1{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.03)}}
-@keyframes obf2{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-16px) scale(1.04)}}
-@keyframes obf3{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.02)}}
-
 /* Lens Flare */
 .lens-flare {
     position: absolute;

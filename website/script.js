@@ -164,7 +164,6 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
     let targetRotateX = 0, targetRotateY = 0;
     let isHovering = false;
     let rafId = null;
-    const badges = document.querySelectorAll('.orb-badge');
 
     function lerp(a, b, t) { return a + (b - a) * t; }
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -177,7 +176,6 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
             currentRotateX = targetRotateX;
             currentRotateY = targetRotateY;
             orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)`;
-            badges.forEach(b => { b.style.transform = ''; });
             rafId = null;
             return;
         }
@@ -190,11 +188,6 @@ console.log('%c The Ultimate Discord Security Bot ', 'color: #8888aa; font-size:
         const scaleVal = isHovering ? 1.05 : 1;
 
         orb.style.transform = `translate(-50%, -50%) perspective(800px) rotateX(${-rx}deg) rotateY(${ry}deg) scale(${scaleVal})`;
-
-        badges.forEach((badge, i) => {
-            const depth = 0.5 + i * 0.3;
-            badge.style.transform = `translateX(${currentRotateY * 15 * depth}px) translateY(${currentRotateX * 15 * depth}px)`;
-        });
 
         rafId = requestAnimationFrame(animate);
     }
