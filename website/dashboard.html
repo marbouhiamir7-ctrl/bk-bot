@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — BK BOT</title>
+<title>Dashboard ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â BK BOT</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -224,14 +224,13 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
             </ul>
             <div class="sb-label">System</div>
             <ul class="sb-menu">
-                <li><a href="#" data-page="honeypot"><i class="fas fa-spider"></i> Honeypot</a></li>
                 <li><a href="#" data-page="userlookup"><i class="fas fa-magnifying-glass"></i> User Lookup</a></li>
                 <li><a href="#" data-page="settings"><i class="fas fa-gear"></i> Settings</a></li>
             </ul>
             <div class="sb-label">Management</div>
             <ul class="sb-menu">
                 <li><a href="#" data-page="activity"><i class="fas fa-stream"></i> Activity</a></li>
-                <li><a href="#" data-page="emojis"><i class="fas fa-face-smile"></i> Emojis</a></li>
+
                 <li><a href="#" data-page="invites"><i class="fas fa-link"></i> Invites</a></li>
                 <li><a href="#" data-page="webhooks"><i class="fas fa-plug"></i> Webhooks</a></li>
                 <li><a href="#" data-page="tags"><i class="fas fa-tag"></i> Tags</a></li>
@@ -404,14 +403,14 @@ function renderAll(g){
 
     <!-- SECURITY -->
     <div class="page" id="pg-security">
-        <div class="pg-header"><h1><i class="fas fa-shield-halved"></i> Security</h1><p>Always-on protection — configure thresholds and actions</p></div>
+        <div class="pg-header"><h1><i class="fas fa-shield-halved"></i> Security</h1><p>Always-on protection ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â configure thresholds and actions</p></div>
         <div class="grid2">
             <div>
                 <div class="card" style="margin-bottom:14px">
                     <div class="card-head"><h2><i class="fas fa-sliders" style="color:var(--red)"></i> Protection Toggles</h2></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-shield-halved" style="color:var(--red)"></i> Anti-Nuke</h4><p>Mass deletion protection — auto-bans attackers</p></div><div class="toggle on" data-key="anti_nuke" onclick="toggleSetting(this)"></div></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-user-shield" style="color:var(--blue)"></i> Anti-Raid</h4><p>Mass join protection — auto-kicks raiders</p></div><div class="toggle on" data-key="anti_raid" onclick="toggleSetting(this)"></div></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-ban" style="color:var(--orange)"></i> Anti-Spam</h4><p>Message flood protection — auto-mutes spammers</p></div><div class="toggle on" data-key="anti_spam" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-shield-halved" style="color:var(--red)"></i> Anti-Nuke</h4><p>Mass deletion protection ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â auto-bans attackers</p></div><div class="toggle on" data-key="anti_nuke" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-user-shield" style="color:var(--blue)"></i> Anti-Raid</h4><p>Mass join protection ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â auto-kicks raiders</p></div><div class="toggle on" data-key="anti_raid" onclick="toggleSetting(this)"></div></div>
+                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-ban" style="color:var(--orange)"></i> Anti-Spam</h4><p>Message flood protection ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â auto-mutes spammers</p></div><div class="toggle on" data-key="anti_spam" onclick="toggleSetting(this)"></div></div>
                     <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link-slash" style="color:var(--purple)"></i> Anti-Link</h4><p>Blocks unauthorized links from being posted</p></div><div class="toggle on" data-key="anti_link" onclick="toggleSetting(this)"></div></div>
                 </div>
                 <div class="card">
@@ -459,9 +458,9 @@ function renderAll(g){
             </div>
             <div class="card">
                 <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Recent Mod Actions</h2></div>
-                <div class="log-entry"><div class="log-icon si-red"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Nuke protection active — monitoring channel deletes</span></div><div class="log-time">Now</div></div>
-                <div class="log-entry"><div class="log-icon si-blue"><i class="fas fa-shield-halved"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Raid protection active — monitoring joins</span></div><div class="log-time">Now</div></div>
-                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Spam protection active — monitoring messages</span></div><div class="log-time">Now</div></div>
+                <div class="log-entry"><div class="log-icon si-red"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Nuke protection active ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â monitoring channel deletes</span></div><div class="log-time">Now</div></div>
+                <div class="log-entry"><div class="log-icon si-blue"><i class="fas fa-shield-halved"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Raid protection active ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â monitoring joins</span></div><div class="log-time">Now</div></div>
+                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>System</strong> <span>Anti-Spam protection active ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â monitoring messages</span></div><div class="log-time">Now</div></div>
             </div>
         </div>
         <div class="inner-panel" id="mod-automod">
@@ -531,7 +530,7 @@ function renderAll(g){
                         <div class="discord-embed" id="welcomePreviewEmbed" style="border-left-color:${SETTINGS.welcome_color||'#5865F2'}">
                             <div class="discord-embed-title" id="welcomeEmbedTitle">Welcome!</div>
                             <div class="discord-embed-desc" id="welcomeEmbedDesc">Welcome to the server!</div>
-                            <div class="discord-embed-footer"><i class="fas fa-robot"></i> <span>BK BOT • ${esc(g.name||'Server')}</span></div>
+                            <div class="discord-embed-footer"><i class="fas fa-robot"></i> <span>BK BOT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${esc(g.name||'Server')}</span></div>
                         </div>
                     </div>
                 </div>
@@ -546,17 +545,9 @@ function renderAll(g){
             <div class="card">
                 <div class="card-head"><h2><i class="fas fa-user-plus" style="color:var(--red)"></i> Configuration</h2></div>
                 <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Auto-assign roles on member join</p></div><div class="toggle on" data-key="autorole_enabled" onclick="toggleSetting(this)"></div></div>
-                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-id-card" style="color:var(--red)"></i> Role</h4><p>Role given to every new member</p></div><select class="sel" id="autoRole" onchange="saveSetting('auto_role',this.value);updateAutoRolePreview()"><option value="">None</option>${roleOpts(rl)}</select></div>
+                <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-id-card" style="color:var(--red)"></i> Role</h4><p>Role given to every new member</p></div><select class="sel" id="autoRole" onchange="saveSetting('auto_role',this.value)"><option value="">None</option>${roleOpts(rl)}</select></div>
                 <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-clock" style="color:var(--orange)"></i> Delay</h4><p>Wait before assigning role (anti-raid)</p></div><div class="toggle" data-key="autorole_delay" onclick="toggleSetting(this)"></div></div>
                 <div class="sel-row"><div class="sel-info"><h4><i class="fas fa-clock" style="color:var(--blue)"></i> Delay (seconds)</h4><p>Seconds to wait before assigning</p></div><input class="input" style="max-width:100px" type="number" min="5" max="300" value="${SETTINGS.autorole_delay_time||30}" onchange="SETTINGS.autorole_delay_time=parseInt(this.value);markDirty()"></div>
-            </div>
-            <div class="card">
-                <div class="card-head"><h2><i class="fas fa-eye" style="color:var(--purple)"></i> Preview</h2></div>
-                <div class="discord-msg">
-                    <div class="discord-avatar"><i class="fas fa-robot"></i></div>
-                    <div class="discord-header"><span style="font-weight:700;font-size:.85rem;color:#fff">BK BOT</span><span class="discord-bot-tag">BOT</span><span class="discord-time">Now</span></div>
-                    <div class="discord-content">Welcome to <strong>${esc(g.name||'Server')}</strong>! You've been assigned the <span style="color:#a78bfa;font-weight:600">@Member</span> role.</div>
-                </div>
             </div>
         </div>
     </div>
@@ -644,38 +635,13 @@ function renderAll(g){
                 <div class="log-entry"><div class="log-icon si-green"><i class="fas fa-right-to-bracket"></i></div><div class="log-text"><strong>John#1234</strong> <span>joined the server</span></div><div class="log-time">2m ago</div></div>
                 <div class="log-entry"><div class="log-icon si-red"><i class="fas fa-right-from-bracket"></i></div><div class="log-text"><strong>Jane#5678</strong> <span>left the server</span></div><div class="log-time">5m ago</div></div>
                 <div class="log-entry"><div class="log-icon si-blue"><i class="fas fa-pen"></i></div><div class="log-text"><strong>Bob#9012</strong> <span>edited a message in <strong>#general</strong></span></div><div class="log-time">8m ago</div></div>
-                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>Mod</strong> <span>banned <strong>Spammer#0001</strong> — spamming</span></div><div class="log-time">12m ago</div></div>
+                <div class="log-entry"><div class="log-icon si-orange"><i class="fas fa-ban"></i></div><div class="log-text"><strong>Mod</strong> <span>banned <strong>Spammer#0001</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â spamming</span></div><div class="log-time">12m ago</div></div>
                 <div class="log-entry"><div class="log-icon si-purple"><i class="fas fa-gavel"></i></div><div class="log-text"><strong>Mod</strong> <span>muted <strong>User#3456</strong> for 10 minutes</span></div><div class="log-time">15m ago</div></div>
             </div>
         </div>
     </div>
 
     <!-- HONEYPOT -->
-    <div class="page" id="pg-honeypot">
-        <div class="pg-header"><h1><i class="fas fa-spider"></i> Honeypot</h1><p>Anti-abuse trap system — catches malicious users automatically</p></div>
-        <div class="grid2">
-            <div>
-                <div class="card" style="margin-bottom:14px">
-                    <div class="card-head"><h2><i class="fas fa-shield" style="color:var(--red)"></i> Trap Configuration</h2><span class="badge badge-live" id="hpStatus">ACTIVE</span></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-power-off" style="color:var(--green)"></i> Enabled</h4><p>Active honeypot trap system</p></div><div class="toggle${SETTINGS.honeypot_enabled?' on':''}" id="hpToggle" onclick="toggleHoneypot()"></div></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-terminal" style="color:var(--red)"></i> Trap Commands</h4><p>Auto-ban on malicious command usage</p></div><span class="badge badge-live">14 TRAPS</span></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-comment" style="color:var(--orange)"></i> Social Engineering</h4><p>Detect impersonation attempts</p></div><span class="badge badge-live">11 KEYWORDS</span></div>
-                    <div class="toggle-row"><div class="toggle-info"><h4><i class="fas fa-link" style="color:var(--purple)"></i> Phishing Detection</h4><p>Block scam and phishing links</p></div><span class="badge badge-live">ACTIVE</span></div>
-                </div>
-                <div class="card">
-                    <div class="card-head"><h2><i class="fas fa-list" style="color:var(--orange)"></i> Trap Commands</h2></div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:4px">
-                        ${['.token','.eval','.exec','.hack','.grabtoken','.steal','.raid','.nuke','.spam','.ddos','.rat','.selfbot','.webhook','.snipe'].map(c=>`<div style="padding:6px 8px;background:rgba(255,92,92,.06);border:1px solid rgba(255,92,92,.1);border-radius:6px;font-size:.7rem;color:var(--red);font-family:'Courier New',monospace;text-align:center">${c}</div>`).join('')}
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-head"><h2><i class="fas fa-scroll" style="color:var(--blue)"></i> Trap Log</h2><button class="save-btn" onclick="loadHoneypot()" style="padding:6px 14px;font-size:.72rem"><i class="fas fa-refresh"></i> Refresh</button></div>
-                <div id="honeypotLog" style="max-height:500px;overflow-y:auto"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- USER LOOKUP -->
     <div class="page" id="pg-userlookup">
         <div class="pg-header"><h1><i class="fas fa-magnifying-glass"></i> User Lookup</h1><p>Search and inspect any Discord user with full server data</p></div>
@@ -750,23 +716,6 @@ function renderAll(g){
     </div>
 
     <!-- EMOJIS -->
-    <div class="page" id="pg-emojis">
-        <div class="pg-header"><h1><i class="fas fa-face-smile"></i> Emojis & Stickers</h1><p>View and manage server emojis and stickers</p></div>
-        <div class="inner-tabs"><button class="inner-tab active" onclick="switchInner(this,'emoji','emojis')">Emojis</button><button class="inner-tab" onclick="switchInner(this,'emoji','stickers')">Stickers</button></div>
-        <div class="inner-panel active" id="emoji-emojis">
-            <div class="grid4" style="margin-bottom:14px">
-                <div class="card stat-card sg"><div class="stat-top"><div class="stat-icon si-green"><i class="fas fa-face-smile"></i></div><span class="badge badge-live">Active</span></div><div class="stat-val" id="emojiTotal">0</div><div class="stat-label">Total Emojis</div></div>
-                <div class="card stat-card sb"><div class="stat-top"><div class="stat-icon si-blue"><i class="fas fa-image"></i></div><span class="badge badge-count">Static</span></div><div class="stat-val" id="emojiStatic">0</div><div class="stat-label">Static</div></div>
-                <div class="card stat-card so"><div class="stat-top"><div class="stat-icon si-orange"><i class="fas fa-film"></i></div><span class="badge badge-warn">Animated</span></div><div class="stat-val" id="emojiAnimated">0</div><div class="stat-label">Animated</div></div>
-                <div class="card stat-card sr"><div class="stat-top"><div class="stat-icon si-red"><i class="fas fa-upload"></i></div></div><div class="stat-val" id="emojiSlots">0</div><div class="stat-label">Slots Used</div></div>
-            </div>
-            <div class="card"><div class="card-head"><h2><i class="fas fa-face-smile" style="color:var(--orange)"></i> All Emojis</h2><span class="badge badge-count" id="emojiCount">0</span></div><div id="emojiList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div></div>
-        </div>
-        <div class="inner-panel" id="emoji-stickers">
-            <div class="card"><div class="card-head"><h2><i class="fas fa-note-sticky" style="color:var(--pink)"></i> Stickers</h2><span class="badge badge-count" id="stickerCount">0</span></div><div id="stickerList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div></div>
-        </div>
-    </div>
-
     <!-- INVITES -->
     <div class="page" id="pg-invites">
         <div class="pg-header"><h1><i class="fas fa-link"></i> Invites</h1><p>Create, manage and track server invites</p></div>
@@ -826,7 +775,7 @@ function renderAll(g){
 
     <!-- TAGS -->
     <div class="page" id="pg-tags">
-        <div class="pg-header"><h1><i class="fas fa-tag"></i> Tags</h1><p>Quick response tags — use /tag in Discord</p></div>
+        <div class="pg-header"><h1><i class="fas fa-tag"></i> Tags</h1><p>Quick response tags ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â use /tag in Discord</p></div>
         <div class="grid2">
             <div class="card">
                 <div class="card-head"><h2><i class="fas fa-plus" style="color:var(--green)"></i> Create Tag</h2></div>
@@ -990,7 +939,7 @@ function renderAll(g){
                         <div class="card-head"><h2><i class="fas fa-key" style="color:var(--green)"></i> Authentication</h2></div>
                         <div style="padding:14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px">
                             <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">How to authenticate</div>
-                            <div style="font-size:.72rem;color:var(--text3);line-height:1.6">All API endpoints require a valid session cookie. Login through the dashboard OAuth2 flow at <code style="background:rgba(52,211,153,.1);color:var(--green);padding:2px 6px;border-radius:4px;font-size:.7rem">/login</code> to get a session. CSRF tokens are required for POST/DELETE requests — fetch one from <code style="background:rgba(96,165,250,.1);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:.7rem">GET /api/csrf</code></div>
+                            <div style="font-size:.72rem;color:var(--text3);line-height:1.6">All API endpoints require a valid session cookie. Login through the dashboard OAuth2 flow at <code style="background:rgba(52,211,153,.1);color:var(--green);padding:2px 6px;border-radius:4px;font-size:.7rem">/login</code> to get a session. CSRF tokens are required for POST/DELETE requests ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â fetch one from <code style="background:rgba(96,165,250,.1);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:.7rem">GET /api/csrf</code></div>
                         </div>
                         <div style="padding:14px;background:var(--glass);border-radius:var(--r);border:1px solid var(--border)">
                             <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">Headers</div>
@@ -1064,7 +1013,7 @@ function renderAll(g){
                     <div class="card-head"><h2><i class="fas fa-rocket" style="color:var(--green)"></i> Quick Start</h2></div>
                     <div style="display:grid;gap:12px">
                         <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">1</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Add Bot to Server</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Click the <strong>Invite</strong> button and select your server. Grant all requested permissions for full functionality.</div></div></div>
-                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">2</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Setup Moderation</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Create a <strong>#mod-logs</strong> channel. Go to <strong>Moderation → Mod Log</strong> and select it. Configure Auto-Mod settings.</div></div></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">2</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Setup Moderation</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Create a <strong>#mod-logs</strong> channel. Go to <strong>Moderation ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Mod Log</strong> and select it. Configure Auto-Mod settings.</div></div></div>
                         <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:var(--grad3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">3</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Configure Welcome</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Welcome</strong> tab. Enable it, select a channel, customize the message with <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">{user}</code> <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">{server}</code> variables.</div></div></div>
                         <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--red));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">4</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Enable Security</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Security</strong> tab. Anti-Nuke, Anti-Raid, Anti-Spam, and Anti-Link are ON by default. Adjust thresholds as needed.</div></div></div>
                         <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;font-weight:800;color:#fff">5</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Setup Tickets</div><div style="font-size:.72rem;color:var(--text3);line-height:1.5">Go to <strong>Tickets</strong> tab. Enable, select channel, category, and support role. Use <code style="background:rgba(88,101,242,.1);color:#5865F2;padding:1px 5px;border-radius:3px;font-size:.68rem">/ticket</code> in Discord to post the panel.</div></div></div>
@@ -1107,7 +1056,7 @@ function renderAll(g){
                         {q:'The bot is not responding to commands, what do I do?',a:'Make sure the bot role is above all other roles in the server hierarchy. Check that the bot has "Use Slash Commands" permission. Try /ping to check latency.'},
                         {q:'How do I configure welcome messages?',a:'Go to the Welcome tab in the dashboard. Enable it, select a channel, and customize the message. Use {user} for mention, {server} for server name, {member_count} for total members.'},
                         {q:'What does Anti-Nuke do?',a:'Anti-Nuke monitors for mass channel/role deletions. If a user deletes multiple channels or roles in a short time, they are automatically banned. This prevents raid damage.'},
-                        {q:'How do I setup the ticket system?',a:'Go to Tickets tab → Enable → Select panel channel, ticket category, and support role. Then use /ticket in Discord to post the ticket panel embed.'},
+                        {q:'How do I setup the ticket system?',a:'Go to Tickets tab ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Enable ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Select panel channel, ticket category, and support role. Then use /ticket in Discord to post the ticket panel embed.'},
                         {q:'Can I customize the bot\'s responses?',a:'Yes! Use the Commands tab to create custom auto-reply commands. You can also use variables like {user}, {server}, {channel}, {mention} in responses.'},
                         {q:'How do I get support?',a:'Join our Discord server or open a ticket using the bot. You can also check the API Documentation tab for technical details.'},
                         {q:'Does the bot store any data?',a:'The bot stores server settings, custom commands, warnings, level data, and backups in a local JSON database. No personal data is shared with third parties.'},
@@ -1120,7 +1069,7 @@ function renderAll(g){
     </div>`;
 
     initMods();loadCustomCommands();bindNav();applySettings();
-    loadActivity();loadOvActivity();loadOvInvites();loadEmojis();loadStickers();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();loadHoneypot();
+    loadActivity();loadOvActivity();loadOvInvites();loadInvites();loadWebhooks();loadTags();loadLevels();loadBackups();
     setTimeout(()=>{
         document.querySelectorAll('.stat-val[data-count]').forEach(el=>animateVal(el,parseInt(el.dataset.count)||0));
         updateWelcomePreview();initColorPicker();
@@ -1169,40 +1118,8 @@ function selectColor(el,color){
     if(embed)embed.style.borderLeftColor=color;
 }
 
-/* === AUTO ROLE PREVIEW === */
-function updateAutoRolePreview(){
-    const roleId=SETTINGS.auto_role;
-    if(!roleId||!GUILD_DATA.roles)return;
-    const role=GUILD_DATA.roles.find(r=>r.id===roleId);
-    if(!role)return;
-    const el=document.querySelector('#pg-autorole .discord-content');
-    if(el)el.innerHTML=`Welcome to <strong>${esc(GUILD_DATA.name||'Server')}</strong>! You've been assigned the <span style="color:${role.color?'#'+role.color.toString(16).padStart(6,'0'):'#a78bfa'};font-weight:600">@${esc(role.name)}</span> role.`;
-}
-
 /* === OVERVIEW DATA === */
-function toggleHoneypot(){
-    const el=document.getElementById('hpToggle');
-    el.classList.toggle('on');
-    SETTINGS.honeypot_enabled=el.classList.contains('on');
-    markDirty();
-}
-
-async function loadHoneypot(){
-    if(!GUILD_ID)return;
-    try{
-        const data=await(await fetch('/api/honeypot')).json();
-        const el=document.getElementById('honeypotLog'),statusEl=document.getElementById('hpStatus'),toggleEl=document.getElementById('hpToggle');
-        if(!el)return;
-        if(statusEl)statusEl.textContent=data.enabled?'ACTIVE':'DISABLED';
-        if(toggleEl)toggleEl.classList.toggle('on',data.enabled);
-        if(!data.log||!data.log.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text4);font-size:.8rem"><div style="width:48px;height:48px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><i class="fas fa-shield-halved" style="font-size:1.1rem;opacity:.3"></i></div><div style="font-weight:600;margin-bottom:4px">No traps triggered</div><div style="font-size:.7rem">The honeypot is watching. Malicious users will appear here.</div></div>';return}
-        el.innerHTML=data.log.map(h=>{
-            const tc={trap_command:'255,92,92',social_engineering:'251,191,36',phishing_link:'244,114,182',scam_link:'244,114,182'};
-            const ti={trap_command:'fa-terminal',social_engineering:'fa-comment',phishing_link:'fa-link',scam_link:'fa-fish'};
-            return`<div style="padding:10px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;border-left:3px solid rgb(${tc[h.type]||'255,92,92'})"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="display:flex;align-items:center;gap:6px"><div style="width:24px;height:24px;border-radius:6px;background:rgba(${tc[h.type]||'255,92,92'},.12);display:flex;align-items:center;justify-content:center"><i class="fas ${ti[h.type]||'fa-shield'}" style="font-size:.6rem;color:rgb(${tc[h.type]||'255,92,92'})"></i></div><span style="font-size:.82rem;font-weight:600;color:var(--text)">${esc(h.user||'Unknown')}</span></div><span style="font-size:.6rem;color:var(--text4)">${h.time?new Date(h.time).toLocaleTimeString():''}</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(${tc[h.type]||'255,92,92'},.1);color:rgb(${tc[h.type]||'255,92,92'});font-weight:600">${h.type?.replace(/_/g,' ')||'unknown'}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4);font-family:'Courier New',monospace">${esc(h.value||'')}</span><span style="font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text4)">${esc(h.channel||'')}</span></div></div>`;
-        }).join('');
-    }catch(e){}
-}
+/* === OVERVIEW DATA === */
 async function loadOvActivity(){
     if(!GUILD_ID)return;
     try{
@@ -1406,39 +1323,6 @@ async function loadActivity(){
         el.innerHTML=data.map(a=>`<div class="log-entry"><div class="log-icon si-${a.type==='ban'?'red':a.type==='join'?'green':a.type==='leave'?'orange':'blue'}"><i class="fas fa-${a.type==='ban'?'ban':a.type==='join'?'right-to-bracket':a.type==='leave'?'right-from-bracket':'info-circle'}"></i></div><div class="log-text"><strong>${esc(a.user||'System')}</strong> <span>${esc(a.action||'event')}</span></div><div class="log-time">${a.time?new Date(a.time).toLocaleTimeString():''}</div></div>`).join('');
     }catch(e){}
 }
-async function loadEmojis(){
-    if(!GUILD_ID)return;
-    try{
-        const emojis=await(await fetch(`/api/guild/${GUILD_ID}/emojis`)).json();
-        const el=document.getElementById('emojiList'),cnt=document.getElementById('emojiCount');
-        const totalEl=document.getElementById('emojiTotal'),staticEl=document.getElementById('emojiStatic'),animEl=document.getElementById('emojiAnimated'),slotsEl=document.getElementById('emojiSlots');
-        if(!el)return;
-        if(cnt)cnt.textContent=emojis.length;
-        if(totalEl)animateVal(totalEl,emojis.length);
-        const animated=emojis.filter(e=>e.animated).length;
-        const statics=emojis.length-animated;
-        if(animEl)animateVal(animEl,animated);
-        if(staticEl)animateVal(staticEl,statics);
-        if(slotsEl)slotsEl.textContent=emojis.length+'/50';
-        if(!emojis.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-face-smile"></i></div><h3>No emojis</h3><p>Upload emojis in server settings</p></div>';return}
-        el.innerHTML=emojis.map(e=>`<div style="text-align:center;padding:14px;background:var(--glass);border-radius:12px;border:1px solid var(--border);transition:var(--tr);position:relative" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="position:absolute;top:6px;right:6px"><button class="cmd-btn del" title="Delete" onclick="deleteEmoji('${e.id}')" style="width:24px;height:24px;font-size:.6rem"><i class="fas fa-trash"></i></button></div><img src="${e.url}" alt="${e.name}" style="width:52px;height:52px;${e.animated?'animation:spin 2s linear infinite':''}"><div style="font-size:.72rem;color:var(--text2);margin-top:8px;word-break:break-all;font-weight:600">:${esc(e.name)}:</div><div style="font-size:.6rem;color:var(--text4);margin-top:2px">${e.animated?'Animated':'Static'}</div></div>`).join('');
-    }catch(e){}
-}
-async function deleteEmoji(id){
-    if(!confirm('Delete this emoji?'))return;
-    try{await fetch(`/api/guild/${GUILD_ID}/emojis/${id}`,{method:'DELETE',headers:{'X-CSRF-Token':CSRF_TOKEN}});loadEmojis();showToast('Emoji deleted','info')}catch(e){showToast('Failed','error')}
-}
-async function loadStickers(){
-    if(!GUILD_ID)return;
-    try{
-        const stickers=await(await fetch(`/api/guild/${GUILD_ID}/stickers`)).json();
-        const el=document.getElementById('stickerList'),cnt=document.getElementById('stickerCount');
-        if(!el)return;
-        if(cnt)cnt.textContent=stickers.length;
-        if(!stickers.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><i class="fas fa-note-sticky"></i></div><h3>No stickers</h3></div>';return}
-        el.innerHTML=stickers.map(s=>`<div style="padding:16px;background:var(--glass);border-radius:12px;border:1px solid var(--border);text-align:center;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'"><div style="font-size:1.5rem;margin-bottom:8px">📋</div><div style="font-size:.8rem;font-weight:600;color:var(--text)">${esc(s.name)}</div><div style="font-size:.68rem;color:var(--text4);margin-top:4px">${esc(s.description||'No description')}</div></div>`).join('');
-    }catch(e){}
-}
 async function loadInvites(){
     if(!GUILD_ID)return;
     try{
@@ -1553,7 +1437,7 @@ async function loadLevels(){
         if(cnt)cnt.textContent=levels.length;
         if(!levels.length){el.innerHTML='<div class="empty"><div class="empty-icon"><i class="fas fa-trophy"></i></div><h3>No level data</h3><p>Members will appear as they chat</p></div>';return}
         el.innerHTML=levels.map((l,i)=>{
-            const medals=['🥇','🥈','🥉'];
+            const medals=['ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡','ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¥Ãƒâ€¹Ã¢â‚¬Â ','ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°'];
             const medal=i<3?medals[i]:`<span style="color:var(--text4);font-size:.85rem;font-weight:700">#${i+1}</span>`;
             const xpPct=Math.round((l.xp%100));
             return`<div style="padding:12px 16px;background:var(--glass);border:1px solid ${i<3?'rgba(251,191,36,.15)':'var(--border)'};border-radius:var(--r);margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:var(--tr)" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='${i<3?'rgba(251,191,36,.15)':'var(--border)'}'"><div style="min-width:32px;text-align:center;font-size:${i<3?'1.2rem':'.85rem'}">${medal}</div><div style="flex:1"><div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px">User ${esc(l.userId)}</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:.68rem;color:var(--text4)">${l.xp} XP</span><div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;max-width:120px"><div style="height:100%;width:${xpPct}%;background:var(--orange);border-radius:3px"></div></div></div></div><div style="text-align:right"><div style="font-size:1.3rem;font-weight:900;color:var(--orange)">${l.level}</div><div style="font-size:.6rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px">Level</div></div></div>`;
