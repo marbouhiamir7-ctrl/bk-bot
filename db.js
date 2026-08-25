@@ -47,34 +47,36 @@ const customCommands = new Database('custom-commands');
 const levelData = new Database('level-data');
 const warnings = new Database('warnings');
 
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
 function createSession(user, guilds) {
-    const token = crypto.randomBytes(32).toString('hex');
-    const sessionData = {
+    const payload = {
         user,
         guilds,
         created: Date.now(),
-        lastActivity: Date.now(),
         expires: Date.now() + (90 * 24 * 60 * 60 * 1000)
     };
-    sessions.set(token, sessionData);
-    return token;
+    const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const sig = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+    return `${data}.${sig}`;
 }
 
 function getSession(token) {
-    if (!token) return null;
-    const s = sessions.get(token);
-    if (!s) return null;
-    if (Date.now() > s.expires) { sessions.delete(token); return null; }
-    s.lastActivity = Date.now();
-    if (Date.now() - s.created > 7 * 24 * 60 * 60 * 1000) {
-        s.expires = Date.now() + (90 * 24 * 60 * 60 * 1000);
+    if (!token || !token.includes('.')) return null;
+    try {
+        const [data, sig] = token.split('.');
+        const expected = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+        if (sig !== expected) return null;
+        const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+        if (Date.now() > payload.expires) return null;
+        return payload;
+    } catch (e) {
+        return null;
     }
-    sessions.set(token, s);
-    return s;
 }
 
 function destroySession(token) {
-    sessions.delete(token);
+    // Signed tokens can't be revoked without a blocklist; cookie expiry handles it
 }
 
 function getGuildSettings(guildId) {
