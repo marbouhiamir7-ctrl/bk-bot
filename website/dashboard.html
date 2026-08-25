@@ -116,8 +116,8 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
 .invite-btn{display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:#fff;padding:12px 28px;border-radius:var(--r);text-decoration:none;font-weight:700;font-size:.88rem;transition:var(--tr);border:none;cursor:pointer;position:relative;z-index:1;box-shadow:0 4px 20px rgba(255,92,92,.25)}.invite-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,92,92,.35)}
 .empty{text-align:center;padding:48px 20px}.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--glass2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.4rem;color:var(--text4)}.empty h3{font-size:.95rem;font-weight:700;margin-bottom:4px}.empty p{color:var(--text4);font-size:.8rem}
 .toast{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:var(--r);font-size:.82rem;font-weight:600;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:var(--shadow2);backdrop-filter:blur(12px)}.toast.show{transform:translateY(0);opacity:1;pointer-events:auto}.toast.success{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.2);color:var(--green)}.toast.error{background:rgba(255,59,59,.15);border:1px solid rgba(255,59,59,.2);color:var(--red)}.toast.info{background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.2);color:var(--blue)}.toast i{font-size:1rem}
-.save-bar{position:fixed;bottom:28px;right:28px;z-index:100;display:none;animation:slideUp .3s ease}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.save-btn{background:var(--grad);color:#fff;padding:12px 28px;border-radius:var(--r);border:none;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:0 4px 20px rgba(255,92,92,.3);transition:var(--tr);display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif}.save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,92,92,.4)}.save-btn.saved{background:var(--grad3);box-shadow:0 4px 20px rgba(52,211,153,.3)}
+.save-bar{position:fixed;bottom:28px;right:28px;z-index:100;display:none;animation:slideUp .3s ease;background:rgba(15,15,22,.95);border:1px solid rgba(52,211,153,.2);border-radius:var(--r);backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,.4)}@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.save-status{color:var(--green);padding:10px 20px;font-size:.78rem;font-weight:600;display:flex;align-items:center;gap:7px}
 .skeleton{background:linear-gradient(90deg,var(--glass) 25%,var(--glass2) 50%,var(--glass) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}.skel-card{height:140px;border-radius:var(--r2);margin-bottom:14px}
 .loading{text-align:center;padding:60px 20px}.loading i{font-size:2rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:spin 1s linear infinite;display:inline-block}.loading p{margin-top:14px;color:var(--text3);font-size:.85rem}@keyframes spin{to{transform:rotate(360deg)}}
 .conn-status{position:fixed;top:16px;right:16px;z-index:200;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.65rem;font-weight:600;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.15);color:var(--green);opacity:0;transition:var(--tr)}.conn-status.show{opacity:1}.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -250,10 +250,28 @@ textarea.input{resize:vertical;min-height:60px;max-height:200px}
     <main class="main" id="mainContent"></main>
 </div>
 
-<div class="save-bar" id="saveBar"><button class="save-btn" id="saveBtn" onclick="saveAll()"><i class="fas fa-check"></i> Save Changes</button></div>
+<div class="save-bar" id="saveBar"><span class="save-status" id="saveStatus"><i class="fas fa-check"></i> Saved</span></div>
 
 <script>
-let GUILD_ID='',GUILD_DATA={},SETTINGS={},DIRTY=false,CSRF_TOKEN='',lookupHistory=[];
+let GUILD_ID='',GUILD_DATA={},SETTINGS={},DIRTY=false,CSRF_TOKEN='',lookupHistory=[],autoSaveTimer=null;
+
+function autoSave(){
+    if(!GUILD_ID||!DIRTY)return;
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer=setTimeout(async()=>{
+        const el=document.getElementById('saveStatus');
+        if(el)el.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
+        try{
+            await fetch(`/api/guild/${GUILD_ID}/settings`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify(SETTINGS)});
+            if(el)el.innerHTML='<i class="fas fa-check"></i> Saved';
+            DIRTY=false;
+            setTimeout(()=>{const b=document.getElementById('saveBar');if(b)b.style.display='none'},1500);
+        }catch(e){
+            if(el)el.innerHTML='<i class="fas fa-exclamation-triangle"></i> Failed';
+            setTimeout(()=>{if(el)el.innerHTML='<i class="fas fa-check"></i> Saved'},2000);
+        }
+    },400);
+}
 
 function showToast(m,t='success'){const e=document.getElementById('toast'),s=document.getElementById('toastMsg');e.className='toast '+t;s.textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000)}
 function showConn(){const c=document.getElementById('connStatus');c.classList.add('show');setTimeout(()=>c.classList.remove('show'),2000)}
@@ -269,7 +287,7 @@ function setSel(id,v){const s=document.getElementById(id);if(s&&v!==undefined)s.
 function setInput(id,v){const s=document.getElementById(id);if(s&&v!==undefined)s.value=v}
 function toggleSetting(el){el.classList.toggle('on');SETTINGS[el.dataset.key]=el.classList.contains('on');markDirty()}
 function saveSetting(k,v){SETTINGS[k]=v;markDirty()}
-function markDirty(){DIRTY=true;document.getElementById('saveBar').style.display='block'}
+function markDirty(){DIRTY=true;document.getElementById('saveBar').style.display='flex';autoSave()}
 
 async function init(){
     await getCsrf();
@@ -1300,17 +1318,7 @@ function bindNav(){
 /* === SAVE === */
 async function saveAll(){
     if(!GUILD_ID)return;
-    const btn=document.getElementById('saveBtn');
-    btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';btn.disabled=true;
-    try{
-        await fetch(`/api/guild/${GUILD_ID}/settings`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF_TOKEN},body:JSON.stringify(SETTINGS)});
-        btn.innerHTML='<i class="fas fa-check"></i> Saved!';btn.classList.add('saved');
-        showToast('Settings saved successfully!','success');
-        setTimeout(()=>{btn.innerHTML='<i class="fas fa-check"></i> Save Changes';btn.classList.remove('saved');document.getElementById('saveBar').style.display='none';DIRTY=false;btn.disabled=false},2000);
-    }catch(e){
-        showToast('Failed to save settings','error');
-        btn.innerHTML='<i class="fas fa-check"></i> Save Changes';btn.disabled=false;
-    }
+    DIRTY=true;autoSave();
 }
 
 /* === LOAD DATA FUNCTIONS === */
