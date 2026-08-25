@@ -1,5 +1,6 @@
 const { Events, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const config = require('../config.json');
+const db = require('../db');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -97,15 +98,14 @@ module.exports = {
                         console.error('Failed to ban spammer');
                     }
                 } else if (client.antiSpam.action === 'warn') {
-                    if (!client.warnings.has(message.author.id)) {
-                        client.warnings.set(message.author.id, []);
-                    }
-                    const warnings = client.warnings.get(message.author.id);
-                    warnings.push({
+                    const guildId = message.guild.id;
+                    const userWarns = db.warnings.get(`${guildId}:${message.author.id}`, []);
+                    userWarns.push({
                         reason: 'Anti-spam: Spamming',
                         moderator: 'Anti-Spam System',
                         date: new Date().toISOString()
                     });
+                    db.warnings.set(`${guildId}:${message.author.id}`, userWarns);
                     message.channel.send(`${message.author} has been warned for spamming.`);
                 }
 
@@ -179,14 +179,14 @@ module.exports = {
             }
         }
 
-        // Leveling system
         const userId2 = message.author.id;
+        const guildId = message.guild.id;
+        const levelKey = `${guildId}:${userId2}`;
+        const settings = db.getGuildSettings(guildId);
 
-        if (!client.levelData.has(userId2)) {
-            client.levelData.set(userId2, { xp: 0, level: 1 });
-        }
+        if (!settings.level_enabled) return;
 
-        const data = client.levelData.get(userId2);
+        const data = db.levelData.get(levelKey, { xp: 0, level: 1 });
         const xpGain = Math.floor(Math.random() * 15) + 5;
         data.xp += xpGain;
 
@@ -202,21 +202,18 @@ module.exports = {
                 .setDescription(`Congratulations ${message.author}! You've reached **Level ${data.level}**!`)
                 .setTimestamp();
 
-            message.channel.send({ embeds: [levelUpEmbed] });
+            const levelChannel = settings.level_channel ? message.guild.channels.cache.get(settings.level_channel) : message.channel;
+            if (levelChannel) levelChannel.send({ embeds: [levelUpEmbed] });
 
             const levelRoles = config.levelRoles;
             if (levelRoles[data.level.toString()]) {
                 const role = message.guild.roles.cache.find(r => r.name === levelRoles[data.level.toString()]);
                 if (role) {
-                    try {
-                        await message.member.roles.add(role);
-                    } catch (error) {
-                        console.error('Failed to add level role');
-                    }
+                    try { await message.member.roles.add(role); } catch (error) {}
                 }
             }
         }
 
-        client.levelData.set(userId2, data);
+        db.levelData.set(levelKey, data);
     }
 };

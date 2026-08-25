@@ -107,7 +107,8 @@ function getGuildSettings(guildId) {
         log_messages: true,
         log_moderation: true,
         log_joinleave: true,
-        log_edits: true
+        log_edits: true,
+        log_voice: true
     };
     const stored = guildSettings.get(guildId, null);
     return stored ? { ...defaults, ...stored } : { ...defaults };

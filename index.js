@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, EmbedBuilder, PermissionFlagsBits, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, EmbedBuilder, PermissionFlagsBits, Events, REST, Routes } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config.json');
@@ -306,20 +306,23 @@ for (const file of eventFiles) {
     }
 }
 
-client.once('ready', () => {
+async function deployCommands() {
+    const rest = new REST().setToken(process.env.TOKEN);
+    const commands = client.commands.map(cmd => cmd.data.toJSON());
+    try {
+        console.log(`🔄 Registering ${commands.length} slash commands...`);
+        await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+        console.log(`✅ Registered ${commands.length} commands with Discord`);
+    } catch (error) {
+        console.error('❌ Failed to register commands:', error.message);
+    }
+}
+
+client.once('ready', async () => {
     console.log(`✅ ${client.user.tag} is online!`);
     console.log(`📋 ${client.commands.size} commands loaded`);
     client.user.setActivity('BK BOT Beta | /help', { type: 'Watching' });
-    syncLiveStats();
-});
-
-client.on(Events.GuildMemberAdd, member => {
-    pushActivity('join', `**${member.user.tag}** joined **${member.guild.name}**`, member.guild.id);
-    syncLiveStats();
-});
-
-client.on(Events.GuildMemberRemove, member => {
-    pushActivity('leave', `**${member.user.tag}** left **${member.guild.name}**`, member.guild.id);
+    await deployCommands();
     syncLiveStats();
 });
 

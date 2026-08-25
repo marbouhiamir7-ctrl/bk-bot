@@ -1,11 +1,23 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const config = require('../config.json');
+const db = require('../db');
 
 module.exports = {
     name: Events.GuildMemberAdd,
     once: false,
     async execute(member) {
         const client = member.client;
+
+        const pushActivity = (type, msg) => {
+            try {
+                const db = require('../db');
+                const feed = db.botStats.get('activity_feed', []);
+                feed.unshift({ type, message: msg, guildId: member.guild.id, time: Date.now() });
+                if (feed.length > 200) feed.length = 200;
+                db.botStats.set('activity_feed', feed);
+            } catch (e) {}
+        };
+        pushActivity('join', `**${member.user.tag}** joined **${member.guild.name}**`);
 
         // Anti-raid check
         if (client.antiRaid && client.antiRaid.enabled) {
@@ -72,12 +84,16 @@ module.exports = {
             }
         }
 
-        // Welcome message
-        const welcomeChannel = member.guild.channels.cache.get(config.welcomeChannel);
+        const settings = db.getGuildSettings(member.guild.id);
+        if (!settings.welcome_enabled) return;
+
+        const welcomeChannel = settings.welcome_channel
+            ? member.guild.channels.cache.get(settings.welcome_channel)
+            : null;
 
         if (!welcomeChannel) return;
 
-        const welcomeMessage = config.welcomeMessage.replace('{user}', `${member}`);
+        const welcomeMessage = (settings.welcome_message || 'Welcome to the server, {user}!').replace('{user}', `${member}`);
 
         const embed = new EmbedBuilder()
             .setColor('#FF6B6B')
